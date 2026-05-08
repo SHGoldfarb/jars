@@ -19,6 +19,24 @@
 - **PWA + offline**: service worker caching strategy, installability, offline/online UX states.
 - **Core calculations**: account balances, total net worth, jar balances, unallocated amount.
 
+#### Epic 1 checklist
+
+- [ ] Define core entities + stable IDs (accounts, jars, transactions, allocations, import batches, settings)
+- [ ] Design IndexedDB schema v1 (stores + indexes based on expected queries)
+- [ ] Implement a versioned migration framework (new DB + upgrades)
+- [ ] Build a typed repository layer (CRUD, batch writes, IDB transactions)
+- [ ] Add default seed data + settings (e.g. optional “Unallocated” jar behavior)
+- [ ] Add write-time validation for basic integrity (required fields, references, amount/date rules)
+- [ ] Add dev utilities (reset local DB; optional raw export for debugging)
+- [ ] Add web app manifest (name, theme, icons, start URL, display mode)
+- [ ] Generate/commit required PWA icons (common sizes for iOS/Android/desktop)
+- [ ] Add service worker registration with a clear update strategy
+- [ ] Implement caching strategy (app shell + hashed assets; offline navigation works)
+- [ ] Add offline UX states (offline indicator; graceful failures for future network features)
+- [ ] Implement core balance calculations (account balances, net worth)
+- [ ] Implement jar allocation calculations (per-jar totals) and “Unallocated” calculation
+- [ ] Add invariant checks/tests (e.g. net worth vs allocations consistency on sample datasets)
+
 ### Epic 2: Accounts & transfers (where money lives)
 
 - **Account management**: create/edit/archive, opening balances.
