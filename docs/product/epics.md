@@ -80,4 +80,3 @@
 - **Speed**: instant offline startup, large-ledger performance.
 - **Accessibility**: keyboard-first entry, screen reader support.
 - **Tests**: calculation invariants (net worth vs allocations), import parsing, transfer linkage.
-

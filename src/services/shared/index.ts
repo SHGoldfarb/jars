@@ -1,3 +1,2 @@
-export * from './decimal'
-export * from './money'
-
+export * from './decimal';
+export * from './money';
