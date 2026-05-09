@@ -21,7 +21,7 @@
 
 #### Epic 1 checklist
 
-- [ ] Define core entities + stable IDs (accounts, jars, transactions, allocations, import batches, settings)
+- [x] Define core entities
 - [ ] Design IndexedDB schema v1 (stores + indexes based on expected queries)
 - [ ] Implement a versioned migration framework (new DB + upgrades)
 - [ ] Build a typed repository layer (CRUD, batch writes, IDB transactions)

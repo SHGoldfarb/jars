@@ -18,7 +18,6 @@ export const computeBalances = (
     transfers: Transfer[],
     allocations: Allocation[],
 ): Balances => {
-    // Runtime validation at the boundary (cheap + catches import/UI bugs early).
     validateApplicationState(allocations, transfers, transactions)
 
     const accounts = {} as Record<AccountId, CurrencyAmount>
