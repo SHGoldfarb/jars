@@ -30,6 +30,9 @@ function App() {
         >
           Count is {count}
         </button>
+        <div>
+          <p>Hi! this is Sam.</p>
+        </div>
       </section>
 
       <div className="ticks"></div>
