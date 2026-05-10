@@ -13,9 +13,9 @@ export type ExpenseCategoryId = Brand<string, 'ExpenseCategoryId'>;
 
 export type ISODateTimeString = string;
 
-export type Archivable = {
+export interface Archivable {
   archivedAtISO?: ISODateTimeString;
-};
+}
 
 type CategoryBase = Archivable & {
   name: string;

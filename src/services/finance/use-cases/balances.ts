@@ -3,10 +3,10 @@ import type { CurrencyAmount } from '../../shared';
 import { currencies } from '../../shared';
 import { validateApplicationState } from '../policies';
 
-type Balances = {
+interface Balances {
   accounts: Record<AccountId, CurrencyAmount>;
   jars: Record<JarId, CurrencyAmount>;
-};
+}
 
 const addToRecord = <K extends string>(
   record: Record<K, CurrencyAmount>,
@@ -14,7 +14,7 @@ const addToRecord = <K extends string>(
   delta: CurrencyAmount
 ) => {
   const current = record[key];
-  record[key] = current ? currencies.sum(current, delta) : delta;
+  record[key] = currencies.sum(current, delta);
 };
 
 export const computeBalances = (
