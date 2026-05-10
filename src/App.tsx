@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { UpdatePrompt } from './app/index';
+
 import reactLogo from './assets/react.svg';
 import viteLogo from './assets/vite.svg';
 import heroImg from './assets/hero.png';
@@ -31,8 +33,9 @@ function App() {
           Count is {count}
         </button>
         <div>
-          <p>Hi! this is Sam.</p>
+          <p>Hi! this is Sam. (4)</p>
         </div>
+        <UpdatePrompt />
       </section>
 
       <div className="ticks"></div>
