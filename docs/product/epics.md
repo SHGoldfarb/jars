@@ -7,9 +7,9 @@ React + TypeScript scaffold, IndexedDB schema design (accounts, transactions, ja
 ### Acceptance Criteria
 
 - [x] React + TypeScript project is scaffolded and runs locally without errors
-- [ ] IndexedDB is initialized on first load with object stores for: `accounts`, `transactions`, `jars`, `categories`
-- [ ] All object stores have defined schemas with typed fields and indexes (e.g. transactions indexed by account, jar, category, date)
-- [ ] A data access layer (DAL) abstracts all IndexedDB reads and writes behind async functions — no raw IndexedDB calls outside of it
+- [x] IndexedDB is initialized on first load with object stores for all entities
+- [x] All object stores have defined schemas with typed fields and indexes.
+- [x] A data access layer (DAL) abstracts all IndexedDB reads and writes behind async functions — no raw IndexedDB calls outside of it
 - [ ] App is registered as a PWA with a service worker that enables full offline functionality
 - [ ] App can be installed on mobile
 - [ ] Client-side routing is configured with placeholder routes for: Dashboard, Accounts, Jars, Categories
