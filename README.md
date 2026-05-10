@@ -11,6 +11,11 @@ Your cash sits in real accounts — your wallet, your bank, your savings account
 - **Categories** — Tag every transaction with a category (groceries, rent, salary, freelance, etc.) to see where your money is actually coming from and going.
 - **Dashboard** — See your full financial picture at a glance: account balances, jar progress, and spending and income breakdowns over time.
 
+### Specifications
+
+- **Provides**: offline support
+- **Uses**: react, typescript, indexedDB
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
