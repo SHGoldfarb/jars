@@ -8,8 +8,7 @@ export type JarId = Brand<string, 'JarId'>;
 export type TransactionId = Brand<string, 'TransactionId'>;
 export type TransferId = Brand<string, 'TransferId'>;
 export type AllocationId = Brand<string, 'AllocationId'>;
-export type IncomeCategoryId = Brand<string, 'IncomeCategoryId'>;
-export type ExpenseCategoryId = Brand<string, 'ExpenseCategoryId'>;
+export type CategoryId = Brand<string, 'CategoryId'>;
 
 export type ISODateTimeString = string;
 
@@ -18,16 +17,21 @@ export interface Archivable {
 }
 
 type CategoryBase = Archivable & {
+  id: CategoryId;
   name: string;
 };
 
+export type CategoryKind = 'income' | 'expense';
+
 export type IncomeCategory = CategoryBase & {
-  id: IncomeCategoryId;
+  kind: 'income';
 };
 
 export type ExpenseCategory = CategoryBase & {
-  id: ExpenseCategoryId;
+  kind: 'expense';
 };
+
+export type Category = IncomeCategory | ExpenseCategory;
 
 export type Account = Archivable & {
   id: AccountId;
@@ -49,16 +53,15 @@ type TransactionBase = Archivable & {
   amount: CurrencyAmount; // Always positive; sign is derived from kind.
   dateISO: string;
   notes: string;
+  categoryId: CategoryId;
 };
 
 export type IncomeTransaction = TransactionBase & {
   kind: 'income';
-  categoryId: IncomeCategoryId;
 };
 
 export type ExpenseTransaction = TransactionBase & {
   kind: 'expense';
-  categoryId: ExpenseCategoryId;
 };
 
 export type Transaction = IncomeTransaction | ExpenseTransaction;
