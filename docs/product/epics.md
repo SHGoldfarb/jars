@@ -10,8 +10,8 @@ React + TypeScript scaffold, IndexedDB schema design (accounts, transactions, ja
 - [x] IndexedDB is initialized on first load with object stores for all entities
 - [x] All object stores have defined schemas with typed fields and indexes.
 - [x] A data access layer (DAL) abstracts all IndexedDB reads and writes behind async functions — no raw IndexedDB calls outside of it
-- [ ] App is registered as a PWA with a service worker that enables full offline functionality
-- [ ] App can be installed on mobile
+- [x] App is registered as a PWA with a service worker that enables full offline functionality
+- [x] App can be installed on mobile
 - [ ] Client-side routing is configured with placeholder routes for: Dashboard, Accounts, Jars, Categories
 - [ ] Global state management is set up and can reflect changes from the DAL across components
 - [ ] No data is lost on page refresh
