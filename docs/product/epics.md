@@ -21,18 +21,38 @@ React + TypeScript scaffold, IndexedDB schema design (accounts, transactions, ja
 
 Create/edit/delete accounts. Manual transaction entry (amount, date, description, type income/expense, category, jar). Account balance calculation from transactions.
 
+### Acceptance Criteria
+
+WIP
+
 ## Epic 3 — Jars
 
 Create/edit/delete jars with a target amount (optional). Allocate/deallocate money from a jar. Jar balance derived from allocations, not from moving money between accounts. Visual progress toward goal.
+
+### Acceptance Criteria
+
+WIP
 
 ## Epic 4 — Categories
 
 Create/edit/delete custom categories, scoped to income or expense. Assign a category when logging a transaction.
 
+### Acceptance Criteria
+
+WIP
+
 ## Epic 5 — Dashboard
 
 Total balance across all accounts, jar summaries, recent transactions, spending breakdown by category (chart), income vs expense overview for a selected period.
 
+### Acceptance Criteria
+
+WIP
+
 ## Epic 6 — Data Management
 
 Export data (JSON or CSV), import/restore from backup, clear all data. Since there's no backend, this is the user's only safety net.
+
+### Acceptance Criteria
+
+WIP

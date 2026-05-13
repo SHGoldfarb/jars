@@ -6,14 +6,19 @@ Your cash sits in real accounts — your wallet, your bank, your savings account
 
 ### What Jars does
 
+#### Key features
+
 - **Accounts** — Define your real-world money containers (bank accounts, cash, etc.) and log transactions manually.
 - **Jars** — Create budget envelopes or savings goals, then pour money into them. A jar labeled "Holidays" or "Monthly Expenses" holds a portion of your real account balances — no transfers needed. When you receive money, you decide which jar it goes into.
 - **Categories** — Tag every transaction with a category (groceries, rent, salary, freelance, etc.) to see where your money is actually coming from and going.
-- **Offline support** - You just need access to the internet the first time you visit. Then it's saved in your device.
+
+#### Other functionality
+
+- **Offline support**
 
 ### Development
 
-- **Key technologies**: react, typescript, vite-pwa, Dexie.
+- **Key technologies**: react, typescript, vite-pwa, Dexie, Tailwind CSS, shadcn.
 - **Key devexp technologies**: eslint, prettier. Developed with vscode.
 - **Modeling**:
   - Entities:
