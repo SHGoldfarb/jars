@@ -32,8 +32,8 @@ export const Navbar = () => {
       <NavigationMenu className="mx-auto">
         <NavigationMenuList className="">
           {routes.map((route) => (
-            <NavigationMenuItem className="">
-              <NavigationMenuLink>
+            <NavigationMenuItem className="" key={route.name}>
+              <NavigationMenuLink asChild>
                 <Link to={route.href} className="[&.active]:font-bold">
                   {route.name}
                 </Link>
