@@ -53,6 +53,13 @@ export default defineConfig([
 
       // Accessibility
       ...jsxA11y.configs.recommended.rules,
+
+      '@typescript-eslint/only-throw-error': [
+        'error',
+        {
+          allow: [{ name: 'redirect' }],
+        },
+      ],
     },
   },
   prettier,

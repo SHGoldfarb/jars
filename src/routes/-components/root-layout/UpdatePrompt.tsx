@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 import { registerSW } from 'virtual:pwa-register';
 
@@ -25,22 +26,24 @@ export const UpdatePrompt = () => {
   }
 
   return (
-    <div>
+    <div className="flex flex-col items-center">
       <p>New version available!</p>
-      <button
-        onClick={() => {
-          void handleUpdate();
-        }}
-      >
-        {loading ? 'Updating...' : 'Update'}
-      </button>
-      <button
-        onClick={() => {
-          setDismissed(true);
-        }}
-      >
-        Dismiss
-      </button>
+      <div>
+        <Button
+          onClick={() => {
+            void handleUpdate();
+          }}
+        >
+          {loading ? 'Updating...' : 'Update'}
+        </Button>
+        <Button
+          onClick={() => {
+            setDismissed(true);
+          }}
+        >
+          Dismiss
+        </Button>
+      </div>
     </div>
   );
 };

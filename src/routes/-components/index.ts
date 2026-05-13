@@ -1,3 +1,5 @@
+export * from './Accounts';
+export * from './Categories';
+export * from './Jars';
+export * from './Movements';
 export * from './RootLayout';
-export * from './IndexComponent';
-export * from './About';

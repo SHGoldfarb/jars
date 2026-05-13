@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { IndexComponent } from './-components';
+import { redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/')({
-  component: IndexComponent,
+  loader: () => {
+    throw redirect({ to: '/movements' });
+  },
 });
