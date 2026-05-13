@@ -12,10 +12,10 @@ React + TypeScript scaffold, IndexedDB schema design (accounts, transactions, ja
 - [x] A data access layer (DAL) abstracts all IndexedDB reads and writes behind async functions — no raw IndexedDB calls outside of it
 - [x] App is registered as a PWA with a service worker that enables full offline functionality
 - [x] App can be installed on mobile
-- [ ] Client-side routing is configured with placeholder routes for: Movements, Accounts, Jars, Categories
-- [ ] Global state management is set up and can reflect changes from the DAL across components
-- [ ] No data is lost on page refresh
-- [ ] App builds for production without errors or type errors
+- [x] Client-side routing is configured with placeholder routes for: Movements, Accounts, Jars, Categories
+- [x] Global state management is set up and can reflect changes from the DAL across components
+- [x] No data is lost on page refresh
+- [x] App builds for production without errors or type errors
 
 ## Epic 2 — Accounts
 
