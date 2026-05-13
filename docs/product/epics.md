@@ -19,15 +19,20 @@ React + TypeScript scaffold, IndexedDB schema design (accounts, transactions, ja
 
 ## Epic 2 — Accounts
 
-Create/edit/delete accounts. Manual transaction entry (amount, date, description, type income/expense, category, jar). Account balance calculation from transactions.
+Create/edit/delete accounts.
 
 ### Acceptance Criteria
 
-WIP
+- [ ] User can create an account with a name
+- [ ] User can edit an account's name
+- [ ] User can delete an account
+- [ ] All accounts are listed on the Accounts screen
+- [ ] Each account displays its name
+- [ ] Accounts persist across page refreshes
 
 ## Epic 3 — Jars
 
-Create/edit/delete jars with a target amount (optional). Allocate/deallocate money from a jar. Jar balance derived from allocations, not from moving money between accounts. Visual progress toward goal.
+Create/edit/delete jars.
 
 ### Acceptance Criteria
 
@@ -35,23 +40,55 @@ WIP
 
 ## Epic 4 — Categories
 
-Create/edit/delete custom categories, scoped to income or expense. Assign a category when logging a transaction.
+Create/edit/delete categories, scoped to income or expense.
 
 ### Acceptance Criteria
 
 WIP
 
-## Epic 5 — Dashboard
+## Epic 5 — Transactions
 
-Total balance across all accounts, jar summaries, recent transactions, spending breakdown by category (chart), income vs expense overview for a selected period.
+Manual transaction entry (amount, date, description, type income/expense, category, jar).
 
 ### Acceptance Criteria
 
 WIP
 
-## Epic 6 — Data Management
+## Epic 6 — Transfers
 
-Export data (JSON or CSV), import/restore from backup, clear all data. Since there's no backend, this is the user's only safety net.
+Move money between accounts.
+
+### Acceptance Criteria
+
+WIP
+
+## Epic 7 — Allocations
+
+Move money between jars.
+
+### Acceptance Criteria
+
+WIP
+
+## Epic 8 — Balances
+
+Account balance is shown, derived from transactions and transfers. Jar balance is shown, derived from transactions and allocations.
+
+### Acceptance Criteria
+
+WIP
+
+## Epic 9 — Data Management
+
+Export data (JSON or CSV), import/restore from backup. Clear all data.
+
+### Acceptance Criteria
+
+WIP
+
+## Epic 10 — Statistics
+
+View incomes/expenses breakdown, evolution, etc.
 
 ### Acceptance Criteria
 
