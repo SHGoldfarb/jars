@@ -57,7 +57,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      tslib: path.resolve(__dirname, './node_modules/tslib/tslib.es6.js'),
+      tslib: path.resolve(__dirname, 'tslib/tslib.es6.js'),
     },
   },
 });
