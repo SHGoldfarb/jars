@@ -1,11 +1,11 @@
-import type { Allocation, AccountId, JarId, Transaction, Transfer } from '../model';
+import type { Allocation, Transaction, Transfer } from '../model';
 import type { CurrencyAmount } from '../../shared';
 import { currencies } from '../../shared';
 import { validateApplicationState } from '../policies';
 
 interface Balances {
-  accounts: Record<AccountId, CurrencyAmount>;
-  jars: Record<JarId, CurrencyAmount>;
+  accounts: Record<string, CurrencyAmount>;
+  jars: Record<string, CurrencyAmount>;
 }
 
 const addToRecord = <K extends string>(
@@ -24,8 +24,8 @@ export const computeBalances = (
 ): Balances => {
   validateApplicationState(allocations, transfers, transactions);
 
-  const accounts = {} as Record<AccountId, CurrencyAmount>;
-  const jars = {} as Record<JarId, CurrencyAmount>;
+  const accounts = {} as Record<string, CurrencyAmount>;
+  const jars = {} as Record<string, CurrencyAmount>;
 
   for (const tx of transactions) {
     const signedAmount = tx.kind === 'income' ? tx.amount : currencies.negate(tx.amount);
