@@ -23,7 +23,8 @@
 
     /* Alias for shadcn */
     "paths": {
-      "@/*": ["./src/*"]
+      "src/*": ["./src/*"],
+      "components/*": ["./src/components/*"]
     }
   },
   "include": ["src"]

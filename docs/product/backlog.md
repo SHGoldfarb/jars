@@ -1,3 +1,6 @@
 # Backlog
 
-- App can be installed on desktop
+- Desktop support
+- Sync support (open in desktop browser)
+- dark-light modes
+- multi currency

@@ -1,15 +1,5 @@
 import type { CurrencyAmount } from '../../shared';
 
-type Brand<K, T> = K & { readonly __brand: T };
-
-// IDs as branded strings to reduce accidental mixing of entity IDs.
-export type AccountId = Brand<string, 'AccountId'>;
-export type JarId = Brand<string, 'JarId'>;
-export type TransactionId = Brand<string, 'TransactionId'>;
-export type TransferId = Brand<string, 'TransferId'>;
-export type AllocationId = Brand<string, 'AllocationId'>;
-export type CategoryId = Brand<string, 'CategoryId'>;
-
 export type ISODateTimeString = string;
 
 export interface Archivable {
@@ -17,7 +7,7 @@ export interface Archivable {
 }
 
 type CategoryBase = Archivable & {
-  id: CategoryId;
+  id: string;
   name: string;
 };
 
@@ -34,26 +24,26 @@ export type ExpenseCategory = CategoryBase & {
 export type Category = IncomeCategory | ExpenseCategory;
 
 export type Account = Archivable & {
-  id: AccountId;
+  id: string;
   name: string;
 };
 
 export type Jar = Archivable & {
-  id: JarId;
+  id: string;
   name: string;
 };
 
 export type TransactionKind = 'income' | 'expense';
 
 type TransactionBase = Archivable & {
-  id: TransactionId;
+  id: string;
   kind: TransactionKind;
-  accountId: AccountId;
-  jarId: JarId;
+  accountId: string;
+  jarId: string;
   amount: CurrencyAmount; // Always positive; sign is derived from kind.
   dateISO: string;
   notes: string;
-  categoryId: CategoryId;
+  categoryId: string;
 };
 
 export type IncomeTransaction = TransactionBase & {
@@ -67,19 +57,19 @@ export type ExpenseTransaction = TransactionBase & {
 export type Transaction = IncomeTransaction | ExpenseTransaction;
 
 export type Transfer = Archivable & {
-  id: TransferId;
+  id: string;
   dateISO: string;
-  originAccountId: AccountId;
-  destinationAccountId: AccountId;
+  originAccountId: string;
+  destinationAccountId: string;
   notes: string;
   amount: CurrencyAmount; // Always positive.
 };
 
 export type Allocation = Archivable & {
-  id: AllocationId;
+  id: string;
   dateISO: string;
-  originJarId: JarId;
-  destinationJarId: JarId;
+  originJarId: string;
+  destinationJarId: string;
   notes: string;
   amount: CurrencyAmount; // Always positive.
 };

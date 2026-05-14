@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { NavigationMenu as NavigationMenuPrimitive } from 'radix-ui';
 
-import { cn } from '@/lib/utils';
+import { cn } from 'src/lib/utils';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons';
 import { navigationMenuTriggerStyle } from './variants';

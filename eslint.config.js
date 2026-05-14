@@ -57,7 +57,7 @@ export default defineConfig([
       '@typescript-eslint/only-throw-error': [
         'error',
         {
-          allow: [{ name: 'redirect' }],
+          allow: [{ from: 'file', name: ['Redirect'] }],
         },
       ],
     },

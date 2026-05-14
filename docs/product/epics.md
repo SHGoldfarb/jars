@@ -1,6 +1,6 @@
 # Epics
 
-## Epic 1 — Project Setup
+## Epic 1 — Project Setup [DONE]
 
 React + TypeScript scaffold, IndexedDB schema design (accounts, transactions, jars, categories), offline PWA config, routing, and global state management.
 
@@ -17,7 +17,7 @@ React + TypeScript scaffold, IndexedDB schema design (accounts, transactions, ja
 - [x] No data is lost on page refresh
 - [x] App builds for production without errors or type errors
 
-## Epic 2 — Accounts
+## Epic 2 — Accounts [IN PROGRESS]
 
 Create/edit/delete accounts.
 
@@ -26,7 +26,7 @@ Create/edit/delete accounts.
 - [ ] User can create an account with a name
 - [ ] User can edit an account's name
 - [ ] User can delete an account
-- [ ] All accounts are listed on the Accounts screen
+- [x] All accounts are listed on the Accounts screen
 - [ ] Each account displays its name
 - [ ] Accounts persist across page refreshes
 
@@ -52,7 +52,11 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 
 ### Acceptance Criteria
 
-WIP
+- [ ] ...
+- [ ] Can't delete accounts when they have balance.
+- [ ] Can't delete jars when they have balance.
+- [ ] If a deleted account acquires balance (e.g. by editing or deleteing transaction) it is magically restored.
+- [ ] If a deleted jar acquires balance (e.g. by editing or deleteing transaction) it is magically restored.
 
 ## Epic 6 — Transfers
 
