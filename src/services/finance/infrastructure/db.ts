@@ -1,6 +1,6 @@
 import { Dexie } from 'dexie';
 
-const db = new Dexie('FriendsDatabase');
+const db = new Dexie('JarsMainDatabase');
 
 db.version(2).stores({
   accounts: '&id',
@@ -11,4 +11,15 @@ db.version(2).stores({
   transfers: '&id, originAccountId, destinationAccountId',
 });
 
-export { db };
+const getAccounts = () => {
+  return db.table('accounts').toArray();
+};
+
+const createAccount = (account: { id: string }) => {
+  return db.table('accounts').add(account);
+};
+
+export const DB = {
+  getAccounts,
+  createAccount,
+};

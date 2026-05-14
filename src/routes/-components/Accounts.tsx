@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Button } from 'components/ui/button';
 import { Item, ItemActions, ItemContent, ItemGroup, ItemTitle } from 'components/ui/item';
 import type { Account } from 'src/services/finance';
+import { useAccounts } from 'src/hooks/useAccounts';
 
 const AccountItem = ({ account }: { account: Account }) => {
   return (
@@ -24,14 +24,8 @@ const AccountItem = ({ account }: { account: Account }) => {
   );
 };
 
-const MOCK_ACCOUNTS: Account[] = [
-  { id: '1', name: 'Wallet' },
-  { id: '2', name: 'Bank Account' },
-  { id: '3', name: 'Savings' },
-];
-
 export const Accounts = () => {
-  const [accounts] = useState<Account[]>(MOCK_ACCOUNTS);
+  const { accounts } = useAccounts();
 
   return (
     <ItemGroup className="p-6 max-w-lg mx-auto">

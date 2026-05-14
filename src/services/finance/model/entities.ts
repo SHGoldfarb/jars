@@ -23,11 +23,6 @@ export type ExpenseCategory = CategoryBase & {
 
 export type Category = IncomeCategory | ExpenseCategory;
 
-export type Account = Archivable & {
-  id: string;
-  name: string;
-};
-
 export type Jar = Archivable & {
   id: string;
   name: string;

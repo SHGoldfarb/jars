@@ -25,7 +25,9 @@
     "paths": {
       "src/*": ["./src/*"],
       "components/*": ["./src/components/*"]
-    }
+    },
+
+    "strict": true
   },
   "include": ["src"]
 }

@@ -27,8 +27,8 @@ Create/edit/delete accounts.
 - [ ] User can edit an account's name
 - [ ] User can delete an account
 - [x] All accounts are listed on the Accounts screen
-- [ ] Each account displays its name
-- [ ] Accounts persist across page refreshes
+- [x] Each account displays its name
+- [x] Accounts persist across page refreshes
 
 ## Epic 3 — Jars
 
