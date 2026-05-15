@@ -24,11 +24,13 @@ export const AccountForm = ({
   title,
   onSubmit,
   onCancelRoute,
+  onDelete,
 }: {
   initialName?: string;
   title: string;
   onSubmit: (name: string) => void;
   onCancelRoute: string;
+  onDelete?: () => void;
 }) => {
   const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -65,6 +67,11 @@ export const AccountForm = ({
                 Cancel
               </Button>
             </Link>
+            {onDelete ? (
+              <Button variant="destructive" type="button" onClick={onDelete}>
+                Delete
+              </Button>
+            ) : null}
           </Field>
         </FieldGroup>
       </form>

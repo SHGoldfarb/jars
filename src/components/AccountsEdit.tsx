@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router';
 import { AccountForm } from './AccountForm';
-import { updateAccount } from 'src/services/finance';
+import { deleteAccount, updateAccount } from 'src/services/finance';
 import { useParams } from '@tanstack/react-router';
 import { useAccount } from 'src/hooks/useAccount';
 
@@ -21,6 +21,16 @@ export const AccountsEdit = () => {
       console.error('Failed to update account:', error);
     }
   };
+
+  const handleDelete = async () => {
+    try {
+      await deleteAccount(account.id);
+      await navigate({ to: '/accounts' });
+    } catch (error) {
+      console.error('Failed to delete account:', error);
+    }
+  };
+
   return (
     <AccountForm
       title="Edit Account"
@@ -29,6 +39,9 @@ export const AccountsEdit = () => {
       }}
       onCancelRoute="/accounts"
       initialName={account.name}
+      onDelete={() => {
+        void handleDelete();
+      }}
     />
   );
 };
