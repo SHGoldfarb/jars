@@ -11,20 +11,6 @@ db.version(2).stores({
   transfers: '&id, originAccountId, destinationAccountId',
 });
 
-const getAccounts = () => {
-  return db.table('accounts').toArray();
-};
-
-const createAccount = (account: { id: string }) => {
-  return db.table('accounts').add(account);
-};
-
-const updateAccount = (account: { id: string }) => {
-  return db.table('accounts').put(account);
-};
-
 export const DB = {
-  getAccounts,
-  createAccount,
-  updateAccount,
+  accounts: db.table('accounts'),
 };

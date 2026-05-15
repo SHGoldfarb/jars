@@ -3,8 +3,9 @@ import { Button } from 'components/ui/button';
 import { Item, ItemActions, ItemContent, ItemGroup, ItemTitle } from 'components/ui/item';
 import { useAccounts } from 'src/hooks/useAccounts';
 import { Link } from '@tanstack/react-router';
+import { deleteAccount } from 'src/services/finance';
 
-const AccountItem = ({ name }: { name: string }) => {
+const AccountItem = ({ name, id }: { name: string; id: string }) => {
   return (
     <Item variant="outline">
       <ItemContent>
@@ -16,6 +17,9 @@ const AccountItem = ({ name }: { name: string }) => {
           size="icon"
           aria-label={`Delete ${name}`}
           className="text-muted-foreground hover:text-destructive"
+          onClick={() => {
+            void deleteAccount(id);
+          }}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -39,7 +43,7 @@ export const Accounts = () => {
         </ItemActions>
       </Item>
       {accounts.map((account) => (
-        <AccountItem key={account.id} name={account.name} />
+        <AccountItem key={account.id} name={account.name} id={account.id} />
       ))}
     </ItemGroup>
   );

@@ -2,14 +2,30 @@ import { generateId } from 'src/lib/utils';
 import { DB } from '../infrastructure';
 import { Account } from '../model';
 
-export const getAccounts = async () => {
-  const accounts = await DB.getAccounts();
+const table = DB.accounts;
+
+export const getAccounts = async ({
+  includeArchived = false,
+}: { includeArchived?: boolean } = {}) => {
+  const accounts = await table.toArray();
   return accounts
     .filter((account) => Account.safeParse(account).success)
-    .map((account) => Account.parse(account));
+    .map((account) => Account.parse(account))
+    .filter((account) => includeArchived || !account.archivedAtISO);
 };
 
 export const createAccount = async ({ name }: { name: string }) => {
   const parsedAccount = Account.parse({ name, id: generateId() });
-  return await DB.createAccount(parsedAccount);
+  return await table.add(parsedAccount);
+};
+
+export const updateAccount = async (account: Account) => {
+  const parsedAccount = Account.parse(account);
+  return await table.put(parsedAccount);
+};
+
+export const deleteAccount = async (accountId: string) => {
+  const account = Account.parse(await table.get(accountId));
+  account.archivedAtISO = new Date().toISOString();
+  return await table.put(account);
 };

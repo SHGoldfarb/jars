@@ -15,13 +15,18 @@ import { createAccount } from 'src/services/finance';
 
 // TODO: use a form library (tanstack form?)
 
+const appFormPrefix = 'jars-app-form';
+
+const fieldIds = {
+  name: `${appFormPrefix}-account-name`,
+};
+
 export const AccountsNew = () => {
   const navigate = useNavigate();
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!(e.currentTarget instanceof HTMLFormElement)) return;
     const data = new FormData(e.currentTarget);
-    const name = data.get('name');
+    const name = data.get(fieldIds.name);
     if (!name || typeof name !== 'string') return;
 
     try {
@@ -44,8 +49,13 @@ export const AccountsNew = () => {
             <FieldDescription>WIP description</FieldDescription>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="name">Account Name</FieldLabel>
-                <Input id="name" name="name" placeholder="Savings Account" required />
+                <FieldLabel htmlFor={fieldIds.name}>Account Name</FieldLabel>
+                <Input
+                  id={fieldIds.name}
+                  name={fieldIds.name}
+                  placeholder="Savings Account"
+                  required
+                />
                 <FieldDescription>WIP description</FieldDescription>
               </Field>
             </FieldGroup>
