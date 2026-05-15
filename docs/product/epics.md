@@ -23,7 +23,7 @@ Create/edit/delete accounts.
 
 ### Acceptance Criteria
 
-- [ ] User can create an account with a name
+- [x] User can create an account with a name
 - [ ] User can edit an account's name
 - [ ] User can delete an account
 - [x] All accounts are listed on the Accounts screen
