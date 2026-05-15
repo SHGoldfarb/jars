@@ -55,8 +55,8 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 - [ ] ...
 - [ ] Can't delete accounts when they have balance.
 - [ ] Can't delete jars when they have balance.
-- [ ] If a deleted account acquires balance (e.g. by editing or deleteing transaction) it is magically restored.
-- [ ] If a deleted jar acquires balance (e.g. by editing or deleteing transaction) it is magically restored.
+- [ ] If a deleted account acquires balance (e.g. by editing transaction) it is magically restored.
+- [ ] If a deleted jar acquires balance (e.g. by editing transaction) it is magically restored.
 
 ## Epic 6 — Transfers
 
@@ -97,3 +97,11 @@ View incomes/expenses breakdown, evolution, etc.
 ### Acceptance Criteria
 
 WIP
+
+## Backlog
+
+- Desktop support
+- Sync support (open in desktop browser and keep synced with phone)
+- switch between dark/light modes
+- multi currency
+- localization (language, money amount format)
