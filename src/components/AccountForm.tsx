@@ -50,6 +50,8 @@ export const AccountForm = ({
               <Field>
                 <FieldLabel htmlFor={fieldIds.name}>Account Name</FieldLabel>
                 <Input
+                  // eslint-disable-next-line jsx-a11y/no-autofocus -- user navigates here manually -> autofocus is fine
+                  autoFocus
                   id={fieldIds.name}
                   name={fieldIds.name}
                   placeholder="Savings Account"
