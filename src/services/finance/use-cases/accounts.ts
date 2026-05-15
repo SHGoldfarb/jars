@@ -29,3 +29,7 @@ export const deleteAccount = async (accountId: string) => {
   account.archivedAtISO = new Date().toISOString();
   return await table.put(account);
 };
+
+export const getAccount = async (accountId: string) => {
+  return Account.parse(await table.get(accountId));
+};

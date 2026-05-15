@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react';
+import { Pen, Trash2 } from 'lucide-react';
 import { Button } from 'components/ui/button';
 import { Item, ItemActions, ItemContent, ItemGroup, ItemTitle } from 'components/ui/item';
 import { useAccounts } from 'src/hooks/useAccounts';
@@ -12,6 +12,16 @@ const AccountItem = ({ name, id }: { name: string; id: string }) => {
         <ItemTitle>{name}</ItemTitle>
       </ItemContent>
       <ItemActions>
+        <Link to={`/accounts/$accountId/edit`} params={{ accountId: id }}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Edit ${name}`}
+            className="text-muted-foreground hover:text-destructive"
+          >
+            <Pen className="h-4 w-4" />
+          </Button>
+        </Link>
         <Button
           variant="ghost"
           size="icon"
