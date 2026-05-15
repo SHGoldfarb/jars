@@ -1,3 +1,4 @@
+import { generateId } from 'src/lib/utils';
 import { DB } from '../infrastructure';
 import { Account } from '../model';
 
@@ -8,6 +9,7 @@ export const getAccounts = async () => {
     .map((account) => Account.parse(account));
 };
 
-export const createAccount = async (account: Account) => {
-  return await DB.createAccount(account);
+export const createAccount = async ({ name }: { name: string }) => {
+  const parsedAccount = Account.parse({ name, id: generateId() });
+  return await DB.createAccount(parsedAccount);
 };

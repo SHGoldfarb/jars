@@ -12,8 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as MovementsRouteImport } from './routes/movements'
 import { Route as JarsRouteImport } from './routes/jars'
 import { Route as CategoriesRouteImport } from './routes/categories'
-import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountsIndexRouteImport } from './routes/accounts/index'
+import { Route as AccountsNewRouteImport } from './routes/accounts/new'
 
 const MovementsRoute = MovementsRouteImport.update({
   id: '/movements',
@@ -30,53 +31,81 @@ const CategoriesRoute = CategoriesRouteImport.update({
   path: '/categories',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AccountsRoute = AccountsRouteImport.update({
-  id: '/accounts',
-  path: '/accounts',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountsIndexRoute = AccountsIndexRouteImport.update({
+  id: '/accounts/',
+  path: '/accounts/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountsNewRoute = AccountsNewRouteImport.update({
+  id: '/accounts/new',
+  path: '/accounts/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/accounts': typeof AccountsRoute
   '/categories': typeof CategoriesRoute
   '/jars': typeof JarsRoute
   '/movements': typeof MovementsRoute
+  '/accounts/new': typeof AccountsNewRoute
+  '/accounts/': typeof AccountsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/accounts': typeof AccountsRoute
   '/categories': typeof CategoriesRoute
   '/jars': typeof JarsRoute
   '/movements': typeof MovementsRoute
+  '/accounts/new': typeof AccountsNewRoute
+  '/accounts': typeof AccountsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/accounts': typeof AccountsRoute
   '/categories': typeof CategoriesRoute
   '/jars': typeof JarsRoute
   '/movements': typeof MovementsRoute
+  '/accounts/new': typeof AccountsNewRoute
+  '/accounts/': typeof AccountsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/accounts' | '/categories' | '/jars' | '/movements'
+  fullPaths:
+    | '/'
+    | '/categories'
+    | '/jars'
+    | '/movements'
+    | '/accounts/new'
+    | '/accounts/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/accounts' | '/categories' | '/jars' | '/movements'
-  id: '__root__' | '/' | '/accounts' | '/categories' | '/jars' | '/movements'
+  to:
+    | '/'
+    | '/categories'
+    | '/jars'
+    | '/movements'
+    | '/accounts/new'
+    | '/accounts'
+  id:
+    | '__root__'
+    | '/'
+    | '/categories'
+    | '/jars'
+    | '/movements'
+    | '/accounts/new'
+    | '/accounts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AccountsRoute: typeof AccountsRoute
   CategoriesRoute: typeof CategoriesRoute
   JarsRoute: typeof JarsRoute
   MovementsRoute: typeof MovementsRoute
+  AccountsNewRoute: typeof AccountsNewRoute
+  AccountsIndexRoute: typeof AccountsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -102,13 +131,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/accounts': {
-      id: '/accounts'
-      path: '/accounts'
-      fullPath: '/accounts'
-      preLoaderRoute: typeof AccountsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -116,15 +138,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/accounts/': {
+      id: '/accounts/'
+      path: '/accounts'
+      fullPath: '/accounts/'
+      preLoaderRoute: typeof AccountsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accounts/new': {
+      id: '/accounts/new'
+      path: '/accounts/new'
+      fullPath: '/accounts/new'
+      preLoaderRoute: typeof AccountsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AccountsRoute: AccountsRoute,
   CategoriesRoute: CategoriesRoute,
   JarsRoute: JarsRoute,
   MovementsRoute: MovementsRoute,
+  AccountsNewRoute: AccountsNewRoute,
+  AccountsIndexRoute: AccountsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

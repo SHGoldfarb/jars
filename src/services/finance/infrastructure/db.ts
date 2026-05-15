@@ -19,7 +19,12 @@ const createAccount = (account: { id: string }) => {
   return db.table('accounts').add(account);
 };
 
+const updateAccount = (account: { id: string }) => {
+  return db.table('accounts').put(account);
+};
+
 export const DB = {
   getAccounts,
   createAccount,
+  updateAccount,
 };

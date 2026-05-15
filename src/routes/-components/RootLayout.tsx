@@ -1,6 +1,7 @@
 import { Outlet } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import { Navbar, UpdatePrompt } from './root-layout';
+import { Navbar } from 'components/Navbar';
+import { UpdatePrompt } from 'components/UpdatePrompt';
 
 export const RootLayout = () => (
   <>
