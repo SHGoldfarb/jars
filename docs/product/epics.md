@@ -84,7 +84,7 @@ WIP
 
 ## Epic 9 — Data Management
 
-Export data (JSON or CSV), import/restore from backup. Clear all data.
+Create backup, restore from backup (JSON). Export data (CSV). Configure automatic backup to cloud (Google Drive?). Clear all data.
 
 ### Acceptance Criteria
 
