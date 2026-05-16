@@ -34,7 +34,7 @@ Create/edit/delete accounts.
 
 - [x] Refactor to use tanstack form
 
-## Epic 3 — Jars [IN PROGRESS]
+## Epic 3 — Jars [DONE]
 
 Create/edit/delete jars.
 
@@ -47,13 +47,19 @@ Create/edit/delete jars.
 - [x] Each jar displays its name
 - [x] Jars persist across page refreshes
 
-## Epic 4 — Categories
+## Epic 4 — Categories [IN PROGRESS]
 
 Create/edit/delete categories, scoped to income or expense.
 
 ### Acceptance Criteria
 
-WIP
+- [ ] User can create a category with a name and a kind (`income` or `expense`)
+- [ ] User can edit a category's name
+- [ ] User can delete a category
+- [ ] All categories are listed on the Categories screen
+- [ ] Income and expense categories are visually grouped and labeled
+- [ ] Each category displays its name
+- [ ] Categories persist across page refreshes
 
 ## Epic 5 — Transactions
 
@@ -64,6 +70,7 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 - [ ] ...
 - [ ] Can't delete accounts when they have balance.
 - [ ] Can't delete jars when they have balance.
+- [ ] WIP Can delete categories when they have assigned transactions? decide this and implement.
 - [ ] If a deleted account acquires balance (e.g. by editing transaction) it is magically restored.
 - [ ] If a deleted jar acquires balance (e.g. by editing transaction) it is magically restored.
 
