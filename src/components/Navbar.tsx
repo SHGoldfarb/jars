@@ -7,26 +7,7 @@ import {
 
 import { Link } from '@tanstack/react-router';
 
-const routes = [
-  {
-    name: 'Movements',
-    href: '/movements',
-  },
-  {
-    name: 'Accounts',
-    href: '/accounts',
-  },
-  {
-    name: 'Jars',
-    href: '/jars',
-  },
-  {
-    name: 'Categories',
-    href: '/categories',
-  },
-];
-
-export const Navbar = () => {
+export const Navbar = ({ routes }: { routes: { name: string; href: string }[] }) => {
   return (
     <header className="border-b px-6 py-3 ">
       <NavigationMenu className="mx-auto">
