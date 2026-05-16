@@ -18,6 +18,7 @@ export const GenericNameForm = ({
   onCancelRoute,
   onDelete,
   fieldName,
+  placeholder,
 }: {
   initialName?: string;
   title: string;
@@ -25,6 +26,7 @@ export const GenericNameForm = ({
   onCancelRoute: string;
   onDelete?: () => void;
   fieldName: string;
+  placeholder: string;
 }) => {
   const form = useForm({
     defaultValues: {
@@ -58,7 +60,7 @@ export const GenericNameForm = ({
                       autoFocus
                       id={field.name}
                       name={field.name}
-                      placeholder="Savings Account"
+                      placeholder={placeholder}
                       required
                       value={field.state.value}
                       onBlur={field.handleBlur}

@@ -40,12 +40,12 @@ Create/edit/delete jars.
 
 ### Acceptance Criteria
 
-- [ ] User can create a jar with a name
-- [ ] User can edit a jar's name
-- [ ] User can delete a jar
-- [ ] All jars are listed on the Jars screen
-- [ ] Each jar displays its name
-- [ ] Jars persist across page refreshes
+- [x] User can create a jar with a name
+- [x] User can edit a jar's name
+- [x] User can delete a jar
+- [x] All jars are listed on the Jars screen
+- [x] Each jar displays its name
+- [x] Jars persist across page refreshes
 
 ## Epic 4 — Categories
 

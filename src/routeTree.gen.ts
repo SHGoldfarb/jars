@@ -10,21 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MovementsRouteImport } from './routes/movements'
-import { Route as JarsRouteImport } from './routes/jars'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as JarsIndexRouteImport } from './routes/jars/index'
 import { Route as AccountsIndexRouteImport } from './routes/accounts/index'
+import { Route as JarsNewRouteImport } from './routes/jars/new'
 import { Route as AccountsNewRouteImport } from './routes/accounts/new'
+import { Route as JarsJarIdEditRouteImport } from './routes/jars/$jarId.edit'
 import { Route as AccountsAccountIdEditRouteImport } from './routes/accounts/$accountId.edit'
 
 const MovementsRoute = MovementsRouteImport.update({
   id: '/movements',
   path: '/movements',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const JarsRoute = JarsRouteImport.update({
-  id: '/jars',
-  path: '/jars',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CategoriesRoute = CategoriesRouteImport.update({
@@ -37,14 +34,29 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JarsIndexRoute = JarsIndexRouteImport.update({
+  id: '/jars/',
+  path: '/jars/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountsIndexRoute = AccountsIndexRouteImport.update({
   id: '/accounts/',
   path: '/accounts/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JarsNewRoute = JarsNewRouteImport.update({
+  id: '/jars/new',
+  path: '/jars/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountsNewRoute = AccountsNewRouteImport.update({
   id: '/accounts/new',
   path: '/accounts/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JarsJarIdEditRoute = JarsJarIdEditRouteImport.update({
+  id: '/jars/$jarId/edit',
+  path: '/jars/$jarId/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountsAccountIdEditRoute = AccountsAccountIdEditRouteImport.update({
@@ -56,69 +68,83 @@ const AccountsAccountIdEditRoute = AccountsAccountIdEditRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/categories': typeof CategoriesRoute
-  '/jars': typeof JarsRoute
   '/movements': typeof MovementsRoute
   '/accounts/new': typeof AccountsNewRoute
+  '/jars/new': typeof JarsNewRoute
   '/accounts/': typeof AccountsIndexRoute
+  '/jars/': typeof JarsIndexRoute
   '/accounts/$accountId/edit': typeof AccountsAccountIdEditRoute
+  '/jars/$jarId/edit': typeof JarsJarIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/categories': typeof CategoriesRoute
-  '/jars': typeof JarsRoute
   '/movements': typeof MovementsRoute
   '/accounts/new': typeof AccountsNewRoute
+  '/jars/new': typeof JarsNewRoute
   '/accounts': typeof AccountsIndexRoute
+  '/jars': typeof JarsIndexRoute
   '/accounts/$accountId/edit': typeof AccountsAccountIdEditRoute
+  '/jars/$jarId/edit': typeof JarsJarIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/categories': typeof CategoriesRoute
-  '/jars': typeof JarsRoute
   '/movements': typeof MovementsRoute
   '/accounts/new': typeof AccountsNewRoute
+  '/jars/new': typeof JarsNewRoute
   '/accounts/': typeof AccountsIndexRoute
+  '/jars/': typeof JarsIndexRoute
   '/accounts/$accountId/edit': typeof AccountsAccountIdEditRoute
+  '/jars/$jarId/edit': typeof JarsJarIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/categories'
-    | '/jars'
     | '/movements'
     | '/accounts/new'
+    | '/jars/new'
     | '/accounts/'
+    | '/jars/'
     | '/accounts/$accountId/edit'
+    | '/jars/$jarId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/categories'
-    | '/jars'
     | '/movements'
     | '/accounts/new'
+    | '/jars/new'
     | '/accounts'
+    | '/jars'
     | '/accounts/$accountId/edit'
+    | '/jars/$jarId/edit'
   id:
     | '__root__'
     | '/'
     | '/categories'
-    | '/jars'
     | '/movements'
     | '/accounts/new'
+    | '/jars/new'
     | '/accounts/'
+    | '/jars/'
     | '/accounts/$accountId/edit'
+    | '/jars/$jarId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CategoriesRoute: typeof CategoriesRoute
-  JarsRoute: typeof JarsRoute
   MovementsRoute: typeof MovementsRoute
   AccountsNewRoute: typeof AccountsNewRoute
+  JarsNewRoute: typeof JarsNewRoute
   AccountsIndexRoute: typeof AccountsIndexRoute
+  JarsIndexRoute: typeof JarsIndexRoute
   AccountsAccountIdEditRoute: typeof AccountsAccountIdEditRoute
+  JarsJarIdEditRoute: typeof JarsJarIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -128,13 +154,6 @@ declare module '@tanstack/react-router' {
       path: '/movements'
       fullPath: '/movements'
       preLoaderRoute: typeof MovementsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/jars': {
-      id: '/jars'
-      path: '/jars'
-      fullPath: '/jars'
-      preLoaderRoute: typeof JarsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/categories': {
@@ -151,6 +170,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/jars/': {
+      id: '/jars/'
+      path: '/jars'
+      fullPath: '/jars/'
+      preLoaderRoute: typeof JarsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/accounts/': {
       id: '/accounts/'
       path: '/accounts'
@@ -158,11 +184,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/jars/new': {
+      id: '/jars/new'
+      path: '/jars/new'
+      fullPath: '/jars/new'
+      preLoaderRoute: typeof JarsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/accounts/new': {
       id: '/accounts/new'
       path: '/accounts/new'
       fullPath: '/accounts/new'
       preLoaderRoute: typeof AccountsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jars/$jarId/edit': {
+      id: '/jars/$jarId/edit'
+      path: '/jars/$jarId/edit'
+      fullPath: '/jars/$jarId/edit'
+      preLoaderRoute: typeof JarsJarIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/accounts/$accountId/edit': {
@@ -178,11 +218,13 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CategoriesRoute: CategoriesRoute,
-  JarsRoute: JarsRoute,
   MovementsRoute: MovementsRoute,
   AccountsNewRoute: AccountsNewRoute,
+  JarsNewRoute: JarsNewRoute,
   AccountsIndexRoute: AccountsIndexRoute,
+  JarsIndexRoute: JarsIndexRoute,
   AccountsAccountIdEditRoute: AccountsAccountIdEditRoute,
+  JarsJarIdEditRoute: JarsJarIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

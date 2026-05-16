@@ -43,6 +43,7 @@ export const AccountsEdit = () => {
         void handleDelete();
       }}
       fieldName="accountName"
+      placeholder="Savings Account"
     />
   );
 };

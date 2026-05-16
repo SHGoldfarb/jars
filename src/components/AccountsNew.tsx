@@ -20,6 +20,7 @@ export const AccountsNew = () => {
       }}
       onCancelRoute="/accounts"
       fieldName="accountName"
+      placeholder="Savings Account"
     />
   );
 };
