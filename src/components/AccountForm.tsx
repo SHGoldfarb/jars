@@ -9,15 +9,7 @@ import {
   FieldSet,
 } from 'src/components/ui/field';
 import { Input } from 'src/components/ui/input';
-import type { SubmitEvent } from 'react';
-
-// TODO: use a form library (tanstack form?)
-
-const appFormPrefix = 'jars-app-form';
-
-const fieldIds = {
-  name: `${appFormPrefix}-account-name`,
-};
+import { useForm } from '@tanstack/react-form';
 
 export const AccountForm = ({
   initialName,
@@ -32,33 +24,49 @@ export const AccountForm = ({
   onCancelRoute: string;
   onDelete?: () => void;
 }) => {
-  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    const name = data.get(fieldIds.name);
-    if (!name || typeof name !== 'string') return;
+  const form = useForm({
+    defaultValues: {
+      accountName: initialName ?? '',
+    },
+    onSubmit: ({ value }) => {
+      onSubmit(value.accountName);
+    },
+  });
 
-    onSubmit(name);
-  };
   return (
     <div className="w-full max-w-md p-6 ">
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          void form.handleSubmit();
+        }}
+      >
         <FieldGroup>
           <FieldSet>
             <FieldLegend>{title}</FieldLegend>
             <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor={fieldIds.name}>Account Name</FieldLabel>
-                <Input
-                  // eslint-disable-next-line jsx-a11y/no-autofocus -- user navigates here manually -> autofocus is fine
-                  autoFocus
-                  id={fieldIds.name}
-                  name={fieldIds.name}
-                  placeholder="Savings Account"
-                  required
-                  defaultValue={initialName}
-                />
-              </Field>
+              <form.Field
+                name="accountName"
+                children={(field) => (
+                  <Field>
+                    <FieldLabel htmlFor={field.name}>Account Name</FieldLabel>
+                    <Input
+                      // eslint-disable-next-line jsx-a11y/no-autofocus -- user navigates here manually -> autofocus is fine
+                      autoFocus
+                      id={field.name}
+                      name={field.name}
+                      placeholder="Savings Account"
+                      required
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
+                    />
+                  </Field>
+                )}
+              />
             </FieldGroup>
           </FieldSet>
           <FieldSeparator />

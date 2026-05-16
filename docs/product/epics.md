@@ -30,6 +30,10 @@ Create/edit/delete accounts.
 - [x] Each account displays its name
 - [x] Accounts persist across page refreshes
 
+### Unplanned work
+
+- [x] Refactor to use tanstack form
+
 ## Epic 3 — Jars
 
 Create/edit/delete jars.
