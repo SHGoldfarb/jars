@@ -1,8 +1,8 @@
 import { useNavigate } from '@tanstack/react-router';
-import { AccountForm } from './AccountForm';
 import { deleteAccount, updateAccount } from 'src/services/finance';
 import { useParams } from '@tanstack/react-router';
 import { useAccount } from 'src/hooks/useAccount';
+import { GenericNameForm } from './GenericNameForm';
 
 export const AccountsEdit = () => {
   const { accountId } = useParams({ strict: false });
@@ -32,7 +32,7 @@ export const AccountsEdit = () => {
   };
 
   return (
-    <AccountForm
+    <GenericNameForm
       title="Edit Account"
       onSubmit={(name) => {
         void handleSubmit(name);
@@ -42,6 +42,7 @@ export const AccountsEdit = () => {
       onDelete={() => {
         void handleDelete();
       }}
+      fieldName="accountName"
     />
   );
 };

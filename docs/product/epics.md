@@ -17,7 +17,7 @@ React + TypeScript scaffold, IndexedDB schema design (accounts, transactions, ja
 - [x] No data is lost on page refresh
 - [x] App builds for production without errors or type errors
 
-## Epic 2 — Accounts [IN PROGRESS]
+## Epic 2 — Accounts [DONE]
 
 Create/edit/delete accounts.
 
@@ -34,13 +34,18 @@ Create/edit/delete accounts.
 
 - [x] Refactor to use tanstack form
 
-## Epic 3 — Jars
+## Epic 3 — Jars [IN PROGRESS]
 
 Create/edit/delete jars.
 
 ### Acceptance Criteria
 
-WIP
+- [ ] User can create a jar with a name
+- [ ] User can edit a jar's name
+- [ ] User can delete a jar
+- [ ] All jars are listed on the Jars screen
+- [ ] Each jar displays its name
+- [ ] Jars persist across page refreshes
 
 ## Epic 4 — Categories
 

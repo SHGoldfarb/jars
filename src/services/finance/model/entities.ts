@@ -1,4 +1,33 @@
 import type { CurrencyAmount } from '../../shared';
+import * as z from 'zod';
+
+export const Archivable = z.object({
+  archivedAtISO: z.iso.datetime().optional(),
+});
+
+export const Identifiable = z.object({
+  id: z.uuidv4(),
+});
+
+export const Account = z.object({
+  ...Archivable.shape,
+  ...Identifiable.shape,
+  name: z.string(),
+});
+
+export type Account = z.infer<typeof Account>;
+
+export const Jar = z.object({
+  ...Archivable.shape,
+  ...Identifiable.shape,
+  name: z.string(),
+});
+
+export type Jar = z.infer<typeof Jar>;
+
+// -----------------------------------
+// ----------- OLD TYPES -------------
+// -----------------------------------
 
 export type ISODateTimeString = string;
 
@@ -22,11 +51,6 @@ export type ExpenseCategory = CategoryBase & {
 };
 
 export type Category = IncomeCategory | ExpenseCategory;
-
-export type Jar = Archivable & {
-  id: string;
-  name: string;
-};
 
 export type TransactionKind = 'income' | 'expense';
 

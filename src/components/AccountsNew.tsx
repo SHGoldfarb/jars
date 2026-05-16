@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router';
-import { AccountForm } from './AccountForm';
 import { createAccount } from 'src/services/finance';
+import { GenericNameForm } from './GenericNameForm';
 
 export const AccountsNew = () => {
   const navigate = useNavigate();
@@ -13,12 +13,13 @@ export const AccountsNew = () => {
     }
   };
   return (
-    <AccountForm
+    <GenericNameForm
       title="Create Account"
       onSubmit={(name) => {
         void handleSubmit(name);
       }}
       onCancelRoute="/accounts"
+      fieldName="accountName"
     />
   );
 };

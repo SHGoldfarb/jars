@@ -11,25 +11,27 @@ import {
 import { Input } from 'src/components/ui/input';
 import { useForm } from '@tanstack/react-form';
 
-export const AccountForm = ({
+export const GenericNameForm = ({
   initialName,
   title,
   onSubmit,
   onCancelRoute,
   onDelete,
+  fieldName,
 }: {
   initialName?: string;
   title: string;
   onSubmit: (name: string) => void;
   onCancelRoute: string;
   onDelete?: () => void;
+  fieldName: string;
 }) => {
   const form = useForm({
     defaultValues: {
-      accountName: initialName ?? '',
+      [fieldName]: initialName ?? '',
     },
     onSubmit: ({ value }) => {
-      onSubmit(value.accountName);
+      onSubmit(value[fieldName]);
     },
   });
 
@@ -47,10 +49,10 @@ export const AccountForm = ({
             <FieldLegend>{title}</FieldLegend>
             <FieldGroup>
               <form.Field
-                name="accountName"
+                name={fieldName}
                 children={(field) => (
                   <Field>
-                    <FieldLabel htmlFor={field.name}>Account Name</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>Name</FieldLabel>
                     <Input
                       // eslint-disable-next-line jsx-a11y/no-autofocus -- user navigates here manually -> autofocus is fine
                       autoFocus
