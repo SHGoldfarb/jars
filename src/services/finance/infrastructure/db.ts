@@ -14,4 +14,5 @@ db.version(2).stores({
 export const DB = {
   accounts: db.table('accounts'),
   jars: db.table('jars'),
+  categories: db.table('categories'),
 };

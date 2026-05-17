@@ -13,10 +13,16 @@ import { Route as MovementsRouteImport } from './routes/movements'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JarsIndexRouteImport } from './routes/jars/index'
+import { Route as CategoriesIndexRouteImport } from './routes/categories/index'
 import { Route as AccountsIndexRouteImport } from './routes/accounts/index'
 import { Route as JarsNewRouteImport } from './routes/jars/new'
 import { Route as AccountsNewRouteImport } from './routes/accounts/new'
+import { Route as CategoriesIncomeIndexRouteImport } from './routes/categories/income/index'
+import { Route as CategoriesExpenseIndexRouteImport } from './routes/categories/expense/index'
 import { Route as JarsJarIdEditRouteImport } from './routes/jars/$jarId.edit'
+import { Route as CategoriesIncomeNewRouteImport } from './routes/categories/income/new'
+import { Route as CategoriesExpenseNewRouteImport } from './routes/categories/expense/new'
+import { Route as CategoriesCategoryIdEditRouteImport } from './routes/categories/$categoryId.edit'
 import { Route as AccountsAccountIdEditRouteImport } from './routes/accounts/$accountId.edit'
 
 const MovementsRoute = MovementsRouteImport.update({
@@ -39,6 +45,11 @@ const JarsIndexRoute = JarsIndexRouteImport.update({
   path: '/jars/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CategoriesIndexRoute = CategoriesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CategoriesRoute,
+} as any)
 const AccountsIndexRoute = AccountsIndexRouteImport.update({
   id: '/accounts/',
   path: '/accounts/',
@@ -54,11 +65,37 @@ const AccountsNewRoute = AccountsNewRouteImport.update({
   path: '/accounts/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CategoriesIncomeIndexRoute = CategoriesIncomeIndexRouteImport.update({
+  id: '/income/',
+  path: '/income/',
+  getParentRoute: () => CategoriesRoute,
+} as any)
+const CategoriesExpenseIndexRoute = CategoriesExpenseIndexRouteImport.update({
+  id: '/expense/',
+  path: '/expense/',
+  getParentRoute: () => CategoriesRoute,
+} as any)
 const JarsJarIdEditRoute = JarsJarIdEditRouteImport.update({
   id: '/jars/$jarId/edit',
   path: '/jars/$jarId/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CategoriesIncomeNewRoute = CategoriesIncomeNewRouteImport.update({
+  id: '/income/new',
+  path: '/income/new',
+  getParentRoute: () => CategoriesRoute,
+} as any)
+const CategoriesExpenseNewRoute = CategoriesExpenseNewRouteImport.update({
+  id: '/expense/new',
+  path: '/expense/new',
+  getParentRoute: () => CategoriesRoute,
+} as any)
+const CategoriesCategoryIdEditRoute =
+  CategoriesCategoryIdEditRouteImport.update({
+    id: '/$categoryId/edit',
+    path: '/$categoryId/edit',
+    getParentRoute: () => CategoriesRoute,
+  } as any)
 const AccountsAccountIdEditRoute = AccountsAccountIdEditRouteImport.update({
   id: '/accounts/$accountId/edit',
   path: '/accounts/$accountId/edit',
@@ -67,37 +104,54 @@ const AccountsAccountIdEditRoute = AccountsAccountIdEditRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/categories': typeof CategoriesRoute
+  '/categories': typeof CategoriesRouteWithChildren
   '/movements': typeof MovementsRoute
   '/accounts/new': typeof AccountsNewRoute
   '/jars/new': typeof JarsNewRoute
   '/accounts/': typeof AccountsIndexRoute
+  '/categories/': typeof CategoriesIndexRoute
   '/jars/': typeof JarsIndexRoute
   '/accounts/$accountId/edit': typeof AccountsAccountIdEditRoute
+  '/categories/$categoryId/edit': typeof CategoriesCategoryIdEditRoute
+  '/categories/expense/new': typeof CategoriesExpenseNewRoute
+  '/categories/income/new': typeof CategoriesIncomeNewRoute
   '/jars/$jarId/edit': typeof JarsJarIdEditRoute
+  '/categories/expense/': typeof CategoriesExpenseIndexRoute
+  '/categories/income/': typeof CategoriesIncomeIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/categories': typeof CategoriesRoute
   '/movements': typeof MovementsRoute
   '/accounts/new': typeof AccountsNewRoute
   '/jars/new': typeof JarsNewRoute
   '/accounts': typeof AccountsIndexRoute
+  '/categories': typeof CategoriesIndexRoute
   '/jars': typeof JarsIndexRoute
   '/accounts/$accountId/edit': typeof AccountsAccountIdEditRoute
+  '/categories/$categoryId/edit': typeof CategoriesCategoryIdEditRoute
+  '/categories/expense/new': typeof CategoriesExpenseNewRoute
+  '/categories/income/new': typeof CategoriesIncomeNewRoute
   '/jars/$jarId/edit': typeof JarsJarIdEditRoute
+  '/categories/expense': typeof CategoriesExpenseIndexRoute
+  '/categories/income': typeof CategoriesIncomeIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/categories': typeof CategoriesRoute
+  '/categories': typeof CategoriesRouteWithChildren
   '/movements': typeof MovementsRoute
   '/accounts/new': typeof AccountsNewRoute
   '/jars/new': typeof JarsNewRoute
   '/accounts/': typeof AccountsIndexRoute
+  '/categories/': typeof CategoriesIndexRoute
   '/jars/': typeof JarsIndexRoute
   '/accounts/$accountId/edit': typeof AccountsAccountIdEditRoute
+  '/categories/$categoryId/edit': typeof CategoriesCategoryIdEditRoute
+  '/categories/expense/new': typeof CategoriesExpenseNewRoute
+  '/categories/income/new': typeof CategoriesIncomeNewRoute
   '/jars/$jarId/edit': typeof JarsJarIdEditRoute
+  '/categories/expense/': typeof CategoriesExpenseIndexRoute
+  '/categories/income/': typeof CategoriesIncomeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -108,20 +162,31 @@ export interface FileRouteTypes {
     | '/accounts/new'
     | '/jars/new'
     | '/accounts/'
+    | '/categories/'
     | '/jars/'
     | '/accounts/$accountId/edit'
+    | '/categories/$categoryId/edit'
+    | '/categories/expense/new'
+    | '/categories/income/new'
     | '/jars/$jarId/edit'
+    | '/categories/expense/'
+    | '/categories/income/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/categories'
     | '/movements'
     | '/accounts/new'
     | '/jars/new'
     | '/accounts'
+    | '/categories'
     | '/jars'
     | '/accounts/$accountId/edit'
+    | '/categories/$categoryId/edit'
+    | '/categories/expense/new'
+    | '/categories/income/new'
     | '/jars/$jarId/edit'
+    | '/categories/expense'
+    | '/categories/income'
   id:
     | '__root__'
     | '/'
@@ -130,14 +195,20 @@ export interface FileRouteTypes {
     | '/accounts/new'
     | '/jars/new'
     | '/accounts/'
+    | '/categories/'
     | '/jars/'
     | '/accounts/$accountId/edit'
+    | '/categories/$categoryId/edit'
+    | '/categories/expense/new'
+    | '/categories/income/new'
     | '/jars/$jarId/edit'
+    | '/categories/expense/'
+    | '/categories/income/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  CategoriesRoute: typeof CategoriesRoute
+  CategoriesRoute: typeof CategoriesRouteWithChildren
   MovementsRoute: typeof MovementsRoute
   AccountsNewRoute: typeof AccountsNewRoute
   JarsNewRoute: typeof JarsNewRoute
@@ -177,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JarsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/categories/': {
+      id: '/categories/'
+      path: '/'
+      fullPath: '/categories/'
+      preLoaderRoute: typeof CategoriesIndexRouteImport
+      parentRoute: typeof CategoriesRoute
+    }
     '/accounts/': {
       id: '/accounts/'
       path: '/accounts'
@@ -198,12 +276,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/categories/income/': {
+      id: '/categories/income/'
+      path: '/income'
+      fullPath: '/categories/income/'
+      preLoaderRoute: typeof CategoriesIncomeIndexRouteImport
+      parentRoute: typeof CategoriesRoute
+    }
+    '/categories/expense/': {
+      id: '/categories/expense/'
+      path: '/expense'
+      fullPath: '/categories/expense/'
+      preLoaderRoute: typeof CategoriesExpenseIndexRouteImport
+      parentRoute: typeof CategoriesRoute
+    }
     '/jars/$jarId/edit': {
       id: '/jars/$jarId/edit'
       path: '/jars/$jarId/edit'
       fullPath: '/jars/$jarId/edit'
       preLoaderRoute: typeof JarsJarIdEditRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/categories/income/new': {
+      id: '/categories/income/new'
+      path: '/income/new'
+      fullPath: '/categories/income/new'
+      preLoaderRoute: typeof CategoriesIncomeNewRouteImport
+      parentRoute: typeof CategoriesRoute
+    }
+    '/categories/expense/new': {
+      id: '/categories/expense/new'
+      path: '/expense/new'
+      fullPath: '/categories/expense/new'
+      preLoaderRoute: typeof CategoriesExpenseNewRouteImport
+      parentRoute: typeof CategoriesRoute
+    }
+    '/categories/$categoryId/edit': {
+      id: '/categories/$categoryId/edit'
+      path: '/$categoryId/edit'
+      fullPath: '/categories/$categoryId/edit'
+      preLoaderRoute: typeof CategoriesCategoryIdEditRouteImport
+      parentRoute: typeof CategoriesRoute
     }
     '/accounts/$accountId/edit': {
       id: '/accounts/$accountId/edit'
@@ -215,9 +328,31 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface CategoriesRouteChildren {
+  CategoriesIndexRoute: typeof CategoriesIndexRoute
+  CategoriesCategoryIdEditRoute: typeof CategoriesCategoryIdEditRoute
+  CategoriesExpenseNewRoute: typeof CategoriesExpenseNewRoute
+  CategoriesIncomeNewRoute: typeof CategoriesIncomeNewRoute
+  CategoriesExpenseIndexRoute: typeof CategoriesExpenseIndexRoute
+  CategoriesIncomeIndexRoute: typeof CategoriesIncomeIndexRoute
+}
+
+const CategoriesRouteChildren: CategoriesRouteChildren = {
+  CategoriesIndexRoute: CategoriesIndexRoute,
+  CategoriesCategoryIdEditRoute: CategoriesCategoryIdEditRoute,
+  CategoriesExpenseNewRoute: CategoriesExpenseNewRoute,
+  CategoriesIncomeNewRoute: CategoriesIncomeNewRoute,
+  CategoriesExpenseIndexRoute: CategoriesExpenseIndexRoute,
+  CategoriesIncomeIndexRoute: CategoriesIncomeIndexRoute,
+}
+
+const CategoriesRouteWithChildren = CategoriesRoute._addFileChildren(
+  CategoriesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  CategoriesRoute: CategoriesRoute,
+  CategoriesRoute: CategoriesRouteWithChildren,
   MovementsRoute: MovementsRoute,
   AccountsNewRoute: AccountsNewRoute,
   JarsNewRoute: JarsNewRoute,

@@ -25,6 +25,29 @@ export const Jar = z.object({
 
 export type Jar = z.infer<typeof Jar>;
 
+export const Category = z.object({
+  ...Archivable.shape,
+  ...Identifiable.shape,
+  name: z.string(),
+  kind: z.enum(['income', 'expense']),
+});
+
+export type Category = z.infer<typeof Category>;
+
+export const CategoryIncome = z.object({
+  ...Category.shape,
+  kind: z.literal('income'),
+});
+
+export type CategoryIncome = z.infer<typeof CategoryIncome>;
+
+export const CategoryExpense = z.object({
+  ...Category.shape,
+  kind: z.literal('expense'),
+});
+
+export type CategoryExpense = z.infer<typeof CategoryExpense>;
+
 // -----------------------------------
 // ----------- OLD TYPES -------------
 // -----------------------------------
@@ -34,23 +57,6 @@ export type ISODateTimeString = string;
 export interface Archivable {
   archivedAtISO?: ISODateTimeString;
 }
-
-type CategoryBase = Archivable & {
-  id: string;
-  name: string;
-};
-
-export type CategoryKind = 'income' | 'expense';
-
-export type IncomeCategory = CategoryBase & {
-  kind: 'income';
-};
-
-export type ExpenseCategory = CategoryBase & {
-  kind: 'expense';
-};
-
-export type Category = IncomeCategory | ExpenseCategory;
 
 export type TransactionKind = 'income' | 'expense';
 

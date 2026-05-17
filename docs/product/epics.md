@@ -53,13 +53,18 @@ Create/edit/delete categories, scoped to income or expense.
 
 ### Acceptance Criteria
 
-- [ ] User can create a category with a name and a kind (`income` or `expense`)
-- [ ] User can edit a category's name
-- [ ] User can delete a category
-- [ ] All categories are listed on the Categories screen
-- [ ] Income and expense categories are visually grouped and labeled
-- [ ] Each category displays its name
-- [ ] Categories persist across page refreshes
+- [x] User can create a category with a name and a kind (`income` or `expense`)
+- [x] User can edit a category's name
+- [x] User can delete a category
+- [x] All categories are listed on the Categories screen
+- [x] Income and expense categories are visually grouped and labeled
+- [x] Each category displays its name
+- [x] Categories persist across page refreshes
+
+### Unplanned work
+
+- [ ] Refactor delete -> archive
+- [ ] Add tests
 
 ## Epic 5 — Transactions
 
@@ -121,3 +126,5 @@ WIP
 - switch between dark/light modes
 - multi currency
 - localization (language, money amount format)
+- Bookmarks (favorites)
+- Recurring transactions
