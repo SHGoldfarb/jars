@@ -75,7 +75,6 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 - [ ] ...
 - [ ] Can't delete accounts when they have balance.
 - [ ] Can't delete jars when they have balance.
-- [ ] WIP Can delete categories when they have assigned transactions? decide this and implement.
 - [ ] If a deleted account acquires balance (e.g. by editing transaction) it is magically restored.
 - [ ] If a deleted jar acquires balance (e.g. by editing transaction) it is magically restored.
 
