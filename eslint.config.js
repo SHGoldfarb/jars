@@ -62,5 +62,11 @@ export default defineConfig([
       ],
     },
   },
+  {
+    files: ['src/tests/setup.ts'],
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
+    },
+  },
   prettier,
 ]);
