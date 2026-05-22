@@ -4,7 +4,7 @@
 
 React + TypeScript scaffold, IndexedDB schema design (accounts, transactions, jars, categories), offline PWA config, routing, and global state management.
 
-### Acceptance Criteria
+### Acceptance criteria
 
 - [x] React + TypeScript project is scaffolded and runs locally without errors
 - [x] IndexedDB is initialized on first load with object stores for all entities
@@ -21,7 +21,7 @@ React + TypeScript scaffold, IndexedDB schema design (accounts, transactions, ja
 
 Create/edit/delete accounts.
 
-### Acceptance Criteria
+### Original acceptance criteria
 
 - [x] User can create an account with a name
 - [x] User can edit an account's name
@@ -38,7 +38,7 @@ Create/edit/delete accounts.
 
 Create/edit/delete jars.
 
-### Acceptance Criteria
+### Acceptance criteria
 
 - [x] User can create a jar with a name
 - [x] User can edit a jar's name
@@ -51,7 +51,7 @@ Create/edit/delete jars.
 
 Create/edit/delete categories, scoped to income or expense.
 
-### Acceptance Criteria
+### Original acceptance criteria
 
 - [x] User can create a category with a name and a kind (`income` or `expense`)
 - [x] User can edit a category's name
@@ -64,13 +64,16 @@ Create/edit/delete categories, scoped to income or expense.
 ### Unplanned work
 
 - [ ] Refactor delete -> archive
-- [ ] Add tests
+- [x] Add tests framework
+- [ ] Add accounts tests
+- [ ] Add jars tests
+- [ ] Add categories tests
 
 ## Epic 5 — Transactions
 
 Manual transaction entry (amount, date, description, type income/expense, category, jar).
 
-### Acceptance Criteria
+### Acceptance criteria
 
 - [ ] ...
 - [ ] Can't delete accounts when they have balance.
@@ -82,7 +85,7 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 
 Move money between accounts.
 
-### Acceptance Criteria
+### Acceptance criteria
 
 WIP
 
@@ -90,7 +93,7 @@ WIP
 
 Move money between jars.
 
-### Acceptance Criteria
+### Acceptance criteria
 
 WIP
 
@@ -98,7 +101,7 @@ WIP
 
 Account balance is shown, derived from transactions and transfers. Jar balance is shown, derived from transactions and allocations.
 
-### Acceptance Criteria
+### Acceptance criteria
 
 WIP
 
@@ -106,7 +109,7 @@ WIP
 
 Create backup, restore from backup (JSON). Export data (CSV). Configure automatic backup to cloud (Google Drive?). Clear all data.
 
-### Acceptance Criteria
+### Acceptance criteria
 
 WIP
 
@@ -114,7 +117,7 @@ WIP
 
 View incomes/expenses breakdown, evolution, etc.
 
-### Acceptance Criteria
+### Acceptance criteria
 
 WIP
 
