@@ -5,7 +5,6 @@ import './main.css';
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen';
-import { initializeMockData } from './services/finance';
 
 // Create a new router instance
 const router = createRouter({ routeTree });
@@ -27,6 +26,3 @@ if (rootElement && !rootElement.innerHTML) {
     </StrictMode>
   );
 }
-
-// Initialize mock data
-void initializeMockData();

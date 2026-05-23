@@ -7,8 +7,19 @@ export const accountsPageConstructor = (page: Page) => {
   const expectAccountToExist = async (accountName: string) => {
     await expect(getAccount(accountName)).toBeVisible();
   };
+  const expectAccountToNotExist = async (accountName: string) => {
+    await expect(getAccount(accountName)).not.toBeVisible();
+  };
+  const clickAccount = (accountName: string) => getAccount(accountName).click();
 
-  return { goto, createAccountButton, getAccount, expectAccountToExist };
+  return {
+    goto,
+    createAccountButton,
+    getAccount,
+    expectAccountToExist,
+    expectAccountToNotExist,
+    clickAccount,
+  };
 };
 
 export type AccountsPage = ReturnType<typeof accountsPageConstructor>;
