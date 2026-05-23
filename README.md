@@ -20,12 +20,14 @@ Your cash sits in real accounts — your wallet, your bank, your savings account
 ### Development
 
 - **Key technologies**: react, typescript, vite-pwa, Dexie, Tailwind CSS, shadcn, zod, tanstack router, tanstack form.
-- **Key devexp technologies**: eslint, prettier. Developed with vscode.
+- **Key development technologies**: eslint, prettier, playwright, vscode.
 - **Modeling**:
   - Entities:
     - `accounts`.
     - `jars`.
-    - `transactions`: kind `income` or `expense`.
     - `transfers`: between `accounts`.
     - `allocations`: transfer between `jars`.
     - `category`: kind `income` or `expense`.
+    - `transactions`: kind `income` or `expense`.
+  - Modeling:
+    - `transactions` have 1 `account`, 1 `category` and 1 `jar`.

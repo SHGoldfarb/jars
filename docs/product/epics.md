@@ -47,7 +47,7 @@ Create/edit/delete jars.
 - [x] Each jar displays its name
 - [x] Jars persist across page refreshes
 
-## Epic 4 — Categories [IN PROGRESS]
+## Epic 4 — Categories [DONE]
 
 Create/edit/delete categories, scoped to income or expense.
 
@@ -69,17 +69,43 @@ Create/edit/delete categories, scoped to income or expense.
 - [x] Add jars tests
 - [x] Add categories tests
 
-## Epic 5 — Transactions
+## Epic 5 — Transactions [IN PROGRESS]
 
 Manual transaction entry (amount, date, description, type income/expense, category, jar).
 
 ### Acceptance criteria
 
-- [ ] ...
-- [ ] Can't delete accounts when they have balance.
-- [ ] Can't delete jars when they have balance.
-- [ ] If a deleted account acquires balance (e.g. by editing transaction) it is magically restored.
-- [ ] If a deleted jar acquires balance (e.g. by editing transaction) it is magically restored.
+**Transaction entry**
+
+- [ ] User can create a transaction with: amount, date, description, type (`income` or `expense`), category, account, and jar.
+- [ ] App validates amount is a positive number.
+- [ ] Date defaults to today but can be changed.
+- [ ] Category picker is filtered by transaction type (only income categories for income, only expense categories for expense).
+- [ ] Only active accounts, jars and categories are available for selection when creating or editing a transaction.
+- [ ] User can edit any field of an existing transaction.
+- [ ] User can delete a transaction.
+
+**Listing**
+
+- [ ] All transactions are listed on the Movements screen.
+- [ ] Each transaction displays: amount, date, description, type, category, account, and jar.
+- [ ] Transactions are sorted by date descending by default.
+
+**Validation**
+
+- [ ] Amount, date, type, account, jar, and category are required fields.
+- [ ] Description is optional.
+
+**Persistence**
+
+- [ ] Transactions persist across page refreshes.
+
+**Account/jar integrity**
+
+- [ ] User cannot delete an account that has a non-zero balance
+- [ ] User cannot delete a jar that has a non-zero balance
+- [ ] If a deleted account acquires a non-zero balance (e.g. via transaction edit), it is automatically restored
+- [ ] If a deleted jar acquires a non-zero balance (e.g. via transaction edit), it is automatically restored
 
 ## Epic 6 — Transfers
 
