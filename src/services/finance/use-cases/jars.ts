@@ -22,7 +22,7 @@ export const updateJar = async (jar: Jar) => {
   return await table.put(parsedJar);
 };
 
-export const deleteJar = async (jarId: string) => {
+export const archiveJar = async (jarId: string) => {
   const jar = Jar.parse(await table.get(jarId));
   jar.archivedAtISO = new Date().toISOString();
   return await table.put(jar);

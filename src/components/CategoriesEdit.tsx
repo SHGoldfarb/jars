@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { deleteCategory, updateCategory } from 'src/services/finance';
+import { archiveCategory, updateCategory } from 'src/services/finance';
 import { useParams } from '@tanstack/react-router';
 import { useCategory } from 'src/hooks/useCategory';
 import { GenericNameForm } from './GenericNameForm';
@@ -24,7 +24,7 @@ export const CategoriesEdit = () => {
 
   const handleDelete = async () => {
     try {
-      await deleteCategory(category.id);
+      await archiveCategory(category.id);
       await navigate({ to: `/categories/${category.kind}` });
     } catch (error) {
       console.error('Failed to delete category:', error);

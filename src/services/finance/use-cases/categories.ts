@@ -30,7 +30,7 @@ export const createCategory = async ({
   return await table.add(parsedCategory);
 };
 
-export const deleteCategory = async (categoryId: string) => {
+export const archiveCategory = async (categoryId: string) => {
   const category = Category.parse(await table.get(categoryId));
   category.archivedAtISO = new Date().toISOString();
   return await table.put(category);

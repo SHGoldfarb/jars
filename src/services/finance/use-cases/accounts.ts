@@ -24,7 +24,7 @@ export const updateAccount = async (account: Account) => {
   return await table.put(parsedAccount);
 };
 
-export const deleteAccount = async (accountId: string) => {
+export const archiveAccount = async (accountId: string) => {
   const account = Account.parse(await table.get(accountId));
   account.archivedAtISO = new Date().toISOString();
   return await table.put(account);

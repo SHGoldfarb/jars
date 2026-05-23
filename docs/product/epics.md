@@ -63,7 +63,7 @@ Create/edit/delete categories, scoped to income or expense.
 
 ### Unplanned work
 
-- [ ] Refactor delete -> archive
+- [x] Refactor delete -> archive
 - [x] Add tests framework
 - [x] Add accounts tests
 - [x] Add jars tests

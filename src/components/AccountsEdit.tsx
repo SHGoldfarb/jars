@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { deleteAccount, updateAccount } from 'src/services/finance';
+import { archiveAccount, updateAccount } from 'src/services/finance';
 import { useParams } from '@tanstack/react-router';
 import { useAccount } from 'src/hooks/useAccount';
 import { GenericNameForm } from './GenericNameForm';
@@ -24,7 +24,7 @@ export const AccountsEdit = () => {
 
   const handleDelete = async () => {
     try {
-      await deleteAccount(account.id);
+      await archiveAccount(account.id);
       await navigate({ to: '/accounts' });
     } catch (error) {
       console.error('Failed to delete account:', error);
