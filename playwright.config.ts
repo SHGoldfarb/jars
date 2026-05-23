@@ -11,6 +11,12 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
+
+const doPreview = !!process.env.CI || !!process.env.PREVIEW;
+
+const serverCommand = doPreview ? 'pnpm exec vite build && pnpm preview' : 'pnpm dev';
+const baseUrl = doPreview ? 'http://localhost:4173' : 'http://localhost:5173';
+
 export default defineConfig({
   testDir: './src/tests',
   /* Run tests in files in parallel */
@@ -26,10 +32,15 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: 'http://localhost:5173',
+    baseURL: baseUrl,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+
+    video: {
+      mode: 'retain-on-failure',
+      // show: { actions: { duration: 100 } }
+    },
   },
 
   /* Configure projects for major browsers */
@@ -72,8 +83,8 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'pnpm dev',
-    url: 'http://localhost:5173',
+    command: serverCommand,
+    url: baseUrl,
     reuseExistingServer: true,
   },
 
