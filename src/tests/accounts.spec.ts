@@ -29,7 +29,7 @@ test('shows accounts', async ({ accountsPage, createAccount }) => {
 });
 
 test('can delete account', async ({ accountsPage, accountFormPage, createAccount }) => {
-  const name = 'Accuunt to delete';
+  const name = 'Account to delete';
 
   await createAccount(name);
 

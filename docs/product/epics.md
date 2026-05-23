@@ -66,7 +66,7 @@ Create/edit/delete categories, scoped to income or expense.
 - [ ] Refactor delete -> archive
 - [x] Add tests framework
 - [x] Add accounts tests
-- [ ] Add jars tests
+- [x] Add jars tests
 - [ ] Add categories tests
 
 ## Epic 5 — Transactions
