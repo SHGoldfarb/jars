@@ -65,7 +65,7 @@ Create/edit/delete categories, scoped to income or expense.
 
 - [ ] Refactor delete -> archive
 - [x] Add tests framework
-- [ ] Add accounts tests
+- [x] Add accounts tests
 - [ ] Add jars tests
 - [ ] Add categories tests
 
