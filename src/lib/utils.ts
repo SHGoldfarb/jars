@@ -30,3 +30,27 @@ export const memoize = <T extends unknown[], U>(f: (...params: T) => U) => {
 
   return memoizedFunction;
 };
+
+// WARNING: Can easily grow in size to the point of causing memory issues
+export const makeVersionedMemoize = () => {
+  let version = 0;
+
+  const versionedMemoize = <T, U>(f: (...args: T[]) => U) => {
+    const memoized = memoize((_version: number, ...args: T[]) => f(...args));
+    return (...args: T[]) => memoized(version, ...args);
+  };
+
+  const upVersion = () => {
+    version++;
+  };
+
+  const versionInvalidator =
+    <T, U>(f: (...args: T[]) => U) =>
+    async (...args: T[]) => {
+      const result = await f(...args);
+      upVersion();
+      return result;
+    };
+
+  return { versionedMemoize, upVersion, versionInvalidator };
+};

@@ -1,5 +1,5 @@
 import { Dexie, type Table } from 'dexie';
-import { memoize } from 'src/lib/utils';
+import { makeVersionedMemoize } from 'src/lib/utils';
 
 const db = new Dexie('JarsMainDatabase');
 
@@ -12,37 +12,24 @@ db.version(2).stores({
   transfers: '&id, originAccountId, destinationAccountId',
 });
 
-const tableWithCache = <T, U, V>(table: Table<T, U, V>) => {
-  let cacheVersion = 0;
+const memoizedTable = <T extends { id: string }, U, V>(table: Table<T, U, V>) => {
+  const { versionedMemoize, versionInvalidator } = makeVersionedMemoize();
 
-  const makeMemoized = <U extends unknown[], V>(foo: (...params: U) => V) => {
-    const memoizedFoo = memoize((_: number, ...params: U) => {
-      return foo(...params);
-    });
-    return (...params: U) => {
-      return memoizedFoo(cacheVersion, ...params);
-    };
-  };
+  const getMap = versionedMemoize(async () => {
+    const items = await table.toArray();
+    const emtpyMap: Record<string, T> = {};
+    return items.reduce((acc, item) => {
+      return { ...acc, [item.id]: item };
+    }, emtpyMap);
+  });
 
-  const makeInvalidator =
-    <U extends unknown[], V>(foo: (...args: U) => Promise<V>) =>
-    async (...args: U) => {
-      const result = await foo(...args);
-      cacheVersion++;
-      return result;
-    };
+  const upsert = versionInvalidator((item: V) => table.put(item));
 
-  return {
-    get: makeMemoized((id: U) => table.get(id)),
-    put: makeInvalidator(table.put.bind(table)),
-    toArray: makeMemoized(() => table.toArray()),
-    add: makeInvalidator(table.add.bind(table)),
-    withoutCache: table,
-  };
+  return { getMap, upsert };
 };
 
 export const DB = {
-  accounts: tableWithCache(db.table('accounts')),
-  jars: tableWithCache(db.table('jars')),
-  categories: tableWithCache(db.table('categories')),
+  accounts: memoizedTable(db.table('accounts')),
+  jars: memoizedTable(db.table('jars')),
+  categories: memoizedTable(db.table('categories')),
 };
