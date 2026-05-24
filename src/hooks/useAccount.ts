@@ -1,5 +1,10 @@
 import { getAccount } from 'src/services/finance';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useQuery } from '@tanstack/react-query';
 
-export const useAccount = (accountId: string) =>
-  useLiveQuery(() => getAccount(accountId), [accountId]);
+export const useAccount = (accountId: string) => {
+  const { data } = useQuery({
+    queryKey: ['getAccount', accountId],
+    queryFn: () => getAccount(accountId),
+  });
+  return data;
+};

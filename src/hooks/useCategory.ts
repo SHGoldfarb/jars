@@ -1,5 +1,10 @@
 import { getCategory } from 'src/services/finance';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useQuery } from '@tanstack/react-query';
 
-export const useCategory = (categoryId: string) =>
-  useLiveQuery(() => getCategory(categoryId), [categoryId]);
+export const useCategory = (categoryId: string) => {
+  const { data } = useQuery({
+    queryKey: ['getCategory', categoryId],
+    queryFn: () => getCategory(categoryId),
+  });
+  return data;
+};

@@ -1,4 +1,5 @@
 import { getJar } from 'src/services/finance';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useQuery } from '@tanstack/react-query';
 
-export const useJar = (jarId: string) => useLiveQuery(() => getJar(jarId), [jarId]);
+export const useJar = (jarId: string) =>
+  useQuery({ queryKey: ['getJar', jarId], queryFn: () => getJar(jarId) }).data;

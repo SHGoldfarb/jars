@@ -1,9 +1,8 @@
 import { getAccounts } from 'src/services/finance';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useQuery } from '@tanstack/react-query';
 
 export const useAccounts = () => {
-  const accounts = useLiveQuery(getAccounts);
-  const loading = accounts === undefined;
+  const { data } = useQuery({ queryKey: ['getAccounts'], queryFn: () => getAccounts() });
 
-  return { accounts: accounts ?? [], loading };
+  return { accounts: data ?? [] };
 };

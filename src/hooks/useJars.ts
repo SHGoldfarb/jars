@@ -1,9 +1,7 @@
 import { getJars } from 'src/services/finance';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useQuery } from '@tanstack/react-query';
 
 export const useJars = () => {
-  const jars = useLiveQuery(getJars);
-  const loading = jars === undefined;
-
-  return { jars: jars ?? [], loading };
+  const jars = useQuery({ queryKey: ['getJars'], queryFn: () => getJars() }).data;
+  return { jars: jars ?? [] };
 };

@@ -107,6 +107,10 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 - [ ] If a deleted account acquires a non-zero balance (e.g. via transaction edit), it is automatically restored
 - [ ] If a deleted jar acquires a non-zero balance (e.g. via transaction edit), it is automatically restored
 
+### Unplanned work
+
+- [ ] Add DAL level cache and useQuery
+
 ## Epic 6 — Transfers
 
 Move money between accounts.

@@ -1,16 +1,20 @@
 import { getCategoriesExpense, getCategoriesIncome } from 'src/services/finance';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useQuery } from '@tanstack/react-query';
 
 export const useCategoriesIncome = () => {
-  const categories = useLiveQuery(() => getCategoriesIncome());
-  const loading = categories === undefined;
+  const { data: categories } = useQuery({
+    queryKey: ['getCategoriesIncome'],
+    queryFn: () => getCategoriesIncome(),
+  });
 
-  return { categories: categories ?? [], loading };
+  return { categories: categories ?? [] };
 };
 
 export const useCategoriesExpense = () => {
-  const categories = useLiveQuery(() => getCategoriesExpense());
-  const loading = categories === undefined;
+  const { data: categories } = useQuery({
+    queryKey: ['getCategoriesExpense'],
+    queryFn: () => getCategoriesExpense(),
+  });
 
-  return { categories: categories ?? [], loading };
+  return { categories: categories ?? [] };
 };
