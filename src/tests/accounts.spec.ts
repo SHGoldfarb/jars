@@ -2,10 +2,10 @@ import { expect } from '@playwright/test';
 import { test } from './setup';
 import { runInOrder } from 'src/lib/utils';
 
-test('can create account', async ({ accountsPage, accountFormPage }) => {
+test('can create account', async ({ rootLayoutPage, accountsPage, accountFormPage }) => {
   const accountName = 'Test Account';
 
-  await accountsPage.goto();
+  await rootLayoutPage.navButton('Accounts').click();
   await accountsPage.createAccountButton.click();
   await accountFormPage.nameInput.fill(accountName);
   await accountFormPage.submitButton.click();

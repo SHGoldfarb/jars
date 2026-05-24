@@ -42,10 +42,14 @@ test('shows categories', async ({ categoriesPage, createCategory }) => {
 (['Income', 'Expense'] as const).forEach((kind) => {
   const otherKind = kind === 'Income' ? 'Expense' : 'Income';
 
-  test(`can create ${kind} category`, async ({ categoriesPage, categoryFormPage }) => {
+  test(`can create ${kind} category`, async ({
+    rootLayoutPage,
+    categoriesPage,
+    categoryFormPage,
+  }) => {
     const categoryName = `Test ${kind} Category`;
 
-    await categoriesPage.goto();
+    await rootLayoutPage.navButton('Categories').click();
     await categoriesPage.tabButton(kind).click();
     await categoriesPage.createCategoryButton(kind).click();
     await categoryFormPage.nameInput.fill(categoryName);

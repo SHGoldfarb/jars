@@ -2,10 +2,10 @@ import { expect } from '@playwright/test';
 import { test } from './setup';
 import { runInOrder } from 'src/lib/utils';
 
-test('can create jar', async ({ jarsPage, jarFormPage }) => {
+test('can create jar', async ({ rootLayoutPage, jarsPage, jarFormPage }) => {
   const jarName = 'Test Jar';
 
-  await jarsPage.goto();
+  await rootLayoutPage.navButton('Jars').click();
   await jarsPage.createJarButton.click();
   await jarFormPage.nameInput.fill(jarName);
   await jarFormPage.submitButton.click();
