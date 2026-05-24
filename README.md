@@ -19,7 +19,7 @@ Your cash sits in real accounts — your wallet, your bank, your savings account
 
 ### Development
 
-- **Key technologies**: react, typescript, vite-pwa, Dexie, Tailwind CSS, shadcn, zod, tanstack router, tanstack form.
+- **Key technologies**: react, typescript, vite-pwa, Dexie, Tailwind CSS, shadcn, zod, tanstack router, tanstack form, tanstack query.
 - **Key development technologies**: eslint, prettier, playwright, vscode.
 - **Modeling**:
   - Entities:

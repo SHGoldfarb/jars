@@ -109,7 +109,7 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 
 ### Unplanned work
 
-- [ ] Add DAL level cache and useQuery
+- [x] Add DAL level cache and useQuery
 
 ## Epic 6 — Transfers
 
