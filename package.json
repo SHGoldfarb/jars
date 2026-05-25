@@ -15,7 +15,8 @@
     "lint:fix": "eslint . --fix",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "playwright test"
+    "test": "playwright test",
+    "test:chromium": "playwright test --project=chromium"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
