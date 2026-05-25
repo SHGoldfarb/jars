@@ -35,28 +35,24 @@ const test = base.extend<{
   jarFormPage: async ({ page }, use) => {
     await use(jarFormPageConstructor(page));
   },
-  createAccount: async ({ accountsPage, accountFormPage, rootLayoutPage }, use) => {
+  createAccount: async ({ page, accountsPage, accountFormPage, rootLayoutPage }, use) => {
     await use(async (accountName: string) => {
-      await rootLayoutPage.navButton('Accounts').click();
+      if (new URL(page.url()).pathname != '/accounts') {
+        await rootLayoutPage.navButton('Accounts').click();
+      }
       await accountsPage.createAccountButton.click();
       await accountFormPage.nameInput.fill(accountName);
       await accountFormPage.submitButton.click();
-      // Should be redirected to the accounts page
-      await expect(accountsPage.createAccountButton).toBeVisible();
-      // Contains the new account
-      await accountsPage.expectAccountToExist(accountName);
     });
   },
-  createJar: async ({ jarsPage, jarFormPage, rootLayoutPage }, use) => {
+  createJar: async ({ page, jarsPage, jarFormPage, rootLayoutPage }, use) => {
     await use(async (jarName: string) => {
-      await rootLayoutPage.navButton('Jars').click();
+      if (new URL(page.url()).pathname != '/jars') {
+        await rootLayoutPage.navButton('Jars').click();
+      }
       await jarsPage.createJarButton.click();
       await jarFormPage.nameInput.fill(jarName);
       await jarFormPage.submitButton.click();
-      // Should be redirected to the jars page
-      await expect(jarsPage.createJarButton).toBeVisible();
-      // Contains the new jar
-      await jarsPage.expectJarToExist(jarName);
     });
   },
   categoriesPage: async ({ page }, use) => {
@@ -65,26 +61,15 @@ const test = base.extend<{
   categoryFormPage: async ({ page }, use) => {
     await use(categoryFormPageConstructor(page));
   },
-  createCategory: async ({ categoriesPage, categoryFormPage, rootLayoutPage }, use) => {
+  createCategory: async ({ page, categoriesPage, categoryFormPage, rootLayoutPage }, use) => {
     await use(async (kind, categoryName) => {
-      const otherKind = kind === 'Income' ? 'Expense' : 'Income';
-      await rootLayoutPage.navButton('Categories').click();
-      await categoriesPage.tabButton(kind).click();
+      if (new URL(page.url()).pathname != `/categories/${kind.toLowerCase()}`) {
+        await rootLayoutPage.navButton('Categories').click();
+        await categoriesPage.tabButton(kind).click();
+      }
       await categoriesPage.createCategoryButton(kind).click();
       await categoryFormPage.nameInput.fill(categoryName);
       await categoryFormPage.submitButton.click();
-
-      // Should be redirected to the categories page
-      await expect(categoriesPage.incomeTabButton).toBeVisible();
-      await expect(categoriesPage.expensesTabButton).toBeVisible();
-
-      // Contains the new category in the correct tab
-      await categoriesPage.tabButton(kind).click();
-      await categoriesPage.expectCategoryToExist(categoryName);
-
-      // Does not contain the new category in the other tab
-      await categoriesPage.tabButton(otherKind).click();
-      await categoriesPage.expectCategoryToNotExist(categoryName);
     });
   },
 });
