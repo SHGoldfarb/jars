@@ -1,4 +1,4 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base } from '@playwright/test';
 import { accountsPageConstructor, type AccountsPage } from './pages/accounts.page';
 import { accountFormPageConstructor, type AccountFormPage } from './pages/accountsForm.page';
 import { jarsPageConstructor, type JarsPage } from './pages/jars.page';
