@@ -63,7 +63,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['src/tests/setup.ts'],
+    files: ['src/tests/e2e/setup.ts'],
     rules: {
       'react-hooks/rules-of-hooks': 'off',
     },
