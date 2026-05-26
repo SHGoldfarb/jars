@@ -32,4 +32,7 @@ export const DB = {
   accounts: memoizedTable(db.table('accounts')),
   jars: memoizedTable(db.table('jars')),
   categories: memoizedTable(db.table('categories')),
+  transactions: memoizedTable(db.table('transactions')),
+  allocations: memoizedTable(db.table('allocations')),
+  transfers: memoizedTable(db.table('transfers')),
 };

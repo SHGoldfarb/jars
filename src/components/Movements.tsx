@@ -1,3 +1,19 @@
+import { useTransactions } from 'src/hooks/useTransactions';
+import { GenericNameableList } from './GenericNameableList';
+import { currency } from 'src/services/finance';
+
 export const Movements = () => {
-  return <div className="p-2">Hello from Movements! This is the default page</div>;
+  const { transactions } = useTransactions();
+
+  return (
+    <GenericNameableList
+      items={transactions.map((transaction) => ({
+        ...transaction,
+        name: `${transaction.description} ${currency.stringify(transaction.amount)}`,
+        url: `/transactions/${transaction.id}/edit`,
+      }))}
+      addLabel="Add transaction"
+      addUrl="/transactions/new"
+    />
+  );
 };

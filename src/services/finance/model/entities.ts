@@ -1,12 +1,17 @@
-import type { CurrencyAmount } from '../../shared';
 import * as z from 'zod';
+import { CurrencyAmount } from './currency';
 
-export const Archivable = z.object({
-  archivedAtISO: z.iso.datetime().optional(),
+const idShape = z.uuidv4();
+const dateTimeShape = z.iso.datetime();
+
+const Archivable = z.object({
+  archivedAtISO: dateTimeShape.optional(),
 });
 
-export const Identifiable = z.object({
-  id: z.uuidv4(),
+type Archivable = z.infer<typeof Archivable>;
+
+const Identifiable = z.object({
+  id: idShape,
 });
 
 export const Account = z.object({
@@ -48,45 +53,37 @@ export const CategoryExpense = z.object({
 
 export type CategoryExpense = z.infer<typeof CategoryExpense>;
 
+export const Transaction = z.object({
+  ...Identifiable.shape,
+  ...Archivable.shape,
+  kind: z.enum(['income', 'expense']),
+  accountId: idShape,
+  categoryId: idShape,
+  jarId: idShape,
+  amount: CurrencyAmount,
+  dateISO: dateTimeShape,
+  description: z.string(),
+});
+
+export type Transaction = z.infer<typeof Transaction>;
+
+export const TransactionUnsaved = z.object({
+  ...Transaction.shape,
+  id: Transaction.shape.id.optional(),
+});
+
+export type TransactionUnsaved = z.infer<typeof TransactionUnsaved>;
+
 // -----------------------------------
 // ----------- OLD TYPES -------------
 // -----------------------------------
-
-export type ISODateTimeString = string;
-
-export interface Archivable {
-  archivedAtISO?: ISODateTimeString;
-}
-
-export type TransactionKind = 'income' | 'expense';
-
-type TransactionBase = Archivable & {
-  id: string;
-  kind: TransactionKind;
-  accountId: string;
-  jarId: string;
-  amount: CurrencyAmount; // Always positive; sign is derived from kind.
-  dateISO: string;
-  notes: string;
-  categoryId: string;
-};
-
-export type IncomeTransaction = TransactionBase & {
-  kind: 'income';
-};
-
-export type ExpenseTransaction = TransactionBase & {
-  kind: 'expense';
-};
-
-export type Transaction = IncomeTransaction | ExpenseTransaction;
 
 export type Transfer = Archivable & {
   id: string;
   dateISO: string;
   originAccountId: string;
   destinationAccountId: string;
-  notes: string;
+  description: string;
   amount: CurrencyAmount; // Always positive.
 };
 
@@ -95,6 +92,6 @@ export type Allocation = Archivable & {
   dateISO: string;
   originJarId: string;
   destinationJarId: string;
-  notes: string;
+  description: string;
   amount: CurrencyAmount; // Always positive.
 };
