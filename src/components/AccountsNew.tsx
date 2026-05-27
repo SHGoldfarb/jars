@@ -1,12 +1,12 @@
 import { useNavigate } from '@tanstack/react-router';
-import { createAccount } from 'src/services/finance';
+import { financeCommands } from 'src/services/finance/application';
 import { GenericNameForm } from './GenericNameForm';
 
 export const AccountsNew = () => {
   const navigate = useNavigate();
   const handleSubmit = async (name: string) => {
     try {
-      await createAccount({ name: name });
+      await financeCommands.createAccount({ name: name });
       await navigate({ to: '/accounts' });
     } catch (error) {
       console.error('Failed to create account:', error);

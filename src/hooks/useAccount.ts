@@ -1,10 +1,10 @@
-import { getAccount } from 'src/services/finance';
+import { financeQueries } from 'src/services/finance/application';
 import { useQuery } from '@tanstack/react-query';
 
 export const useAccount = (accountId: string) => {
   const { data } = useQuery({
-    queryKey: ['getAccount', accountId],
-    queryFn: () => getAccount(accountId),
+    queryKey: ['financeQueries.getAccountById', accountId],
+    queryFn: () => financeQueries.getAccountById(accountId),
   });
   return data;
 };

@@ -1,10 +1,10 @@
-import { getCategory } from 'src/services/finance';
+import { financeQueries } from 'src/services/finance/application';
 import { useQuery } from '@tanstack/react-query';
 
 export const useCategory = (categoryId: string) => {
   const { data } = useQuery({
-    queryKey: ['getCategory', categoryId],
-    queryFn: () => getCategory(categoryId),
+    queryKey: ['financeQueries.getCategoryById', categoryId],
+    queryFn: () => financeQueries.getCategoryById(categoryId),
   });
   return data;
 };

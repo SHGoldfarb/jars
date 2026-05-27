@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { archiveJar, updateJar } from 'src/services/finance';
+import { financeCommands } from 'src/services/finance/application';
 import { useParams } from '@tanstack/react-router';
 import { useJar } from 'src/hooks/useJar';
 import { GenericNameForm } from './GenericNameForm';
@@ -15,7 +15,7 @@ export const JarsEdit = () => {
 
   const handleSubmit = async (name: string) => {
     try {
-      await updateJar({ ...jar, name: name });
+      await financeCommands.renameJar({ jarId: jar.id, name });
       await navigate({ to: '/jars' });
     } catch (error) {
       console.error('Failed to update jar:', error);
@@ -24,7 +24,7 @@ export const JarsEdit = () => {
 
   const handleDelete = async () => {
     try {
-      await archiveJar(jar.id);
+      await financeCommands.archiveJar({ jarId: jar.id });
       await navigate({ to: '/jars' });
     } catch (error) {
       console.error('Failed to delete jar:', error);

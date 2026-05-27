@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { archiveAccount, updateAccount } from 'src/services/finance';
+import { financeCommands } from 'src/services/finance/application';
 import { useParams } from '@tanstack/react-router';
 import { useAccount } from 'src/hooks/useAccount';
 import { GenericNameForm } from './GenericNameForm';
@@ -15,7 +15,7 @@ export const AccountsEdit = () => {
 
   const handleSubmit = async (name: string) => {
     try {
-      await updateAccount({ ...account, name: name });
+      await financeCommands.renameAccount({ accountId: account.id, name });
       await navigate({ to: '/accounts' });
     } catch (error) {
       console.error('Failed to update account:', error);
@@ -24,7 +24,7 @@ export const AccountsEdit = () => {
 
   const handleDelete = async () => {
     try {
-      await archiveAccount(account.id);
+      await financeCommands.archiveAccount({ accountId: account.id });
       await navigate({ to: '/accounts' });
     } catch (error) {
       console.error('Failed to delete account:', error);

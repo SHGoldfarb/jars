@@ -1,12 +1,12 @@
 import { useNavigate } from '@tanstack/react-router';
-import { createJar } from 'src/services/finance';
+import { financeCommands } from 'src/services/finance/application';
 import { GenericNameForm } from './GenericNameForm';
 
 export const JarsNew = () => {
   const navigate = useNavigate();
   const handleSubmit = async (name: string) => {
     try {
-      await createJar({ name: name });
+      await financeCommands.createJar({ name: name });
       await navigate({ to: '/jars' });
     } catch (error) {
       console.error('Failed to create jar:', error);

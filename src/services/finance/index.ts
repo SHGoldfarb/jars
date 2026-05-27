@@ -1,3 +1,4 @@
 export * from './model';
-export * from './use-cases';
+export * from './application';
+export * from './domain';
 export * from './policies';

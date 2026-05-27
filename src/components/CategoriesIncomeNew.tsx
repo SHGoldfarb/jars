@@ -1,12 +1,12 @@
 import { useNavigate } from '@tanstack/react-router';
-import { createCategory } from 'src/services/finance';
+import { financeCommands } from 'src/services/finance/application';
 import { GenericNameForm } from './GenericNameForm';
 
 export const CategoriesIncomeNew = () => {
   const navigate = useNavigate();
   const handleSubmit = async (name: string) => {
     try {
-      await createCategory({ name: name, kind: 'income' });
+      await financeCommands.createIncomeCategory({ name: name });
       await navigate({ to: '/categories/income' });
     } catch (error) {
       console.error('Failed to create income category:', error);

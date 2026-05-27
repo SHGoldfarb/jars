@@ -1,8 +1,11 @@
-import { getAccounts } from 'src/services/finance';
+import { financeQueries } from 'src/services/finance/application';
 import { useQuery } from '@tanstack/react-query';
 
 export const useAccounts = () => {
-  const { data } = useQuery({ queryKey: ['getAccounts'], queryFn: () => getAccounts() });
+  const { data } = useQuery({
+    queryKey: ['financeQueries.listAccounts'],
+    queryFn: () => financeQueries.listAccounts(),
+  });
 
   return { accounts: data ?? [] };
 };

@@ -1,7 +1,10 @@
-import { getJars } from 'src/services/finance';
+import { financeQueries } from 'src/services/finance/application';
 import { useQuery } from '@tanstack/react-query';
 
 export const useJars = () => {
-  const jars = useQuery({ queryKey: ['getJars'], queryFn: () => getJars() }).data;
+  const jars = useQuery({
+    queryKey: ['financeQueries.listJars'],
+    queryFn: () => financeQueries.listJars(),
+  }).data;
   return { jars: jars ?? [] };
 };
