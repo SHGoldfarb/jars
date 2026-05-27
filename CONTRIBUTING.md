@@ -36,6 +36,7 @@ Use `pnpm test:chromium` when you only want the Chromium Playwright project.
 ## Working Style
 
 - Prefer small, focused changes.
+- Prefer arrow functions over function declarations and object method shorthand for consistency.
 - Keep TypeScript strict and type-safe.
 - Avoid `any`, unsafe casts, and non-null assertions unless there is no safer alternative and the tradeoff is clearly explained.
 - Update or add tests when behavior changes.
