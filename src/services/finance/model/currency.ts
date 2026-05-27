@@ -1,6 +1,6 @@
 import * as z from 'zod';
 
-const Decimal = z.object({
+export const Decimal = z.object({
   // Examples
   // { value: 125, decimalPlaces: 2 } = 1.25
   // { value: 50, decimalPlaces: 0 } = 50
@@ -8,6 +8,8 @@ const Decimal = z.object({
   value: z.bigint(),
   decimalPlaces: z.number().int(),
 });
+
+export type Decimal = z.infer<typeof Decimal>;
 
 export const CurrencyAmount = z.object({
   currency: z.enum(['CLP', 'USD']),
