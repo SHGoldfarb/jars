@@ -110,6 +110,7 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 ### Unplanned work
 
 - [x] Add DAL level cache and useQuery
+- [x] Refactor to follow Domain Driven Design more closely
 
 ## Epic 6 — Transfers
 
