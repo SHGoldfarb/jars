@@ -1,15 +1,5 @@
 import * as z from 'zod';
-
-export const Decimal = z.object({
-  // Examples
-  // { value: 125, decimalPlaces: 2 } = 1.25
-  // { value: 50, decimalPlaces: 0 } = 50
-  // { value: 1, decimalPlaces: -2 } = 100
-  value: z.bigint(),
-  decimalPlaces: z.number().int(),
-});
-
-export type Decimal = z.infer<typeof Decimal>;
+import { Decimal, decimal } from './decimal';
 
 export const CurrencyAmount = z.object({
   currency: z.enum(['CLP', 'USD']),
@@ -17,3 +7,21 @@ export const CurrencyAmount = z.object({
 });
 
 export type CurrencyAmount = z.infer<typeof CurrencyAmount>;
+
+const sumCurrencyAmounts = (x: CurrencyAmount, y: CurrencyAmount): CurrencyAmount => {
+  if (x.currency !== y.currency) {
+    throw new Error('Cant sum different currencies');
+  }
+
+  return { amountDecimal: decimal.sum(x.amountDecimal, y.amountDecimal), currency: x.currency };
+};
+
+const negateCurrencyAmount = (amount: CurrencyAmount): CurrencyAmount => ({
+  currency: amount.currency,
+  amountDecimal: decimal.negate(amount.amountDecimal),
+});
+
+export const currency = {
+  sum: sumCurrencyAmounts,
+  negate: negateCurrencyAmount,
+};
