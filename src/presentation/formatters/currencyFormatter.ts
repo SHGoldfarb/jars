@@ -1,7 +1,7 @@
 import { decimal, type CurrencyAmount } from 'src/services/finance';
 
-// Guards agains code drift in CurrencyAmount, ensuring that TypeScipt errors
-// if called with a new currency that was added to CurrencyAmount but not to formatCurrencyAmount.
+// Even if CurrencyAmount already restricts this, that can change in the future
+// so we re-define the supported currencies here
 type supportedCurrencies = 'USD' | 'CLP';
 
 export const formatCurrencyAmount = (value: CurrencyAmount & { currency: supportedCurrencies }) => {
