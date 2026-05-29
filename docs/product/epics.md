@@ -77,7 +77,7 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 
 **Transaction entry**
 
-- [ ] User can create a transaction with: amount, date, description, type (`income` or `expense`), category, account, and jar.
+- [x] User can create a transaction with: amount, date, description, type (`income` or `expense`), category, account, and jar.
 - [ ] App validates amount is a positive number.
 - [ ] Date defaults to today but can be changed.
 - [ ] Category picker is filtered by transaction type (only income categories for income, only expense categories for expense).

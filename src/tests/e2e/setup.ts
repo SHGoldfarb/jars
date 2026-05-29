@@ -6,6 +6,11 @@ import { jarFormPageConstructor, type JarFormPage } from './pages/jarsForm.page'
 import { categoriesPageConstructor, type CategoriesPage } from './pages/categories.page';
 import { categoryFormPageConstructor, type CategoryFormPage } from './pages/categoriesForm.page';
 import { rootLayoutPageConstructor, type RootLayoutPage } from './pages/rootLayout.page';
+import { movementsPageConstructor, type MovementsPage } from './pages/movements.page';
+import {
+  transactionFormPageConstructor,
+  type TransactionFormPage,
+} from './pages/transactionForm.page';
 
 const test = base.extend<{
   accountsPage: AccountsPage;
@@ -18,6 +23,8 @@ const test = base.extend<{
   categoryFormPage: CategoryFormPage;
   createCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
   rootLayoutPage: RootLayoutPage;
+  movementsPage: MovementsPage;
+  transactionFormPage: TransactionFormPage;
 }>({
   rootLayoutPage: async ({ page }, use) => {
     await page.goto('/');
@@ -56,6 +63,12 @@ const test = base.extend<{
   },
   categoryFormPage: async ({ page }, use) => {
     await use(categoryFormPageConstructor(page));
+  },
+  movementsPage: async ({ page }, use) => {
+    await use(movementsPageConstructor(page));
+  },
+  transactionFormPage: async ({ page }, use) => {
+    await use(transactionFormPageConstructor(page));
   },
   createCategory: async ({ categoriesPage, categoryFormPage, rootLayoutPage }, use) => {
     await use(async (kind, categoryName) => {
