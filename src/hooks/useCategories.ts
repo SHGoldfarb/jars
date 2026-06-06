@@ -18,3 +18,9 @@ export const useCategoriesExpense = () => {
 
   return { categories: categories ?? [] };
 };
+
+export const useCategories = (kind: 'income' | 'expense') => {
+  const { categories: incomeCategories } = useCategoriesIncome();
+  const { categories: expenseCategories } = useCategoriesExpense();
+  return { categories: kind === 'income' ? incomeCategories : expenseCategories };
+};
