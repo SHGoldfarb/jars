@@ -78,10 +78,10 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 **Transaction entry**
 
 - [x] User can create a transaction with: amount, date, description, type (`income` or `expense`), category, account, and jar.
-- [ ] App validates amount is a positive number.
-- [ ] Date defaults to today but can be changed.
-- [ ] Category picker is filtered by transaction type (only income categories for income, only expense categories for expense).
-- [ ] Only active accounts, jars and categories are available for selection when creating or editing a transaction.
+- [x] App validates amount is a positive number.
+- [x] Date defaults to today but can be changed.
+- [x] Category picker is filtered by transaction type (only income categories for income, only expense categories for expense).
+- [x] Only active accounts, jars and categories are available for selection when creating or editing a transaction.
 - [ ] User can edit any field of an existing transaction.
 - [ ] User can delete a transaction.
 
@@ -111,6 +111,8 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 
 - [x] Add DAL level cache and useQuery
 - [x] Refactor to follow Domain Driven Design more closely
+- [ ] "Enter" key in form should move to next field
+- [ ] When losing focus in input field, the options in the opened unrelated select dropdown should not be hidden.
 
 ## Epic 6 — Transfers
 
