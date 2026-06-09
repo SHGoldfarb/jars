@@ -93,15 +93,16 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 
 **Validation**
 
-- [ ] Amount, date, type, account, jar, and category are required fields.
-- [ ] Description is optional.
+- [x] Amount, date, type, account, jar, and category are required fields.
+- [x] Description is optional.
 
 **Persistence**
 
-- [ ] Transactions persist across page refreshes.
+- [x] Transactions persist across page refreshes.
 
 **Account/jar integrity**
 
+- [ ] Accounts and jars show current balance
 - [ ] User cannot delete an account that has a non-zero balance
 - [ ] User cannot delete a jar that has a non-zero balance
 - [ ] If a deleted account acquires a non-zero balance (e.g. via transaction edit), it is automatically restored

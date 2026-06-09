@@ -25,10 +25,11 @@ const getDefaultValues = (): TransactionFormValues => ({
   jarId: '',
 });
 
+const nonNegativeNumberRegex = /^\d+(\.\d+)?$/;
+
 const parsePositiveAmountToClp = (value: string): CurrencyAmount => {
   const normalized = value.trim();
-  const amountRegex = /^\d+(\.\d+)?$/;
-  if (!amountRegex.test(normalized)) {
+  if (!nonNegativeNumberRegex.test(normalized)) {
     throw new Error('Amount must be a positive number');
   }
 
@@ -47,19 +48,6 @@ const parsePositiveAmountToClp = (value: string): CurrencyAmount => {
       decimalPlaces: decimalPart.length,
     },
   };
-};
-
-const amountRegex = /^\d+(\.\d+)?$/;
-
-const isPositiveAmountString = (value: string): boolean => {
-  const normalized = value.trim();
-  if (!amountRegex.test(normalized)) {
-    return false;
-  }
-
-  const [wholePart, decimalPart = ''] = normalized.split('.');
-  const amountValue = BigInt(`${wholePart}${decimalPart}`);
-  return amountValue > 0n;
 };
 
 const parseDateInputToISO = (value: string): string => {
@@ -81,8 +69,8 @@ const transactionValidators = {
     .string()
     .trim()
     .min(1, 'Amount is required')
-    .regex(amountRegex, 'Amount must be a positive number')
-    .refine(isPositiveAmountString, 'Amount must be greater than zero'),
+    .regex(nonNegativeNumberRegex, 'Amount must be a positive number')
+    .refine((val) => parseFloat(val) > 0, 'Amount must be greater than zero'),
   date: z
     .string()
     .trim()
