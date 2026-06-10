@@ -34,6 +34,9 @@ const test = base.extend<{
   rootLayoutPage: RootLayoutPage;
   movementsPage: MovementsPage;
   transactionFormPage: TransactionFormPage;
+  deleteAccount: (accountName: string) => Promise<void>;
+  deleteCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
+  deleteJar: (jarName: string) => Promise<void>;
 }>({
   rootLayoutPage: async ({ page }, use) => {
     await page.goto('/');
@@ -104,6 +107,28 @@ const test = base.extend<{
           await createJar(name);
         }),
       ]);
+    });
+  },
+  deleteAccount: async ({ rootLayoutPage, accountsPage, accountFormPage }, use) => {
+    await use(async (accountName) => {
+      await rootLayoutPage.navButton('Accounts').click();
+      await accountsPage.clickAccount(accountName);
+      await accountFormPage.deleteButton.click();
+    });
+  },
+  deleteCategory: async ({ rootLayoutPage, categoriesPage, categoryFormPage }, use) => {
+    await use(async (kind, categoryName) => {
+      await rootLayoutPage.navButton('Categories').click();
+      await categoriesPage.tabButton(kind).click();
+      await categoriesPage.clickCategory(categoryName);
+      await categoryFormPage.deleteButton.click();
+    });
+  },
+  deleteJar: async ({ rootLayoutPage, jarsPage, jarFormPage }, use) => {
+    await use(async (jarName) => {
+      await rootLayoutPage.navButton('Jars').click();
+      await jarsPage.clickJar(jarName);
+      await jarFormPage.deleteButton.click();
     });
   },
 });

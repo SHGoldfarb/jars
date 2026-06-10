@@ -36,27 +36,43 @@ test('can create income transaction', async ({
 });
 
 test.describe('transaction form', () => {
-  test('filters categories by selected transaction type', async ({
+  test('selectors behavior', async ({
     createAccount,
     createJar,
     createCategory,
     rootLayoutPage,
     movementsPage,
     transactionFormPage,
+    deleteAccount,
+    deleteJar,
+    deleteCategory,
   }) => {
+    // Setup data
     const accountName = 'Main account for expense';
     const jarName = 'Main jar for expense';
     const incomeCategoryName = 'Dividends';
     const expenseCategoryName = 'Groceries';
-
     await createAccount(accountName);
     await createJar(jarName);
     await createCategory('Income', incomeCategoryName);
     await createCategory('Expense', expenseCategoryName);
 
+    // Setup deleted data
+    const deletedCategoryName = 'Deleted Category';
+    const deletedAccountName = 'Deleted Account';
+    const deletedJarName = 'Deleted Jar';
+    await createAccount(deletedAccountName);
+    await createCategory('Expense', deletedCategoryName);
+    await createJar(deletedJarName);
+    await deleteAccount(deletedAccountName);
+    await deleteCategory('Expense', deletedCategoryName);
+    await deleteJar(deletedJarName);
+
+    // Go to form
     await rootLayoutPage.navButton('Movements').click();
     await movementsPage.createTransactionButton.click();
 
+    // Categories selector only shows selected kind categories
     await transactionFormPage.selectType('Income');
     await transactionFormPage.expectCategoryOptionToExist(incomeCategoryName);
     await transactionFormPage.expectCategoryOptionToNotExist(expenseCategoryName);
@@ -64,17 +80,25 @@ test.describe('transaction form', () => {
     await transactionFormPage.selectType('Expense');
     await transactionFormPage.expectCategoryOptionToExist(expenseCategoryName);
     await transactionFormPage.expectCategoryOptionToNotExist(incomeCategoryName);
+
+    // Selectors dont show deleted data
+    await transactionFormPage.selectType('Expense');
+    await transactionFormPage.expectOptionToNotExist('Category', deletedCategoryName);
+    await transactionFormPage.expectOptionToNotExist('Account', deletedAccountName);
+    await transactionFormPage.expectOptionToNotExist('Jar', deletedJarName);
   });
 
-  test('validates fields and shows error messages', async ({
+  test('form validations', async ({
     transactionFormPage,
     page,
     createDefaultData,
     rootLayoutPage,
     movementsPage,
   }) => {
-    // Setup data and go to form
+    // Setup data
     await createDefaultData();
+
+    // Go to form
     await rootLayoutPage.navButton('Movements').click();
     await movementsPage.createTransactionButton.click();
 
@@ -102,11 +126,4 @@ test.describe('transaction form', () => {
     await transactionFormPage.submitButton.click();
     await expect(page.getByText('Amount must be greater than zero')).toBeVisible();
   });
-
-  // TODO:
-
-  //  - not on blur; on change
-  //  - removes error message on change
-  // auto focus on first input on form open
-  // doesnt show deleted categories, jars, accounts
 });

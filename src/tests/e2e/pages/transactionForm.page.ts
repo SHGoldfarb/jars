@@ -24,16 +24,30 @@ export const transactionFormPageConstructor = (page: Page) => {
   const selectJar = (name: string) => selectOption('Jar', name);
   const selectCategory = (name: string) => selectOption('Category', name);
 
-  const expectCategoryOptionToExist = async (name: string) => {
-    await categorySelect.click();
-    await expect(page.getByRole('option', { name, exact: true })).toBeVisible();
+  const expectOptionToExist = async (
+    comboboxName: 'Type' | 'Account' | 'Jar' | 'Category',
+    option: string
+  ) => {
+    await page.getByRole('combobox', { name: comboboxName }).click();
+    await expect(page.getByRole('option', { name: option, exact: true })).toBeVisible();
     await page.keyboard.press('Escape');
   };
 
-  const expectCategoryOptionToNotExist = async (name: string) => {
-    await categorySelect.click();
-    await expect(page.getByRole('option', { name, exact: true })).toHaveCount(0);
+  const expectOptionToNotExist = async (
+    comboboxName: 'Type' | 'Account' | 'Jar' | 'Category',
+    option: string
+  ) => {
+    await page.getByRole('combobox', { name: comboboxName }).click();
+    await expect(page.getByRole('option', { name: option, exact: true })).toHaveCount(0);
     await page.keyboard.press('Escape');
+  };
+
+  const expectCategoryOptionToExist = async (name: string) => {
+    await expectOptionToExist('Category', name);
+  };
+
+  const expectCategoryOptionToNotExist = async (name: string) => {
+    await expectOptionToNotExist('Category', name);
   };
 
   return {
@@ -50,6 +64,8 @@ export const transactionFormPageConstructor = (page: Page) => {
     selectAccount,
     selectJar,
     selectCategory,
+    expectOptionToExist,
+    expectOptionToNotExist,
     expectCategoryOptionToExist,
     expectCategoryOptionToNotExist,
   };
