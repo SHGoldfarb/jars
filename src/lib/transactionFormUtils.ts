@@ -1,4 +1,4 @@
-import { type CurrencyAmount } from 'src/services/finance';
+import { decimal, type CurrencyAmount } from 'src/services/finance';
 import * as z from 'zod';
 
 type TransactionKind = 'income' | 'expense';
@@ -28,25 +28,15 @@ const getDefaultValues = (): TransactionFormValues => ({
 const nonNegativeNumberRegex = /^\d+(\.\d+)?$/;
 
 const parsePositiveAmountToClp = (value: string): CurrencyAmount => {
-  const normalized = value.trim();
-  if (!nonNegativeNumberRegex.test(normalized)) {
-    throw new Error('Amount must be a positive number');
-  }
+  const amountDecimal = decimal.parseString(value);
 
-  const [wholePart, decimalPart = ''] = normalized.split('.');
-  const combinedDigits = `${wholePart}${decimalPart}`;
-  const amountValue = BigInt(combinedDigits);
-
-  if (amountValue <= 0n) {
+  if (amountDecimal.value <= 0n) {
     throw new Error('Amount must be greater than zero');
   }
 
   return {
     currency: 'CLP',
-    amountDecimal: {
-      value: amountValue,
-      decimalPlaces: decimalPart.length,
-    },
+    amountDecimal,
   };
 };
 

@@ -1,15 +1,14 @@
 import { decimal, type CurrencyAmount } from 'src/services/finance';
 
-// Even if CurrencyAmount already restricts this, that can change in the future
-// so we re-define the supported currencies here
-type supportedCurrencies = 'USD' | 'CLP';
+const formatters = {
+  USD: (amount: number) =>
+    Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount),
+  CLP: (amount: number) =>
+    Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(amount),
+};
 
-export const formatCurrencyAmount = (value: CurrencyAmount & { currency: supportedCurrencies }) => {
+export const formatCurrencyAmount = (value: CurrencyAmount) => {
   const amount = decimal.toNumber(value.amountDecimal);
 
-  if (value.currency === 'USD') {
-    return `$${amount.toFixed(2)}`;
-  }
-
-  return `$${amount.toFixed(0)}`;
+  return formatters[value.currency](amount);
 };

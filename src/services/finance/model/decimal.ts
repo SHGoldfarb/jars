@@ -48,8 +48,27 @@ const decimalToNumber = (value: Decimal) => {
   return Number(value.value) / 10 ** value.decimalPlaces;
 };
 
+const numberRegex = /^-?\d+(\.\d+)?$/;
+
+const parseString = (value: string): Decimal => {
+  const normalized = value.trim();
+  if (!numberRegex.test(normalized)) {
+    throw new Error('Amount must be a number');
+  }
+
+  const [wholePart, decimalPart = ''] = normalized.split('.');
+  const combinedDigits = `${wholePart}${decimalPart}`;
+  const amountValue = BigInt(combinedDigits);
+
+  return {
+    value: amountValue,
+    decimalPlaces: decimalPart.length,
+  };
+};
+
 export const decimal = {
   sum: sumDecimals,
   negate: negateDecimal,
   toNumber: decimalToNumber,
+  parseString,
 };

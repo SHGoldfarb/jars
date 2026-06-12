@@ -87,7 +87,7 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 
 **Listing**
 
-- [ ] All transactions are listed on the Movements screen.
+- [x] All transactions are listed on the Movements screen.
 - [ ] Each transaction displays: amount, date, description, type, category, account, and jar.
 - [ ] Transactions are sorted by date descending by default.
 

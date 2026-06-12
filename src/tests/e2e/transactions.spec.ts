@@ -1,6 +1,8 @@
 import { expect } from '@playwright/test';
 import { defaultData, test } from './setup';
 import { runInOrder } from 'src/lib/utils';
+import { formatCurrencyAmount } from 'src/presentation/formatters/currencyFormatter';
+import { decimal } from 'src/services/finance';
 
 test('can create income transaction', async ({
   createAccount,
@@ -13,7 +15,8 @@ test('can create income transaction', async ({
   const accountName = 'Main account for income';
   const jarName = 'Main jar for income';
   const categoryName = 'Salary';
-  const description = 'Salary payment for May';
+  const description = 'Payment for May';
+  const amount = '1200000';
 
   await createAccount(accountName);
   await createJar(jarName);
@@ -22,7 +25,7 @@ test('can create income transaction', async ({
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.createTransactionButton.click();
 
-  await transactionFormPage.amountInput.fill('1200000');
+  await transactionFormPage.amountInput.fill(amount);
   await transactionFormPage.dateInput.fill('2026-05-20');
   await transactionFormPage.descriptionInput.fill(description);
   await transactionFormPage.selectType('Income');
@@ -32,7 +35,16 @@ test('can create income transaction', async ({
   await transactionFormPage.submitButton.click();
 
   await expect(movementsPage.createTransactionButton).toBeVisible();
-  await movementsPage.expectTransactionToExist(description);
+  const transactionLink = movementsPage.getTransaction(description);
+  await expect(transactionLink).toBeVisible();
+  await expect(transactionLink.getByText(categoryName)).toBeVisible();
+  await expect(transactionLink.getByText(jarName)).toBeVisible();
+  await expect(transactionLink.getByText(accountName)).toBeVisible();
+  await expect(
+    transactionLink.getByText(
+      formatCurrencyAmount({ currency: 'CLP', amountDecimal: decimal.parseString(amount) })
+    )
+  ).toBeVisible();
 });
 
 test.describe('transaction form', () => {
@@ -47,6 +59,7 @@ test.describe('transaction form', () => {
     deleteJar,
     deleteCategory,
   }) => {
+    test.slow();
     // Setup data
     const accountName = 'Main account for expense';
     const jarName = 'Main jar for expense';
