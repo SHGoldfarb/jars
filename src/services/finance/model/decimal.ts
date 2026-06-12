@@ -2,10 +2,10 @@ import * as z from 'zod';
 
 export const Decimal = z.object({
   // Examples
-  // { value: 125, decimalPlaces: 2 } = 1.25
-  // { value: 50, decimalPlaces: 0 } = 50
-  // { value: 1, decimalPlaces: -2 } = 100
-  value: z.bigint(),
+  // { value: "125", decimalPlaces: 2 } = 1.25
+  // { value: "50", decimalPlaces: 0 } = 50
+  // { value: "1", decimalPlaces: -2 } = 100
+  value: z.string().regex(/^\d+$/),
   decimalPlaces: z.number().int(),
 });
 
@@ -24,7 +24,7 @@ const scaleDecimalValueToPlaces = (decimal: Decimal, targetPlaces: number) => {
     throw new Error('targetPlaces must be >= decimal.decimalPlaces');
   }
 
-  return decimal.value * 10n ** BigInt(diff);
+  return decimal.value + '0'.repeat(diff);
 };
 
 const sumDecimals = (x: Decimal, y: Decimal): Decimal => {
@@ -39,8 +39,12 @@ const sumDecimals = (x: Decimal, y: Decimal): Decimal => {
   });
 };
 
+const negateStringNumber = (value: string): string => {
+  return value.startsWith('-') ? value.slice(1) : `-${value}`;
+};
+
 const negateDecimal = (decimal: Decimal): Decimal => ({
-  value: -decimal.value,
+  value: negateStringNumber(decimal.value),
   decimalPlaces: decimal.decimalPlaces,
 });
 
@@ -58,10 +62,9 @@ const parseString = (value: string): Decimal => {
 
   const [wholePart, decimalPart = ''] = normalized.split('.');
   const combinedDigits = `${wholePart}${decimalPart}`;
-  const amountValue = BigInt(combinedDigits);
 
   return {
-    value: amountValue,
+    value: combinedDigits,
     decimalPlaces: decimalPart.length,
   };
 };

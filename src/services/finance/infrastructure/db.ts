@@ -1,5 +1,6 @@
 import { Dexie, type Table } from 'dexie';
 import { makeVersionedMemoize } from 'src/lib/utils';
+import z from 'zod';
 
 const db = new Dexie('JarsMainDatabase');
 
@@ -10,6 +11,31 @@ db.version(2).stores({
   transactions: '&id, accountId, jarId',
   allocations: '&id, originJarId, destinationJarId',
   transfers: '&id, originAccountId, destinationAccountId',
+});
+
+db.version(3).upgrade((tx) => {
+  return tx
+    .table('transactions')
+    .toCollection()
+    .modify((transaction) => {
+      const transactionValidator = z.object({
+        amount: z.object({
+          amountDecimal: z.object({
+            value: z.bigint().or(z.string()),
+          }),
+        }),
+      });
+
+      const typed = (value: unknown): value is z.infer<typeof transactionValidator> =>
+        transactionValidator.safeParse(value).success;
+
+      if (typed(transaction)) {
+        const amount = transaction.amount.amountDecimal.value;
+        if (typeof amount === 'bigint') {
+          transaction.amount.amountDecimal.value = amount.toString();
+        }
+      }
+    });
 });
 
 const memoizedTable = <T extends { id: string }, U, V>(table: Table<T, U, V>) => {

@@ -30,7 +30,7 @@ const nonNegativeNumberRegex = /^\d+(\.\d+)?$/;
 const parsePositiveAmountToClp = (value: string): CurrencyAmount => {
   const amountDecimal = decimal.parseString(value);
 
-  if (amountDecimal.value <= 0n) {
+  if (decimal.toNumber(amountDecimal) <= 0n) {
     throw new Error('Amount must be greater than zero');
   }
 
