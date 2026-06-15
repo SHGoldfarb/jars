@@ -11,6 +11,7 @@ export const TransactionListItem = ({ transaction }: { transaction: Transaction 
   const jar = useJar(transaction.jarId);
   const category = useCategory(transaction.categoryId);
   const account = useAccount(transaction.accountId);
+
   return (
     <>
       <ItemMedia variant="icon">
@@ -25,7 +26,9 @@ export const TransactionListItem = ({ transaction }: { transaction: Transaction 
         <ItemDescription>{category?.name} </ItemDescription>
       </ItemContent>
       <ItemContent className="ml-auto items-end">
-        <ItemTitle>{formatCurrencyAmount(transaction.amount)}</ItemTitle>
+        <ItemTitle className={transaction.kind === 'income' ? 'text-emerald-400' : 'text-rose-400'}>
+          {formatCurrencyAmount(transaction.amount)}
+        </ItemTitle>
         <ItemDescription>{formatDateISO(transaction.dateISO)} </ItemDescription>
       </ItemContent>
     </>
