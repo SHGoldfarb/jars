@@ -9,21 +9,21 @@ import type {
 
 export interface AccountRepository {
   getById(accountId: string): Promise<Account>;
-  list(params?: { includeArchived?: boolean }): Promise<Account[]>;
+  list(): Promise<Account[]>;
   save(account: Account): Promise<unknown>;
 }
 
 export interface JarRepository {
   getById(jarId: string): Promise<Jar>;
-  list(params?: { includeArchived?: boolean }): Promise<Jar[]>;
+  list(): Promise<Jar[]>;
   save(jar: Jar): Promise<unknown>;
 }
 
 export interface CategoryRepository {
   getById(categoryId: string): Promise<Category>;
-  list(params?: { includeArchived?: boolean }): Promise<Category[]>;
-  listIncome(params?: { includeArchived?: boolean }): Promise<CategoryIncome[]>;
-  listExpense(params?: { includeArchived?: boolean }): Promise<CategoryExpense[]>;
+  list(): Promise<Category[]>;
+  listIncome(): Promise<CategoryIncome[]>;
+  listExpense(): Promise<CategoryExpense[]>;
   save(category: Category): Promise<unknown>;
 }
 
@@ -33,10 +33,7 @@ export interface TransactionOrderItem {
 
 export interface TransactionRepository {
   getById(transactionId: string): Promise<Transaction>;
-  list(params?: {
-    includeArchived?: boolean;
-    orderBy?: TransactionOrderItem[];
-  }): Promise<Transaction[]>;
+  list(): Promise<Transaction[]>;
   save(transaction: Transaction): Promise<unknown>;
 }
 

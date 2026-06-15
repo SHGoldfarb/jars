@@ -1,23 +1,25 @@
 import { repositories } from '../infrastructure/repositories';
-import type { FinanceRepositories } from '../domain';
+import { financeDomainQueries, type FinanceRepositories } from '../domain';
 
 export const createFinanceQueries = (deps: FinanceRepositories) => ({
-  listAccounts: (params?: { includeArchived?: boolean }) => deps.accounts.list(params),
+  listAccounts: async (params?: { includeArchived?: boolean }) =>
+    financeDomainQueries.accounts.list(await deps.accounts.list(), params ?? {}),
   getAccountById: (accountId: string) => deps.accounts.getById(accountId),
 
-  listJars: (params?: { includeArchived?: boolean }) => deps.jars.list(params),
+  listJars: async (params?: { includeArchived?: boolean }) =>
+    financeDomainQueries.jars.list(await deps.jars.list(), params ?? {}),
   getJarById: (jarId: string) => deps.jars.getById(jarId),
 
-  listCategoriesIncome: (params?: { includeArchived?: boolean }) =>
-    deps.categories.listIncome(params),
-  listCategoriesExpense: (params?: { includeArchived?: boolean }) =>
-    deps.categories.listExpense(params),
+  listCategoriesIncome: async (params?: { includeArchived?: boolean }) =>
+    financeDomainQueries.categories.list(await deps.categories.listIncome(), params ?? {}),
+  listCategoriesExpense: async (params?: { includeArchived?: boolean }) =>
+    financeDomainQueries.categories.list(await deps.categories.listExpense(), params ?? {}),
   getCategoryById: (categoryId: string) => deps.categories.getById(categoryId),
 
-  listTransactions: (params?: {
+  listTransactions: async (params?: {
     includeArchived?: boolean;
     orderBy?: { dateISO?: 'asc' | 'desc' }[];
-  }) => deps.transactions.list(params),
+  }) => financeDomainQueries.transactions.list(await deps.transactions.list(), params ?? {}),
 });
 
 export const financeQueries = createFinanceQueries(repositories);
