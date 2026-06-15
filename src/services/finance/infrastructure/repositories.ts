@@ -4,6 +4,7 @@ import type {
   AccountRepository,
   CategoryRepository,
   JarRepository,
+  TransactionOrderItem,
   TransactionRepository,
 } from '../domain';
 
@@ -67,16 +68,42 @@ const categoryRepository: CategoryRepository = {
   },
 };
 
+// TODO: this shouldnt be in the infrastructure layer. Maybe domain?
+const orderTransactions = (a: Transaction, b: Transaction, orderItem: TransactionOrderItem) => {
+  let result: number | undefined = undefined;
+  if (orderItem.dateISO === 'asc') {
+    result = a.dateISO.localeCompare(b.dateISO);
+  }
+  if (orderItem.dateISO === 'desc') {
+    result = b.dateISO.localeCompare(a.dateISO);
+  }
+
+  return result ?? 0;
+};
+
 const transactionRepository: TransactionRepository = {
   getById: async (transactionId) => {
     return Transaction.parse((await DB.transactions.getMap())[transactionId]);
   },
-  list: async ({ includeArchived = false } = {}) => {
+  list: async ({
+    includeArchived = false,
+    orderBy = [{ dateISO: 'desc' as 'asc' | 'desc' }],
+  } = {}) => {
     const transactions = await DB.transactions.getMap();
     return Object.values(transactions)
       .filter((transaction) => Transaction.safeParse(transaction).success)
       .map((transaction) => Transaction.parse(transaction))
-      .filter((transaction) => includeArchived || !transaction.archivedAtISO);
+      .filter((transaction) => includeArchived || !transaction.archivedAtISO)
+      .sort((a, b) => {
+        for (const orderItem of orderBy) {
+          const result = orderTransactions(a, b, orderItem);
+          if (result !== 0) {
+            return result;
+          }
+        }
+
+        return 0;
+      });
   },
   save: (transaction) => {
     return DB.transactions.upsert(Transaction.parse(transaction));

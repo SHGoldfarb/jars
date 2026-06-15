@@ -27,9 +27,16 @@ export interface CategoryRepository {
   save(category: Category): Promise<unknown>;
 }
 
+export interface TransactionOrderItem {
+  dateISO?: 'asc' | 'desc';
+}
+
 export interface TransactionRepository {
   getById(transactionId: string): Promise<Transaction>;
-  list(params?: { includeArchived?: boolean }): Promise<Transaction[]>;
+  list(params?: {
+    includeArchived?: boolean;
+    orderBy?: TransactionOrderItem[];
+  }): Promise<Transaction[]>;
   save(transaction: Transaction): Promise<unknown>;
 }
 

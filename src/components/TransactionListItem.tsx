@@ -5,6 +5,7 @@ import type { Transaction } from 'src/services/finance';
 import { useJar } from 'src/hooks/useJar';
 import { useCategory } from 'src/hooks/useCategory';
 import { useAccount } from 'src/hooks/useAccount';
+import { formatDateISO } from 'src/presentation/formatters/dateFormatters';
 
 export const TransactionListItem = ({ transaction }: { transaction: Transaction }) => {
   const jar = useJar(transaction.jarId);
@@ -23,8 +24,9 @@ export const TransactionListItem = ({ transaction }: { transaction: Transaction 
         <ItemTitle>{transaction.description}</ItemTitle>
         <ItemDescription>{category?.name} </ItemDescription>
       </ItemContent>
-      <ItemContent className="ml-auto">
+      <ItemContent className="ml-auto items-end">
         <ItemTitle>{formatCurrencyAmount(transaction.amount)}</ItemTitle>
+        <ItemDescription>{formatDateISO(transaction.dateISO)} </ItemDescription>
       </ItemContent>
     </>
   );

@@ -14,7 +14,10 @@ export const createFinanceQueries = (deps: FinanceRepositories) => ({
     deps.categories.listExpense(params),
   getCategoryById: (categoryId: string) => deps.categories.getById(categoryId),
 
-  listTransactions: (params?: { includeArchived?: boolean }) => deps.transactions.list(params),
+  listTransactions: (params?: {
+    includeArchived?: boolean;
+    orderBy?: { dateISO?: 'asc' | 'desc' }[];
+  }) => deps.transactions.list(params),
 });
 
 export const financeQueries = createFinanceQueries(repositories);
