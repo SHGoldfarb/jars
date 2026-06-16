@@ -3,6 +3,7 @@ import { defaultData, test } from './setup';
 import { runInOrder } from 'src/lib/utils';
 import { formatCurrencyAmount } from 'src/presentation/formatters/currencyFormatter';
 import { decimal } from 'src/services/finance';
+import { formatDateISO } from 'src/presentation/formatters/dateFormatters';
 
 test('can create income transaction', async ({
   createAccount,
@@ -17,6 +18,7 @@ test('can create income transaction', async ({
   const categoryName = 'Salary';
   const description = 'Payment for May';
   const amount = '1200000';
+  const date = '2026-05-20T15:20';
 
   await createAccount(accountName);
   await createJar(jarName);
@@ -26,7 +28,7 @@ test('can create income transaction', async ({
   await movementsPage.createTransactionButton.click();
 
   await transactionFormPage.amountInput.fill(amount);
-  await transactionFormPage.dateInput.fill('2026-05-20T12:00');
+  await transactionFormPage.dateInput.fill(date);
   await transactionFormPage.descriptionInput.fill(description);
   await transactionFormPage.selectType('Income');
   await transactionFormPage.selectAccount(accountName);
@@ -44,6 +46,9 @@ test('can create income transaction', async ({
     transactionLink.getByText(
       formatCurrencyAmount({ currency: 'CLP', amountDecimal: decimal.parseString(amount) })
     )
+  ).toBeVisible();
+  await expect(
+    transactionLink.getByText(formatDateISO(new Date(`${date}:00.000Z`).toISOString()))
   ).toBeVisible();
 });
 

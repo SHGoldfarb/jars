@@ -13,7 +13,12 @@ interface TransactionFormValues {
   jarId: string;
 }
 
-const todayDateInputValue = () => new Date().toISOString().slice(0, 16);
+// e.g. If new Date() is "Mon Jun 15 2026 21:17:09 GMT-0400 (Chile Standard Time)"
+// then this returns 2026-06-15T21:17
+const todayDateInputValue = () =>
+  new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
 
 const getDefaultValues = (): TransactionFormValues => ({
   amount: '',
