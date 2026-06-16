@@ -10,21 +10,19 @@ export const useTransactionForm = ({
   onSubmit: (value: TransactionUnsaved) => Promise<void>;
   defaultErrorMessage: string;
 }) => {
-  const validateTransactionForm = useTransactionFormValidate();
+  const { validateWithSchema, transactionFormSchema } = useTransactionFormValidate();
 
   return useForm({
     defaultValues: transactionFormUtils.getDefaultValues(),
-    validators: { onSubmit: ({ value }) => validateTransactionForm(value) },
+    validators: { onSubmit: ({ value }) => validateWithSchema(value) },
     onSubmit: async ({ value, formApi }) => {
       try {
-        const amount = transactionFormUtils.parsePositiveAmountToClp(value.amount);
-        const dateISO = transactionFormUtils.parseDateInputToISO(value.date);
+        const parsedValues = transactionFormSchema.parse(value);
 
         await onSubmit({
-          ...value,
-          amount,
-          dateISO,
-          description: value.description.trim(),
+          ...parsedValues,
+          dateISO: parsedValues.date,
+          description: parsedValues.description.trim(),
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : defaultErrorMessage;

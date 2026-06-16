@@ -13,7 +13,7 @@ interface TransactionFormValues {
   jarId: string;
 }
 
-const todayDateInputValue = () => new Date().toISOString().slice(0, 10);
+const todayDateInputValue = () => new Date().toISOString().slice(0, 16);
 
 const getDefaultValues = (): TransactionFormValues => ({
   amount: '',
@@ -27,12 +27,8 @@ const getDefaultValues = (): TransactionFormValues => ({
 
 const nonNegativeNumberRegex = /^\d+(\.\d+)?$/;
 
-const parsePositiveAmountToClp = (value: string): CurrencyAmount => {
+const parseAmountToCLP = (value: string): CurrencyAmount => {
   const amountDecimal = decimal.parseString(value);
-
-  if (decimal.toNumber(amountDecimal) <= 0n) {
-    throw new Error('Amount must be greater than zero');
-  }
 
   return {
     currency: 'CLP',
@@ -40,13 +36,10 @@ const parsePositiveAmountToClp = (value: string): CurrencyAmount => {
   };
 };
 
-const parseDateInputToISO = (value: string): string => {
+const parseDateInputToISO = (value: string) => {
   const normalized = value.trim();
-  if (!normalized) {
-    throw new Error('Date is required');
-  }
 
-  const date = new Date(`${normalized}T00:00:00.000Z`);
+  const date = new Date(`${normalized}:00.000Z`);
   if (Number.isNaN(date.valueOf())) {
     throw new Error('Date must be valid');
   }
@@ -60,14 +53,9 @@ const transactionValidators = {
     .trim()
     .min(1, 'Amount is required')
     .regex(nonNegativeNumberRegex, 'Amount must be a positive number')
-    .refine((val) => parseFloat(val) > 0, 'Amount must be greater than zero'),
-  date: z
-    .string()
-    .trim()
-    .min(1, 'Date is required')
-    .refine((value) => !Number.isNaN(new Date(`${value}T00:00:00.000Z`).valueOf()), {
-      message: 'Date must be valid',
-    }),
+    .refine((val) => parseFloat(val) > 0, 'Amount must be greater than zero')
+    .transform((val) => parseAmountToCLP(val)),
+  date: z.string().trim().min(1, 'Date is required').transform(parseDateInputToISO),
   description: z.string(),
   kind: z.enum(['income', 'expense']),
   accountId: z.string().trim().min(1, 'Account is required'),
@@ -80,7 +68,7 @@ const createFormSchema = (
   jarIds: string[],
   incomeCategoryIds: string[],
   expenseCategoryIds: string[]
-): z.ZodType<TransactionFormValues> =>
+) =>
   z.object(transactionValidators).superRefine((values, ctx) => {
     if (values.accountId && !accountIds.includes(values.accountId)) {
       ctx.addIssue({
@@ -130,6 +118,7 @@ const inputProps = <
   value: field.state.value,
   onBlur: field.handleBlur,
   onChange: (e) => {
+    console.log(e.target.value);
     field.handleChange(e.target.value);
   },
 });
@@ -137,8 +126,6 @@ const inputProps = <
 export const transactionFormUtils = {
   inputProps,
   createFormSchema,
-  parseDateInputToISO,
-  parsePositiveAmountToClp,
   getDefaultValues,
 };
 

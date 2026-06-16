@@ -7,7 +7,7 @@ export const TransactionFormFieldDate = ({ form }: { form: TransactionFormType }
   <form.Field name="date">
     {(field) => (
       <TransactionFormFieldWrapper field={field} label="Date">
-        <Input type="date" {...transactionFormUtils.inputProps(field)} />
+        <Input type="datetime-local" {...transactionFormUtils.inputProps(field)} />
       </TransactionFormFieldWrapper>
     )}
   </form.Field>

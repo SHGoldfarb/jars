@@ -1,6 +1,7 @@
 import { Item, ItemContent, ItemGroup, ItemTitle } from 'components/ui/item';
 import { Link } from '@tanstack/react-router';
 import { Separator } from './ui/separator';
+import { Fragment } from 'react';
 
 export const GenericList = <T extends { id: string; url: string }>({
   items,
@@ -23,12 +24,12 @@ export const GenericList = <T extends { id: string; url: string }>({
         </Item>
       </Link>
       {items.map((item) => (
-        <>
+        <Fragment key={item.id}>
           <Separator />
-          <Link to={item.url} key={item.id}>
+          <Link to={item.url}>
             <Item>{children(item)}</Item>
           </Link>
-        </>
+        </Fragment>
       ))}
     </ItemGroup>
   );

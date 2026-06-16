@@ -22,6 +22,9 @@ export const useTransactionFormValidate = () => {
     expenseCategoryIds
   );
 
-  return (value: Parameters<typeof formUtils.validateWithSchema>[0]) =>
-    formUtils.validateWithSchema(value, transactionFormSchema);
+  return {
+    validateWithSchema: (value: Parameters<typeof formUtils.validateWithSchema>[0]) =>
+      formUtils.validateWithSchema(value, transactionFormSchema),
+    transactionFormSchema,
+  };
 };
