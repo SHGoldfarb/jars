@@ -38,6 +38,8 @@ type NewTransactionInput = z.infer<typeof NewTransactionInput>;
 
 export const createTransaction = (input: NewTransactionInput) => Transaction.parse(input);
 
+export const updateTransaction = (input: Transaction) => Transaction.parse(input);
+
 export const archiveTransaction = (
   transaction: Transaction,
   archivedAtISO = new Date().toISOString()

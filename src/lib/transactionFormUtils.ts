@@ -1,4 +1,4 @@
-import { decimal, type CurrencyAmount } from 'src/services/finance';
+import { decimal, Transaction, type CurrencyAmount } from 'src/services/finance';
 import * as z from 'zod';
 
 type TransactionKind = 'income' | 'expense';
@@ -13,21 +13,32 @@ interface TransactionFormValues {
   jarId: string;
 }
 
-// e.g. If new Date() is "Mon Jun 15 2026 21:17:09 GMT-0400 (Chile Standard Time)"
-// then this returns 2026-06-15T21:17
-const todayDateInputValue = () =>
-  new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
+const toDateInputValue = (date: Date) => date.toISOString().slice(0, 16);
+
+const dateLocalToUTC = (date: Date) =>
+  new Date(date.getTime() - new Date().getTimezoneOffset() * 60000);
 
 const getDefaultValues = (): TransactionFormValues => ({
   amount: '',
-  date: todayDateInputValue(),
+  date: toDateInputValue(dateLocalToUTC(new Date())),
   description: '',
   kind: 'income',
   accountId: '',
   categoryId: '',
   jarId: '',
+});
+
+const toFormValues = (transaction: Transaction): TransactionFormValues => ({
+  amount:
+    transaction.amount.currency === 'CLP'
+      ? decimal.toNumber(transaction.amount.amountDecimal).toString()
+      : '',
+  date: toDateInputValue(new Date(transaction.dateISO)),
+  description: transaction.description,
+  kind: transaction.kind,
+  accountId: transaction.accountId,
+  categoryId: transaction.categoryId,
+  jarId: transaction.jarId,
 });
 
 const nonNegativeNumberRegex = /^\d+(\.\d+)?$/;
@@ -123,7 +134,6 @@ const inputProps = <
   value: field.state.value,
   onBlur: field.handleBlur,
   onChange: (e) => {
-    console.log(e.target.value);
     field.handleChange(e.target.value);
   },
 });
@@ -132,6 +142,7 @@ export const transactionFormUtils = {
   inputProps,
   createFormSchema,
   getDefaultValues,
+  toFormValues,
 };
 
 export type { TransactionFormValues };

@@ -20,6 +20,7 @@ export const createFinanceQueries = (deps: FinanceRepositories) => ({
     includeArchived?: boolean;
     orderBy?: { dateISO?: 'asc' | 'desc' }[];
   }) => financeDomainQueries.transactions.list(await deps.transactions.list(), params ?? {}),
+  getTransactionById: (transactionId: string) => deps.transactions.getById(transactionId),
 });
 
 export const financeQueries = createFinanceQueries(repositories);

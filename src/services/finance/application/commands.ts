@@ -12,8 +12,9 @@ import {
   renameAccount,
   renameCategory,
   renameJar,
+  updateTransaction,
 } from '../model';
-import type { CurrencyAmount } from '../model';
+import type { CurrencyAmount, Transaction } from '../model';
 import { repositories } from '../infrastructure/repositories';
 import type { FinanceRepositories } from '../domain';
 
@@ -97,6 +98,12 @@ export const createFinanceCommands = (deps: FinanceRepositories) => ({
     });
 
     return deps.transactions.save(transaction);
+  },
+
+  async updateTransaction(transaction: Transaction) {
+    const parsedTransaction = updateTransaction(transaction);
+
+    return deps.transactions.save(parsedTransaction);
   },
 
   async archiveTransaction({ transactionId }: { transactionId: string }) {

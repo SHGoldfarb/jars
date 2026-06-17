@@ -20,6 +20,7 @@ import { Route as JarsNewRouteImport } from './routes/jars/new'
 import { Route as AccountsNewRouteImport } from './routes/accounts/new'
 import { Route as CategoriesIncomeIndexRouteImport } from './routes/categories/income/index'
 import { Route as CategoriesExpenseIndexRouteImport } from './routes/categories/expense/index'
+import { Route as TransactionsTransactionIdEditRouteImport } from './routes/transactions/$transactionId.edit'
 import { Route as JarsJarIdEditRouteImport } from './routes/jars/$jarId.edit'
 import { Route as CategoriesIncomeNewRouteImport } from './routes/categories/income/new'
 import { Route as CategoriesExpenseNewRouteImport } from './routes/categories/expense/new'
@@ -81,6 +82,12 @@ const CategoriesExpenseIndexRoute = CategoriesExpenseIndexRouteImport.update({
   path: '/expense/',
   getParentRoute: () => CategoriesRoute,
 } as any)
+const TransactionsTransactionIdEditRoute =
+  TransactionsTransactionIdEditRouteImport.update({
+    id: '/transactions/$transactionId/edit',
+    path: '/transactions/$transactionId/edit',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const JarsJarIdEditRoute = JarsJarIdEditRouteImport.update({
   id: '/jars/$jarId/edit',
   path: '/jars/$jarId/edit',
@@ -123,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/categories/expense/new': typeof CategoriesExpenseNewRoute
   '/categories/income/new': typeof CategoriesIncomeNewRoute
   '/jars/$jarId/edit': typeof JarsJarIdEditRoute
+  '/transactions/$transactionId/edit': typeof TransactionsTransactionIdEditRoute
   '/categories/expense/': typeof CategoriesExpenseIndexRoute
   '/categories/income/': typeof CategoriesIncomeIndexRoute
 }
@@ -140,6 +148,7 @@ export interface FileRoutesByTo {
   '/categories/expense/new': typeof CategoriesExpenseNewRoute
   '/categories/income/new': typeof CategoriesIncomeNewRoute
   '/jars/$jarId/edit': typeof JarsJarIdEditRoute
+  '/transactions/$transactionId/edit': typeof TransactionsTransactionIdEditRoute
   '/categories/expense': typeof CategoriesExpenseIndexRoute
   '/categories/income': typeof CategoriesIncomeIndexRoute
 }
@@ -159,6 +168,7 @@ export interface FileRoutesById {
   '/categories/expense/new': typeof CategoriesExpenseNewRoute
   '/categories/income/new': typeof CategoriesIncomeNewRoute
   '/jars/$jarId/edit': typeof JarsJarIdEditRoute
+  '/transactions/$transactionId/edit': typeof TransactionsTransactionIdEditRoute
   '/categories/expense/': typeof CategoriesExpenseIndexRoute
   '/categories/income/': typeof CategoriesIncomeIndexRoute
 }
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/categories/expense/new'
     | '/categories/income/new'
     | '/jars/$jarId/edit'
+    | '/transactions/$transactionId/edit'
     | '/categories/expense/'
     | '/categories/income/'
   fileRoutesByTo: FileRoutesByTo
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/categories/expense/new'
     | '/categories/income/new'
     | '/jars/$jarId/edit'
+    | '/transactions/$transactionId/edit'
     | '/categories/expense'
     | '/categories/income'
   id:
@@ -214,6 +226,7 @@ export interface FileRouteTypes {
     | '/categories/expense/new'
     | '/categories/income/new'
     | '/jars/$jarId/edit'
+    | '/transactions/$transactionId/edit'
     | '/categories/expense/'
     | '/categories/income/'
   fileRoutesById: FileRoutesById
@@ -229,6 +242,7 @@ export interface RootRouteChildren {
   JarsIndexRoute: typeof JarsIndexRoute
   AccountsAccountIdEditRoute: typeof AccountsAccountIdEditRoute
   JarsJarIdEditRoute: typeof JarsJarIdEditRoute
+  TransactionsTransactionIdEditRoute: typeof TransactionsTransactionIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -310,6 +324,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoriesExpenseIndexRouteImport
       parentRoute: typeof CategoriesRoute
     }
+    '/transactions/$transactionId/edit': {
+      id: '/transactions/$transactionId/edit'
+      path: '/transactions/$transactionId/edit'
+      fullPath: '/transactions/$transactionId/edit'
+      preLoaderRoute: typeof TransactionsTransactionIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/jars/$jarId/edit': {
       id: '/jars/$jarId/edit'
       path: '/jars/$jarId/edit'
@@ -381,6 +402,7 @@ const rootRouteChildren: RootRouteChildren = {
   JarsIndexRoute: JarsIndexRoute,
   AccountsAccountIdEditRoute: AccountsAccountIdEditRoute,
   JarsJarIdEditRoute: JarsJarIdEditRoute,
+  TransactionsTransactionIdEditRoute: TransactionsTransactionIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

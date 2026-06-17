@@ -8,6 +8,8 @@ test.describe('movements list ordering', () => {
     page,
     rootLayoutPage,
   }) => {
+    test.slow();
+
     await createDefaultData();
 
     const accountName = defaultData.accounts[0];

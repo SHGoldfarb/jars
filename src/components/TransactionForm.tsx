@@ -18,6 +18,7 @@ import { TransactionFormFieldKind } from './TransactionFormFieldKind';
 import { TransactionFormFieldAccount } from './TransactionFormFieldAccount';
 import { TransactionFormFieldJar } from './TransactionFormFieldJar';
 import { TransactionFormFieldCategory } from './TransactionFormFieldCategory';
+import { type TransactionFormValues } from 'src/lib/transactionFormUtils';
 
 export const TransactionForm = ({
   title,
@@ -25,14 +26,16 @@ export const TransactionForm = ({
   onCancelRoute,
   onDelete,
   defaultErrorMessage,
+  defaultValues,
 }: {
   title: string;
   onSubmit: (value: TransactionUnsaved) => Promise<void>;
   onCancelRoute: string;
   onDelete?: () => void;
   defaultErrorMessage: string;
+  defaultValues?: TransactionFormValues;
 }) => {
-  const form = useTransactionForm({ onSubmit, defaultErrorMessage });
+  const form = useTransactionForm({ onSubmit, defaultErrorMessage, defaultValues });
   return (
     <div className="w-full max-w-md p-6">
       <form
