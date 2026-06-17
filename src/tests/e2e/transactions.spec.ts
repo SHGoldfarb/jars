@@ -145,6 +145,3 @@ test.describe('transaction form', () => {
     await expect(page.getByText('Amount must be greater than zero')).toBeVisible();
   });
 });
-
-// TODO:
-// - test transactions sorted by date

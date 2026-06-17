@@ -1,10 +1,21 @@
 import { test as base } from './pages.ts';
 
+export interface CreateTransactionParams {
+  amount: string;
+  date: string;
+  description: string;
+  type: 'Income' | 'Expense';
+  accountName: string;
+  jarName: string;
+  categoryName: string;
+}
+
 const test = base.extend<{
   createAccount: (accountName: string) => Promise<void>;
   createJar: (jarName: string) => Promise<void>;
   createDefaultData: () => Promise<void>;
   createCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
+  createTransaction: (params: CreateTransactionParams) => Promise<void>;
   deleteAccount: (accountName: string) => Promise<void>;
   deleteCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
   deleteJar: (jarName: string) => Promise<void>;
@@ -32,6 +43,20 @@ const test = base.extend<{
       await categoriesPage.createCategoryButton(kind).click();
       await categoryFormPage.nameInput.fill(categoryName);
       await categoryFormPage.submitButton.click();
+    });
+  },
+  createTransaction: async ({ rootLayoutPage, movementsPage, transactionFormPage }, use) => {
+    await use(async (params: CreateTransactionParams) => {
+      await rootLayoutPage.navButton('Movements').click();
+      await movementsPage.createTransactionButton.click();
+      await transactionFormPage.amountInput.fill(params.amount);
+      await transactionFormPage.dateInput.fill(params.date);
+      await transactionFormPage.descriptionInput.fill(params.description);
+      await transactionFormPage.selectType(params.type);
+      await transactionFormPage.selectAccount(params.accountName);
+      await transactionFormPage.selectJar(params.jarName);
+      await transactionFormPage.selectCategory(params.categoryName);
+      await transactionFormPage.submitButton.click();
     });
   },
   deleteAccount: async ({ rootLayoutPage, accountsPage, accountFormPage }, use) => {
