@@ -112,8 +112,8 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 
 - [x] Add DAL level cache and useQuery
 - [x] Refactor to follow Domain Driven Design more closely
-- [ ] "Enter" key in form should move to next field
-- [ ] When losing focus in input field, the options in the opened unrelated select dropdown should not be hidden.
+- [x] Auto open select fields and auto move to the next one
+- [ ] Move date field to the start of the form, "enter" key on amount field moves focus to description.
 
 ## Epic 6 — Transfers
 
