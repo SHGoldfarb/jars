@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
   Field,
@@ -35,6 +36,7 @@ export const TransactionForm = ({
   defaultErrorMessage: string;
   defaultValues?: TransactionFormValues;
 }) => {
+  const descriptionInputRef = useRef<HTMLInputElement>(null);
   const form = useTransactionForm({ onSubmit, defaultErrorMessage, defaultValues });
   return (
     <div className="w-full max-w-md p-6">
@@ -54,8 +56,8 @@ export const TransactionForm = ({
               <TransactionFormFieldCategory form={form} />
               <TransactionFormFieldAccount form={form} />
               <TransactionFormFieldJar form={form} />
-              <TransactionFormFieldAmount form={form} />
-              <TransactionFormFieldDescription form={form} />
+              <TransactionFormFieldAmount form={form} descriptionInputRef={descriptionInputRef} />
+              <TransactionFormFieldDescription form={form} inputRef={descriptionInputRef} />
             </FieldGroup>
           </FieldSet>
 
