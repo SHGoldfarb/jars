@@ -9,8 +9,6 @@ export const TransactionFormFieldAmount = ({ form }: { form: TransactionFormType
       {(field) => (
         <TransactionFormFieldWrapper field={field} label="Amount">
           <Input
-            // eslint-disable-next-line jsx-a11y/no-autofocus -- user navigates here manually -> autofocus is fine
-            autoFocus
             inputMode="decimal"
             placeholder="10000"
             {...transactionFormUtils.inputProps(field)}

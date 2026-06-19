@@ -27,9 +27,9 @@ test('can create income transaction', async ({
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.createTransactionButton.click();
 
-  await transactionFormPage.amountInput.fill(amount);
-  await transactionFormPage.dateInput.fill(date);
-  await transactionFormPage.descriptionInput.fill(description);
+  await transactionFormPage.fillAmount(amount);
+  await transactionFormPage.fillDate(date);
+  await transactionFormPage.fillDescription(description);
   await transactionFormPage.selectType('Income');
   await transactionFormPage.selectAccount(accountName);
   await transactionFormPage.selectJar(jarName);

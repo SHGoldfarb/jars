@@ -49,13 +49,13 @@ export const TransactionForm = ({
           <FieldSet>
             <FieldLegend>{title}</FieldLegend>
             <FieldGroup>
+              <TransactionFormFieldKind form={form} />
+              <TransactionFormFieldCategory form={form} />
+              <TransactionFormFieldAccount form={form} />
+              <TransactionFormFieldJar form={form} />
               <TransactionFormFieldAmount form={form} />
               <TransactionFormFieldDate form={form} />
               <TransactionFormFieldDescription form={form} />
-              <TransactionFormFieldKind form={form} />
-              <TransactionFormFieldAccount form={form} />
-              <TransactionFormFieldJar form={form} />
-              <TransactionFormFieldCategory form={form} />
             </FieldGroup>
           </FieldSet>
 

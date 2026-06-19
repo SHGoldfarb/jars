@@ -1,13 +1,11 @@
 import { decimal, Transaction, type CurrencyAmount } from 'src/services/finance';
 import * as z from 'zod';
 
-type TransactionKind = 'income' | 'expense';
-
 interface TransactionFormValues {
   amount: string;
   date: string;
   description: string;
-  kind: TransactionKind;
+  kind: 'income' | 'expense' | '';
   accountId: string;
   categoryId: string;
   jarId: string;
@@ -22,7 +20,7 @@ const getDefaultValues = (): TransactionFormValues => ({
   amount: '',
   date: toDateInputValue(dateLocalToUTC(new Date())),
   description: '',
-  kind: 'income',
+  kind: '',
   accountId: '',
   categoryId: '',
   jarId: '',

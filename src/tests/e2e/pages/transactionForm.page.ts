@@ -1,8 +1,18 @@
 import { expect, type Page } from '@playwright/test';
 
 export const transactionFormPageConstructor = (page: Page) => {
+  const closeDropdowns = async () => {
+    await page.keyboard.press('Escape');
+  };
   const gotoCreate = () => page.goto('/transactions/new');
-  const submitButton = page.getByRole('button', { name: 'Submit' });
+  const submitButtonLocator = page.getByRole('button', { name: 'Submit' });
+  const submitButton = {
+    click: async () => {
+      await closeDropdowns();
+      await submitButtonLocator.click();
+    },
+    locator: () => submitButtonLocator,
+  };
   const amountInput = page.getByLabel('Amount');
   const dateInput = page.getByLabel('Date');
   const descriptionInput = page.getByLabel('Description');
@@ -15,6 +25,7 @@ export const transactionFormPageConstructor = (page: Page) => {
     comboboxName: 'Type' | 'Account' | 'Jar' | 'Category',
     option: string
   ) => {
+    await closeDropdowns();
     await page.getByRole('combobox', { name: comboboxName }).click();
     await page.getByRole('option', { name: option, exact: true }).click();
   };
@@ -28,6 +39,7 @@ export const transactionFormPageConstructor = (page: Page) => {
     comboboxName: 'Type' | 'Account' | 'Jar' | 'Category',
     option: string
   ) => {
+    await closeDropdowns();
     await page.getByRole('combobox', { name: comboboxName }).click();
     await expect(page.getByRole('option', { name: option, exact: true })).toBeVisible();
     await page.keyboard.press('Escape');
@@ -37,6 +49,7 @@ export const transactionFormPageConstructor = (page: Page) => {
     comboboxName: 'Type' | 'Account' | 'Jar' | 'Category',
     option: string
   ) => {
+    await closeDropdowns();
     await page.getByRole('combobox', { name: comboboxName }).click();
     await expect(page.getByRole('option', { name: option, exact: true })).toHaveCount(0);
     await page.keyboard.press('Escape');
@@ -48,6 +61,21 @@ export const transactionFormPageConstructor = (page: Page) => {
 
   const expectCategoryOptionToNotExist = async (name: string) => {
     await expectOptionToNotExist('Category', name);
+  };
+
+  const fillAmount = async (amount: string) => {
+    await closeDropdowns();
+    await amountInput.fill(amount);
+  };
+
+  const fillDescription = async (description: string) => {
+    await closeDropdowns();
+    await descriptionInput.fill(description);
+  };
+
+  const fillDate = async (date: string) => {
+    await closeDropdowns();
+    await dateInput.fill(date);
   };
 
   return {
@@ -68,6 +96,9 @@ export const transactionFormPageConstructor = (page: Page) => {
     expectOptionToNotExist,
     expectCategoryOptionToExist,
     expectCategoryOptionToNotExist,
+    fillAmount,
+    fillDescription,
+    fillDate,
   };
 };
 

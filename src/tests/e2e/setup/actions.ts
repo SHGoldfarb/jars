@@ -49,9 +49,9 @@ const test = base.extend<{
     await use(async (params: CreateTransactionParams) => {
       await rootLayoutPage.navButton('Movements').click();
       await movementsPage.createTransactionButton.click();
-      await transactionFormPage.amountInput.fill(params.amount);
-      await transactionFormPage.dateInput.fill(params.date);
-      await transactionFormPage.descriptionInput.fill(params.description);
+      await transactionFormPage.fillAmount(params.amount);
+      await transactionFormPage.fillDate(params.date);
+      await transactionFormPage.fillDescription(params.description);
       await transactionFormPage.selectType(params.type);
       await transactionFormPage.selectAccount(params.accountName);
       await transactionFormPage.selectJar(params.jarName);
