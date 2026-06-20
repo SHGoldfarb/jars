@@ -113,7 +113,7 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 - [x] Add DAL level cache and useQuery
 - [x] Refactor to follow Domain Driven Design more closely
 - [x] Auto open select fields and auto move to the next one
-- [ ] Move date field to the start of the form, "enter" key on amount field moves focus to description.
+- [x] Move date field to the start of the form, "enter" key on amount field moves focus to description.
 
 ## Epic 6 — Transfers
 

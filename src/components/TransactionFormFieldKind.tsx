@@ -1,10 +1,14 @@
 import { type TransactionFormType } from 'src/hooks/useTransactionForm';
 import { TransactionFormFieldWrapper } from 'src/components/TransactionFormFieldWrapper';
 import { TransactionFormFieldSelect } from './TransactionFormFieldSelect';
-import { useStore } from '@tanstack/react-form';
 
-export const TransactionFormFieldKind = ({ form }: { form: TransactionFormType }) => {
-  const kind = useStore(form.store, (state) => state.values.kind);
+export const TransactionFormFieldKind = ({
+  form,
+  defaultOpen,
+}: {
+  form: TransactionFormType;
+  defaultOpen?: boolean;
+}) => {
   return (
     <form.Field name="kind">
       {(field) => (
@@ -19,7 +23,7 @@ export const TransactionFormFieldKind = ({ form }: { form: TransactionFormType }
             onChange={() => {
               form.setFieldValue('categoryId', '');
             }}
-            defaultOpen={!kind}
+            defaultOpen={defaultOpen}
           />
         </TransactionFormFieldWrapper>
       )}

@@ -4,9 +4,14 @@ import { type TransactionFormType } from 'src/hooks/useTransactionForm';
 import { TransactionFormFieldWrapper } from 'src/components/TransactionFormFieldWrapper';
 import { TransactionFormFieldSelect } from './TransactionFormFieldSelect';
 
-export const TransactionFormFieldCategory = ({ form }: { form: TransactionFormType }) => {
+export const TransactionFormFieldCategory = ({
+  form,
+  defaultOpen,
+}: {
+  form: TransactionFormType;
+  defaultOpen?: boolean;
+}) => {
   const selectedKind = useStore(form.store, (state) => state.values.kind);
-  const categoryId = useStore(form.store, (state) => state.values.categoryId);
   const { categories: incomeCategories } = useCategoriesIncome();
   const { categories: expenseCategories } = useCategoriesExpense();
 
@@ -22,14 +27,13 @@ export const TransactionFormFieldCategory = ({ form }: { form: TransactionFormTy
       {(field) => (
         <TransactionFormFieldWrapper field={field} label="Category">
           <TransactionFormFieldSelect
-            key={selectedKind || 'empty'}
             field={field}
             placeholder="Select Category"
             options={categories.map((category) => ({
               value: category.id,
               label: category.name,
             }))}
-            defaultOpen={!!selectedKind && !categoryId}
+            defaultOpen={defaultOpen}
           />
         </TransactionFormFieldWrapper>
       )}

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
   Field,
@@ -20,6 +20,7 @@ import { TransactionFormFieldAccount } from './TransactionFormFieldAccount';
 import { TransactionFormFieldJar } from './TransactionFormFieldJar';
 import { TransactionFormFieldCategory } from './TransactionFormFieldCategory';
 import { type TransactionFormValues } from 'src/lib/transactionFormUtils';
+import { useStore } from '@tanstack/react-form';
 
 export const TransactionForm = ({
   title,
@@ -37,7 +38,23 @@ export const TransactionForm = ({
   defaultValues?: TransactionFormValues;
 }) => {
   const descriptionInputRef = useRef<HTMLInputElement>(null);
+  const amountInputRef = useRef<HTMLInputElement>(null);
   const form = useTransactionForm({ onSubmit, defaultErrorMessage, defaultValues });
+  const values = useStore(form.store, (state) => state.values);
+
+  useEffect(() => {
+    if (values.jarId) {
+      const timeoutId = setTimeout(() => {
+        if (!values.amount) {
+          amountInputRef.current?.focus();
+        }
+      }, 100);
+      return () => {
+        clearTimeout(timeoutId);
+      };
+    }
+  }, [values.jarId, values.amount]);
+
   return (
     <div className="w-full max-w-md p-6">
       <form
@@ -52,11 +69,29 @@ export const TransactionForm = ({
             <FieldLegend>{title}</FieldLegend>
             <FieldGroup>
               <TransactionFormFieldDate form={form} />
-              <TransactionFormFieldKind form={form} />
-              <TransactionFormFieldCategory form={form} />
-              <TransactionFormFieldAccount form={form} />
-              <TransactionFormFieldJar form={form} />
-              <TransactionFormFieldAmount form={form} descriptionInputRef={descriptionInputRef} />
+              <TransactionFormFieldKind form={form} defaultOpen={!values.kind} />
+              <TransactionFormFieldCategory
+                form={form}
+                defaultOpen={!!(values.kind && !values.categoryId)}
+                key={`category - ${values.kind}`}
+              />
+              <TransactionFormFieldAccount
+                form={form}
+                defaultOpen={!!(values.categoryId && !values.accountId)}
+                key={`account - ${values.categoryId}`}
+              />
+              <TransactionFormFieldJar
+                form={form}
+                defaultOpen={!!(values.accountId && !values.jarId)}
+                key={`jar - ${values.accountId}`}
+              />
+              <TransactionFormFieldAmount
+                form={form}
+                inputRef={amountInputRef}
+                onEnter={() => {
+                  descriptionInputRef.current?.focus();
+                }}
+              />
               <TransactionFormFieldDescription form={form} inputRef={descriptionInputRef} />
             </FieldGroup>
           </FieldSet>
