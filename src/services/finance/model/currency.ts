@@ -21,7 +21,16 @@ const negateCurrencyAmount = (amount: CurrencyAmount): CurrencyAmount => ({
   amountDecimal: decimal.negate(amount.amountDecimal),
 });
 
+const toCurrency = (
+  value: number,
+  currency: CurrencyAmount['currency'] = 'CLP'
+): CurrencyAmount => ({
+  currency,
+  amountDecimal: decimal.parseString(value.toString()),
+});
+
 export const currency = {
   sum: sumCurrencyAmounts,
   negate: negateCurrencyAmount,
+  new: toCurrency,
 };

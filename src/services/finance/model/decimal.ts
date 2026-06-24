@@ -3,20 +3,20 @@ import * as z from 'zod';
 export const Decimal = z.object({
   // Examples
   // { value: "125", decimalPlaces: 2 } = 1.25
-  // { value: "50", decimalPlaces: 0 } = 50
+  // { value: "-50", decimalPlaces: 0 } = -50
   // { value: "1", decimalPlaces: -2 } = 100
-  value: z.string().regex(/^\d+$/),
+  value: z.string().regex(/^-?\d+$/),
   decimalPlaces: z.number().int(),
 });
 
 export type Decimal = z.infer<typeof Decimal>;
 
-const scaleDecimalValueToPlaces = (decimal: Decimal, targetPlaces: number) => {
+const scaleDecimalValueToPlaces = (decimalValue: Decimal, targetPlaces: number) => {
   if (!Number.isInteger(targetPlaces)) {
     throw new Error('targetPlaces must be an integer');
   }
 
-  const diff = targetPlaces - decimal.decimalPlaces;
+  const diff = targetPlaces - decimalValue.decimalPlaces;
 
   if (diff < 0) {
     // This would require dividing and would lose precision if not divisible.
@@ -24,29 +24,30 @@ const scaleDecimalValueToPlaces = (decimal: Decimal, targetPlaces: number) => {
     throw new Error('targetPlaces must be >= decimal.decimalPlaces');
   }
 
-  return decimal.value + '0'.repeat(diff);
+  return decimalValue.value + '0'.repeat(diff);
 };
 
 const sumDecimals = (x: Decimal, y: Decimal): Decimal => {
   const targetPlaces = Math.max(x.decimalPlaces, y.decimalPlaces);
   const scaledX = scaleDecimalValueToPlaces(x, targetPlaces);
   const scaledY = scaleDecimalValueToPlaces(y, targetPlaces);
-  const sumValue = scaledX + scaledY;
-
-  return Decimal.parse({
-    value: sumValue,
+  const sumValue = Number(scaledX) + Number(scaledY);
+  const result = Decimal.parse({
+    value: sumValue.toString(),
     decimalPlaces: targetPlaces,
   });
+  return result;
 };
 
 const negateStringNumber = (value: string): string => {
   return value.startsWith('-') ? value.slice(1) : `-${value}`;
 };
 
-const negateDecimal = (decimal: Decimal): Decimal => ({
-  value: negateStringNumber(decimal.value),
-  decimalPlaces: decimal.decimalPlaces,
-});
+const negateDecimal = (decimal: Decimal) =>
+  Decimal.parse({
+    value: negateStringNumber(decimal.value),
+    decimalPlaces: decimal.decimalPlaces,
+  });
 
 const decimalToNumber = (value: Decimal) => {
   return Number(value.value) / 10 ** value.decimalPlaces;

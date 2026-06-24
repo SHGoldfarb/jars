@@ -5,6 +5,8 @@ export const createFinanceQueries = (deps: FinanceRepositories) => ({
   listAccounts: async (params?: { includeArchived?: boolean }) =>
     financeDomainQueries.accounts.list(await deps.accounts.list(), params ?? {}),
   getAccountById: (accountId: string) => deps.accounts.getById(accountId),
+  getAccountBalance: async (accountId: string) =>
+    financeDomainQueries.accounts.balance(accountId, await deps.transactions.list()),
 
   listJars: async (params?: { includeArchived?: boolean }) =>
     financeDomainQueries.jars.list(await deps.jars.list(), params ?? {}),

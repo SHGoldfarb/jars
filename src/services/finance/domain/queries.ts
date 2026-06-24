@@ -1,4 +1,4 @@
-import { Account, Category, Jar, Transaction } from '../model';
+import { Account, Category, currency, Jar, Transaction } from '../model';
 import type { TransactionOrderItem } from './repositories';
 
 const listJars = (jars: Jar[], params: { includeArchived?: boolean }) => {
@@ -47,12 +47,29 @@ const listTransactions = (
     });
 };
 
+const getAccountBalance = (accountId: string, transactions: Transaction[]) => {
+  const filteredTransactions = listTransactions(transactions, {});
+  return filteredTransactions
+    .filter((transaction) => transaction.accountId === accountId)
+    .reduce(
+      (acc, transaction) => {
+        if (transaction.kind === 'income') {
+          return currency.sum(acc, transaction.amount);
+        } else {
+          return currency.sum(acc, currency.negate(transaction.amount));
+        }
+      },
+      currency.new(0, 'CLP')
+    );
+};
+
 export const financeDomainQueries = {
   transactions: {
     list: listTransactions,
   },
   accounts: {
     list: listAccounts,
+    balance: getAccountBalance,
   },
   categories: {
     list: listCategories,
