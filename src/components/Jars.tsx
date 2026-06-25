@@ -1,14 +1,17 @@
 import { useJars } from 'src/hooks/useJars';
-import { GenericNameableList } from 'src/components/GenericNameableList';
+import { GenericList } from './GenericList';
+import { JarItem } from './JarItem';
 
 export const Jars = () => {
   const { jars } = useJars();
 
   return (
-    <GenericNameableList
+    <GenericList
       items={jars.map((jar) => ({ ...jar, url: `/jars/${jar.id}/edit` }))}
       addLabel="Add jar"
       addUrl="/jars/new"
-    />
+    >
+      {(item) => <JarItem jar={item} />}
+    </GenericList>
   );
 };

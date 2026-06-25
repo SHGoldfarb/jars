@@ -63,6 +63,22 @@ const getAccountBalance = (accountId: string, transactions: Transaction[]) => {
     );
 };
 
+const getJarBalance = (jarId: string, transactions: Transaction[]) => {
+  const filteredTransactions = listTransactions(transactions, {});
+  return filteredTransactions
+    .filter((transaction) => transaction.jarId === jarId)
+    .reduce(
+      (accumulator, transaction) => {
+        if (transaction.kind === 'income') {
+          return currency.sum(accumulator, transaction.amount);
+        } else {
+          return currency.sum(accumulator, currency.negate(transaction.amount));
+        }
+      },
+      currency.new(0, 'CLP')
+    );
+};
+
 export const financeDomainQueries = {
   transactions: {
     list: listTransactions,
@@ -76,5 +92,6 @@ export const financeDomainQueries = {
   },
   jars: {
     list: listJars,
+    balance: getJarBalance,
   },
 };

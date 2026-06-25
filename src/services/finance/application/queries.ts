@@ -11,6 +11,8 @@ export const createFinanceQueries = (deps: FinanceRepositories) => ({
   listJars: async (params?: { includeArchived?: boolean }) =>
     financeDomainQueries.jars.list(await deps.jars.list(), params ?? {}),
   getJarById: (jarId: string) => deps.jars.getById(jarId),
+  getJarBalance: async (jarId: string) =>
+    financeDomainQueries.jars.balance(jarId, await deps.transactions.list()),
 
   listCategoriesIncome: async (params?: { includeArchived?: boolean }) =>
     financeDomainQueries.categories.list(await deps.categories.listIncome(), params ?? {}),
