@@ -130,8 +130,41 @@ test('can edit transaction', async ({
   ).toBeVisible();
 });
 
-test('can delete transaction', async () => {
-  // WIP
+test('can delete transaction', async ({
+  createDefaultData,
+  createTransaction,
+  movementsPage,
+  page,
+}) => {
+  const description = 'Invoice for June';
+  const amount = '250000';
+  const date = '2026-06-30T09:00';
+
+  await createDefaultData();
+
+  await createTransaction({
+    amount,
+    date,
+    description,
+    type: 'Income',
+    accountName: defaultData.accounts[0],
+    jarName: defaultData.jars[0],
+    categoryName: defaultData.incomeCategories[0],
+  });
+
+  // Verify the transaction exists
+  await expect(movementsPage.createTransactionButton).toBeVisible();
+  await expect(movementsPage.getTransaction(description)).toBeVisible();
+
+  // Open the edit form by clicking the transaction link
+  await movementsPage.getTransaction(description).click();
+
+  // Delete the transaction
+  await page.getByRole('button', { name: 'Delete' }).click();
+
+  // Verify the transaction no longer exists on the movements page
+  await expect(movementsPage.createTransactionButton).toBeVisible();
+  await expect(movementsPage.getTransaction(description)).not.toBeVisible();
 });
 
 test.describe('transaction form', () => {

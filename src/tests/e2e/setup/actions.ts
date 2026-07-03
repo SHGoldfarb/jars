@@ -13,7 +13,6 @@ export interface CreateTransactionParams {
 const test = base.extend<{
   createAccount: (accountName: string) => Promise<void>;
   createJar: (jarName: string) => Promise<void>;
-  createDefaultData: () => Promise<void>;
   createCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
   createTransaction: (params: CreateTransactionParams) => Promise<void>;
   deleteAccount: (accountName: string) => Promise<void>;
