@@ -51,7 +51,7 @@ Create/edit/delete jars.
 
 Create/edit/delete categories, scoped to income or expense.
 
-### Original acceptance criteria
+### Acceptance criteria
 
 - [x] User can create a category with a name and a kind (`income` or `expense`)
 - [x] User can edit a category's name
@@ -82,8 +82,8 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 - [x] Date defaults to today but can be changed.
 - [x] Category picker is filtered by transaction type (only income categories for income, only expense categories for expense).
 - [x] Only active accounts, jars and categories are available for selection when creating or editing a transaction.
-- [ ] User can edit any field of an existing transaction.
-- [ ] User can delete a transaction.
+- [x] User can edit any field of an existing transaction.
+- [x] User can delete a transaction.
 
 **Listing**
 
@@ -114,6 +114,7 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 - [x] Refactor to follow Domain Driven Design more closely
 - [x] Auto open select fields and auto move to the next one
 - [x] Move date field to the start of the form, "enter" key on amount field moves focus to description.
+- [ ] Transaction form selectors include current entity, even if it is deleted (account, jar, category)
 
 ## Epic 6 — Transfers
 

@@ -52,6 +52,14 @@ test('can create income transaction', async ({
   ).toBeVisible();
 });
 
+test('can edit transaction', async () => {
+  // WIP
+});
+
+test('can delete transaction', async () => {
+  // WIP
+});
+
 test.describe('transaction form', () => {
   test('selectors behavior', async ({
     createAccount,
@@ -143,5 +151,9 @@ test.describe('transaction form', () => {
     await transactionFormPage.amountInput.fill('0');
     await transactionFormPage.submitButton.click();
     await expect(page.getByText('Amount must be greater than zero')).toBeVisible();
+  });
+
+  test('form loads existing transaction into fields', async () => {
+    // WIP
   });
 });
