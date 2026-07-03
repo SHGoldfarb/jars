@@ -260,7 +260,51 @@ test.describe('transaction form', () => {
     await expect(page.getByText('Amount must be greater than zero')).toBeVisible();
   });
 
-  test('form loads existing transaction into fields', async () => {
-    // WIP
+  test('form loads existing transaction into fields', async ({
+    createAccount,
+    createJar,
+    createCategory,
+    createDefaultData,
+    createTransaction,
+    movementsPage,
+    transactionFormPage,
+    page,
+  }) => {
+    await createDefaultData();
+
+    // Use entities distinct from defaults[0] so the test genuinely checks
+    // the form loaded the transaction values, not just default selections
+    const accountName = 'Premium account';
+    const jarName = 'Vacation fund';
+    const categoryName = 'Investments';
+    await createAccount(accountName);
+    await createJar(jarName);
+    await createCategory('Income', categoryName);
+
+    const description = 'Consulting work';
+    const amount = '750000';
+    const date = '2026-07-15T14:30';
+
+    await createTransaction({
+      amount,
+      date,
+      description,
+      type: 'Income',
+      accountName,
+      jarName,
+      categoryName,
+    });
+
+    // Open the edit form
+    await movementsPage.getTransaction(description).click();
+
+    // Verify each field has the transaction's values loaded
+    await expect(transactionFormPage.amountInput).toHaveValue(amount);
+    await expect(transactionFormPage.dateInput).toHaveValue(date);
+    await expect(transactionFormPage.descriptionInput).toHaveValue(description);
+    await expect(page.getByRole('combobox', { name: 'Type' })).toContainText('Income');
+    await expect(page.getByRole('combobox', { name: 'Account' })).toContainText(accountName);
+    await expect(page.getByRole('combobox', { name: 'Jar' })).toContainText(jarName);
+    await expect(page.getByRole('combobox', { name: 'Category' })).toContainText(categoryName);
   });
 });
