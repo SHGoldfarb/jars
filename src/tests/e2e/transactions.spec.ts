@@ -52,8 +52,82 @@ test('can create income transaction', async ({
   ).toBeVisible();
 });
 
-test('can edit transaction', async () => {
-  // WIP
+test('can edit transaction', async ({
+  createAccount,
+  createJar,
+  createCategory,
+  createTransaction,
+  movementsPage,
+  transactionFormPage,
+}) => {
+  test.slow();
+  // Initial data
+  const initialAccountName = 'Initial checking';
+  const initialJarName = 'Initial savings';
+  const initialCategoryName = 'Part-time job';
+  const initialDescription = 'Freelance project';
+  const initialAmount = '500000';
+  const initialDate = '2026-06-15T10:00';
+
+  // New data (every field will change)
+  const newAccountName = 'New checking';
+  const newJarName = 'New savings';
+  const newCategoryName = 'Utilities';
+  const newDescription = 'Electric bill';
+  const newAmount = '75000';
+  const newDate = '2026-06-20T14:30';
+
+  // Setup all entities
+  await createAccount(initialAccountName);
+  await createJar(initialJarName);
+  await createCategory('Income', initialCategoryName);
+  await createAccount(newAccountName);
+  await createJar(newJarName);
+  await createCategory('Expense', newCategoryName);
+
+  // Create initial transaction
+  await createTransaction({
+    amount: initialAmount,
+    date: initialDate,
+    description: initialDescription,
+    type: 'Income',
+    accountName: initialAccountName,
+    jarName: initialJarName,
+    categoryName: initialCategoryName,
+  });
+
+  // Verify the initial transaction exists
+  await expect(movementsPage.createTransactionButton).toBeVisible();
+  await expect(movementsPage.getTransaction(initialDescription)).toBeVisible();
+
+  // Open the edit form by clicking the transaction link
+  await movementsPage.getTransaction(initialDescription).click();
+
+  // Change every field of the transaction
+  await transactionFormPage.fillAmount(newAmount);
+  await transactionFormPage.fillDate(newDate);
+  await transactionFormPage.fillDescription(newDescription);
+  await transactionFormPage.selectType('Expense');
+  await transactionFormPage.selectAccount(newAccountName);
+  await transactionFormPage.selectJar(newJarName);
+  await transactionFormPage.selectCategory(newCategoryName);
+  await transactionFormPage.submitButton.click();
+
+  // Verify the transaction now shows the new values on movements page
+  await expect(movementsPage.createTransactionButton).toBeVisible();
+  const transactionLink = movementsPage.getTransaction(newDescription);
+  await expect(transactionLink).toBeVisible();
+  await expect(transactionLink.getByText(newCategoryName)).toBeVisible();
+  await expect(transactionLink.getByText(newJarName)).toBeVisible();
+  await expect(transactionLink.getByText(newAccountName)).toBeVisible();
+  await expect(
+    transactionLink.getByText(
+      formatCurrencyAmount({ currency: 'CLP', amountDecimal: decimal.parseString(newAmount) })
+    )
+  ).toBeVisible();
+  await expect(
+    transactionLink.getByText(formatDateISO(new Date(`${newDate}:00.000Z`).toISOString()))
+  ).toBeVisible();
 });
 
 test('can delete transaction', async () => {
