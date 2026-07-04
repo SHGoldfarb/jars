@@ -14,18 +14,28 @@ export const runInOrder = async (fns: (() => Promise<void>)[]) => {
   }, Promise.resolve());
 };
 
-// WARNING: No size limiter
-export const memoize = <T extends unknown[], U>(f: (...params: T) => U) => {
+export const createCacheForFunction = <T extends unknown[], U>(f: (...params: T) => U) => {
   const cache: Record<string, U> = {};
 
-  const memoizedFunction = (...params: T) => {
-    const key = JSON.stringify(params);
+  const computeWithCache = (key: string, params: T) => {
     if (key in cache) {
       return cache[key];
     }
     const result = f(...params);
     cache[key] = result;
     return result;
+  };
+
+  return computeWithCache;
+};
+
+// WARNING: No size limiter
+export const memoize = <T extends unknown[], U>(f: (...params: T) => U) => {
+  const computeWithCache = createCacheForFunction(f);
+
+  const memoizedFunction = (...params: T) => {
+    const key = JSON.stringify(params);
+    return computeWithCache(key, params);
   };
 
   return memoizedFunction;
