@@ -2,6 +2,7 @@ import { type TransactionFormType } from 'src/hooks/useTransactionForm';
 import { TransactionFormFieldWrapper } from 'src/components/TransactionFormFieldWrapper';
 import { TransactionFormFieldSelect } from './TransactionFormFieldSelect';
 import { useTransactionFormAccounts } from 'src/hooks/useTransactionFormAccounts';
+import { useTransactionEditCurrentTransaction } from 'src/hooks/useTransactionEditCurrentTransaction';
 
 export const TransactionFormFieldAccount = ({
   form,
@@ -10,11 +11,8 @@ export const TransactionFormFieldAccount = ({
   form: TransactionFormType;
   defaultOpen: boolean;
 }) => {
-  const accountId = form.getFieldValue('accountId');
-
-  // param should either be a valid account id or undefined,
-  // we add `|| undefined` because empty string is not a valid account id
-  const accounts = useTransactionFormAccounts(accountId || undefined);
+  const transactionBeingEdited = useTransactionEditCurrentTransaction();
+  const accounts = useTransactionFormAccounts(transactionBeingEdited?.accountId ?? undefined);
 
   return (
     <form.Field name="accountId">

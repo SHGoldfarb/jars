@@ -1,12 +1,11 @@
-import { useNavigate, useParams } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import { financeCommands, TransactionUnsaved } from 'src/services/finance';
 import { TransactionForm } from './TransactionForm';
-import { useTransaction } from 'src/hooks/useTransaction';
 import { transactionFormUtils } from 'src/lib/transactionFormUtils';
+import { useTransactionEditCurrentTransaction } from 'src/hooks/useTransactionEditCurrentTransaction';
 
 export const TransactionsEdit = () => {
-  const { transactionId } = useParams({ strict: false });
-  const transaction = useTransaction(transactionId ?? '');
+  const transaction = useTransactionEditCurrentTransaction();
   const navigate = useNavigate();
 
   if (!transaction) {
