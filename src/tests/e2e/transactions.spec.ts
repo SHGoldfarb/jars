@@ -307,4 +307,60 @@ test.describe('transaction form', () => {
     await expect(page.getByRole('combobox', { name: 'Jar' })).toContainText(jarName);
     await expect(page.getByRole('combobox', { name: 'Category' })).toContainText(categoryName);
   });
+
+  test('when editing a transaction, selectors include archived entities that the transaction references', async ({
+    createAccount,
+    createJar,
+    createCategory,
+    createTransaction,
+    movementsPage,
+    transactionFormPage,
+    deleteAccount,
+    deleteJar,
+    deleteCategory,
+    rootLayoutPage,
+  }) => {
+    test.slow();
+    // Create entities
+    const accountName = 'Archived checking account';
+    const jarName = 'Archived vacation fund';
+    const categoryName = 'Old freelance income';
+    const description = 'Invoice for work done';
+    const amount = '350000';
+    const date = '2026-06-01T09:00';
+
+    await createAccount(accountName);
+    await createJar(jarName);
+    await createCategory('Income', categoryName);
+
+    // Create a transaction referencing these entities
+    await createTransaction({
+      amount,
+      date,
+      description,
+      type: 'Income',
+      accountName,
+      jarName,
+      categoryName,
+    });
+
+    // Verify the transaction exists
+    await expect(movementsPage.createTransactionButton).toBeVisible();
+    await expect(movementsPage.getTransaction(description)).toBeVisible();
+
+    // Archive the entities
+    await deleteAccount(accountName);
+    await deleteJar(jarName);
+    await deleteCategory('Income', categoryName);
+
+    // Navigate back to movements and open the edit form for the transaction
+    await rootLayoutPage.navButton('Movements').click();
+    await movementsPage.getTransaction(description).click();
+
+    // The archived entities should still be visible in the selectors
+    // because the transaction references them
+    await transactionFormPage.expectOptionToExist('Account', accountName);
+    await transactionFormPage.expectOptionToExist('Jar', jarName);
+    await transactionFormPage.expectOptionToExist('Category', categoryName);
+  });
 });
