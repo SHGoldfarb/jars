@@ -1,7 +1,8 @@
-import { useJars } from 'src/hooks/useJars';
 import { type TransactionFormType } from 'src/hooks/useTransactionForm';
 import { TransactionFormFieldWrapper } from 'src/components/TransactionFormFieldWrapper';
 import { TransactionFormFieldSelect } from './TransactionFormFieldSelect';
+import { useTransactionFormJars } from 'src/hooks/useTransactionFormJars';
+import { useTransactionEditCurrentTransaction } from 'src/hooks/useTransactionEditCurrentTransaction';
 
 export const TransactionFormFieldJar = ({
   form,
@@ -10,7 +11,8 @@ export const TransactionFormFieldJar = ({
   form: TransactionFormType;
   defaultOpen: boolean;
 }) => {
-  const { jars } = useJars();
+  const transactionBeingEdited = useTransactionEditCurrentTransaction();
+  const jars = useTransactionFormJars(transactionBeingEdited?.id ?? undefined);
 
   return (
     <form.Field name="jarId">

@@ -1,5 +1,6 @@
 import { useStore } from '@tanstack/react-form';
-import { useCategoriesExpense, useCategoriesIncome } from 'src/hooks/useCategories';
+import { useTransactionFormCategories } from 'src/hooks/useTransactionFormCategories';
+import { useTransactionEditCurrentTransaction } from 'src/hooks/useTransactionEditCurrentTransaction';
 import { type TransactionFormType } from 'src/hooks/useTransactionForm';
 import { TransactionFormFieldWrapper } from 'src/components/TransactionFormFieldWrapper';
 import { TransactionFormFieldSelect } from './TransactionFormFieldSelect';
@@ -11,16 +12,12 @@ export const TransactionFormFieldCategory = ({
   form: TransactionFormType;
   defaultOpen?: boolean;
 }) => {
+  const transactionBeingEdited = useTransactionEditCurrentTransaction();
   const selectedKind = useStore(form.store, (state) => state.values.kind);
-  const { categories: incomeCategories } = useCategoriesIncome();
-  const { categories: expenseCategories } = useCategoriesExpense();
-
-  const categories =
-    selectedKind === 'expense'
-      ? expenseCategories
-      : selectedKind === 'income'
-        ? incomeCategories
-        : [];
+  const categories = useTransactionFormCategories(
+    selectedKind,
+    transactionBeingEdited?.id ?? undefined
+  );
 
   return (
     <form.Field name="categoryId">
