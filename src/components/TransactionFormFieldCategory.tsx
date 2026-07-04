@@ -14,10 +14,7 @@ export const TransactionFormFieldCategory = ({
 }) => {
   const transactionBeingEdited = useTransactionEditCurrentTransaction();
   const selectedKind = useStore(form.store, (state) => state.values.kind);
-  const categories = useTransactionFormCategories(
-    selectedKind,
-    transactionBeingEdited?.id ?? undefined
-  );
+  const categories = useTransactionFormCategories(selectedKind, transactionBeingEdited?.id);
 
   return (
     <form.Field name="categoryId">

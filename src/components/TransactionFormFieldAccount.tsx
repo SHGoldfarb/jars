@@ -12,7 +12,7 @@ export const TransactionFormFieldAccount = ({
   defaultOpen: boolean;
 }) => {
   const transactionBeingEdited = useTransactionEditCurrentTransaction();
-  const accounts = useTransactionFormAccounts(transactionBeingEdited?.id ?? undefined);
+  const accounts = useTransactionFormAccounts(transactionBeingEdited?.id);
 
   return (
     <form.Field name="accountId">

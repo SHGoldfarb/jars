@@ -12,7 +12,7 @@ export const TransactionFormFieldJar = ({
   defaultOpen: boolean;
 }) => {
   const transactionBeingEdited = useTransactionEditCurrentTransaction();
-  const jars = useTransactionFormJars(transactionBeingEdited?.id ?? undefined);
+  const jars = useTransactionFormJars(transactionBeingEdited?.id);
 
   return (
     <form.Field name="jarId">
