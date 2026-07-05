@@ -1,6 +1,8 @@
 import { expect } from '@playwright/test';
-import { test } from './setup';
+import { defaultData, test } from './setup';
 import { runInOrder } from 'src/lib/utils';
+import { formatCurrencyAmount } from 'src/presentation/formatters/currencyFormatter';
+import { currency } from 'src/services/finance';
 
 test('can create account', async ({ rootLayoutPage, accountsPage, accountFormPage }) => {
   const accountName = 'Test Account';
@@ -64,4 +66,74 @@ test('can edit account', async ({ accountsPage, accountFormPage, createAccount }
   // Contains the updated account and not the old one
   await accountsPage.expectAccountToExist(newName);
   await accountsPage.expectAccountToNotExist(initialName);
+});
+
+test('accounts show balance', async ({
+  createDefaultData,
+  createTransaction,
+  deleteTransaction,
+  rootLayoutPage,
+  accountsPage,
+  createAccount,
+}) => {
+  test.slow();
+  const jarName = defaultData.jars[0];
+  const expenseCategoryName = defaultData.expenseCategories[0];
+  const incomeCategoryName = defaultData.incomeCategories[0];
+  const accountName = defaultData.accounts[0];
+  const date = '2026-06-30T09:00';
+  const secondAccountName = 'Checking Account';
+  const incomeTransactionAmount = 10000;
+  const expenseTransactionAmount = 3000;
+
+  await createDefaultData();
+  await createAccount(secondAccountName);
+  // Income transaction should add to acocunt balance
+  await createTransaction({
+    amount: incomeTransactionAmount.toString(),
+    date,
+    description: 'income transaction',
+    type: 'Income',
+    accountName,
+    jarName,
+    categoryName: incomeCategoryName,
+  });
+  // Expense transaction should substract from account balance
+  await createTransaction({
+    amount: expenseTransactionAmount.toString(),
+    date,
+    description: 'expense transaction',
+    type: 'Expense',
+    accountName,
+    jarName,
+    categoryName: expenseCategoryName,
+  });
+  // Deleted transaction should not count
+  const deletedTransactionDescription = 'deleted transaction';
+  await createTransaction({
+    amount: '12345',
+    date,
+    description: deletedTransactionDescription,
+    type: 'Expense',
+    accountName,
+    jarName,
+    categoryName: expenseCategoryName,
+  });
+  await deleteTransaction(deletedTransactionDescription);
+  // Transaction belonging to another account shouldn't count
+  await createTransaction({
+    amount: '12345',
+    date,
+    description: 'different account',
+    type: 'Expense',
+    accountName: secondAccountName,
+    jarName,
+    categoryName: expenseCategoryName,
+  });
+
+  await rootLayoutPage.navButton('Accounts').click();
+
+  await expect(accountsPage.getAccount(accountName)).toContainText(
+    formatCurrencyAmount(currency.new(incomeTransactionAmount - expenseTransactionAmount))
+  );
 });

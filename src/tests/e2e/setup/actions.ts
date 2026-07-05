@@ -18,6 +18,7 @@ const test = base.extend<{
   deleteAccount: (accountName: string) => Promise<void>;
   deleteCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
   deleteJar: (jarName: string) => Promise<void>;
+  deleteTransaction: (transactionDescription: string) => Promise<void>;
 }>({
   createAccount: async ({ accountsPage, accountFormPage, rootLayoutPage }, use) => {
     await use(async (accountName: string) => {
@@ -78,6 +79,13 @@ const test = base.extend<{
       await rootLayoutPage.navButton('Jars').click();
       await jarsPage.clickJar(jarName);
       await jarFormPage.deleteButton.click();
+    });
+  },
+  deleteTransaction: async ({ rootLayoutPage, movementsPage, transactionFormPage }, use) => {
+    await use(async (transactionDescription) => {
+      await rootLayoutPage.navButton('Movements').click();
+      await movementsPage.getTransaction(transactionDescription).click();
+      await transactionFormPage.deleteButton.click();
     });
   },
 });

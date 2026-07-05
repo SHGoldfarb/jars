@@ -13,6 +13,7 @@ export const transactionFormPageConstructor = (page: Page) => {
     },
     locator: () => submitButtonLocator,
   };
+  const deleteButton = page.getByRole('button', { name: 'Delete' });
   const amountInput = page.getByLabel('Amount');
   const dateInput = page.getByLabel('Date');
   const descriptionInput = page.getByLabel('Description');
@@ -99,6 +100,7 @@ export const transactionFormPageConstructor = (page: Page) => {
     fillAmount,
     fillDescription,
     fillDate,
+    deleteButton,
   };
 };
 

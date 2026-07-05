@@ -63,3 +63,5 @@ test('can edit jar', async ({ jarsPage, jarFormPage, createJar }) => {
   await jarsPage.expectJarToExist(newName);
   await jarsPage.expectJarToNotExist(initialName);
 });
+
+// TODO: jars show balance
