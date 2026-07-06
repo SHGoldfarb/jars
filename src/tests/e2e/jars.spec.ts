@@ -135,3 +135,18 @@ test('jars show balance', async ({
     formatCurrencyAmount(currency.new(incomeTransactionAmount - expenseTransactionAmount))
   );
 });
+
+test('delete button is disabled for jars with non zero balance', async ({
+  createTransaction,
+  createDefaultData,
+  rootLayoutPage,
+  jarsPage,
+  jarFormPage,
+}) => {
+  test.slow();
+  await createDefaultData();
+  await createTransaction();
+  await rootLayoutPage.navButton('Jars').click();
+  await jarsPage.clickJar(defaultData.jars[0]);
+  await expect(jarFormPage.deleteButton).toBeDisabled();
+});

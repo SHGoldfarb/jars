@@ -137,3 +137,18 @@ test('accounts show balance', async ({
     formatCurrencyAmount(currency.new(incomeTransactionAmount - expenseTransactionAmount))
   );
 });
+
+test('delete button is disabled for accounts with non zero balance', async ({
+  createTransaction,
+  createDefaultData,
+  rootLayoutPage,
+  accountsPage,
+  accountFormPage,
+}) => {
+  test.slow();
+  await createDefaultData();
+  await createTransaction();
+  await rootLayoutPage.navButton('Accounts').click();
+  await accountsPage.clickAccount(defaultData.accounts[0]);
+  await expect(accountFormPage.deleteButton).toBeDisabled();
+});

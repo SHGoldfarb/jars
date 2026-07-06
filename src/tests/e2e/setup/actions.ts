@@ -1,20 +1,22 @@
+import { testUtils } from 'src/tests/utils.ts';
 import { test as base } from './pages.ts';
+import { transactionFormUtils } from 'src/lib/transactionFormUtils.ts';
 
 export interface CreateTransactionParams {
-  amount: string;
-  date: string;
-  description: string;
-  type: 'Income' | 'Expense';
-  accountName: string;
-  jarName: string;
-  categoryName: string;
+  amount?: string;
+  date?: string;
+  description?: string;
+  type?: 'Income' | 'Expense';
+  accountName?: string;
+  jarName?: string;
+  categoryName?: string;
 }
 
 const test = base.extend<{
   createAccount: (accountName: string) => Promise<void>;
   createJar: (jarName: string) => Promise<void>;
   createCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
-  createTransaction: (params: CreateTransactionParams) => Promise<void>;
+  createTransaction: (params?: CreateTransactionParams) => Promise<void>;
   deleteAccount: (accountName: string) => Promise<void>;
   deleteCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
   deleteJar: (jarName: string) => Promise<void>;
@@ -46,16 +48,35 @@ const test = base.extend<{
     });
   },
   createTransaction: async ({ rootLayoutPage, movementsPage, transactionFormPage }, use) => {
-    await use(async (params: CreateTransactionParams) => {
+    await use(async (params?: CreateTransactionParams) => {
+      const defaultParams = {
+        amount: (1000 + testUtils.generateIntId()).toString(),
+        date: transactionFormUtils.getDefaultValues().date,
+        description: `Transaction description${testUtils.generateId()}`,
+        type: 'Expense',
+      } as const;
+
       await rootLayoutPage.navButton('Movements').click();
       await movementsPage.createTransactionButton.click();
-      await transactionFormPage.fillAmount(params.amount);
-      await transactionFormPage.fillDate(params.date);
-      await transactionFormPage.fillDescription(params.description);
-      await transactionFormPage.selectType(params.type);
-      await transactionFormPage.selectAccount(params.accountName);
-      await transactionFormPage.selectJar(params.jarName);
-      await transactionFormPage.selectCategory(params.categoryName);
+      await transactionFormPage.fillAmount(params?.amount ?? defaultParams.amount);
+      await transactionFormPage.fillDate(params?.date ?? defaultParams.date);
+      await transactionFormPage.fillDescription(params?.description ?? defaultParams.description);
+      await transactionFormPage.selectType(params?.type ?? defaultParams.type);
+      if (params?.accountName) {
+        await transactionFormPage.selectAccount(params.accountName);
+      } else {
+        await transactionFormPage.selectFirstAccount();
+      }
+      if (params?.jarName) {
+        await transactionFormPage.selectJar(params.jarName);
+      } else {
+        await transactionFormPage.selectFirstJar();
+      }
+      if (params?.categoryName) {
+        await transactionFormPage.selectCategory(params.categoryName);
+      } else {
+        await transactionFormPage.selectFirstCategory();
+      }
       await transactionFormPage.submitButton.click();
     });
   },

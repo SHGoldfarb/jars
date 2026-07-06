@@ -36,6 +36,27 @@ export const transactionFormPageConstructor = (page: Page) => {
   const selectJar = (name: string) => selectOption('Jar', name);
   const selectCategory = (name: string) => selectOption('Category', name);
 
+  const selectFirstAccount = async () => {
+    await closeDropdowns();
+    await accountSelect.click();
+    const firstOption = page.getByRole('option').first();
+    await firstOption.click();
+  };
+
+  const selectFirstJar = async () => {
+    await closeDropdowns();
+    await jarSelect.click();
+    const firstOption = page.getByRole('option').first();
+    await firstOption.click();
+  };
+
+  const selectFirstCategory = async () => {
+    await closeDropdowns();
+    await categorySelect.click();
+    const firstOption = page.getByRole('option').first();
+    await firstOption.click();
+  };
+
   const expectOptionToExist = async (
     comboboxName: 'Type' | 'Account' | 'Jar' | 'Category',
     option: string
@@ -93,6 +114,9 @@ export const transactionFormPageConstructor = (page: Page) => {
     selectAccount,
     selectJar,
     selectCategory,
+    selectFirstAccount,
+    selectFirstJar,
+    selectFirstCategory,
     expectOptionToExist,
     expectOptionToNotExist,
     expectCategoryOptionToExist,

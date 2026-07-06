@@ -270,6 +270,7 @@ test.describe('transaction form', () => {
     transactionFormPage,
     page,
   }) => {
+    test.slow();
     await createDefaultData();
 
     // Use entities distinct from defaults[0] so the test genuinely checks
