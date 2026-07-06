@@ -3,13 +3,16 @@ import { financeCommands } from 'src/services/finance/application';
 import { useParams } from '@tanstack/react-router';
 import { useAccount } from 'src/hooks/useAccount';
 import { GenericNameForm } from './GenericNameForm';
+import { useAccountBalance } from 'src/hooks/useAccountBalance';
+import { decimal } from 'src/services/finance';
 
 export const AccountsEdit = () => {
   const { accountId } = useParams({ strict: false });
   const account = useAccount(accountId ?? '');
+  const balance = useAccountBalance(accountId ?? '');
   const navigate = useNavigate();
 
-  if (!account) {
+  if (!account || !balance) {
     return null;
   }
 
@@ -44,6 +47,7 @@ export const AccountsEdit = () => {
       }}
       fieldName="accountName"
       placeholder="Savings Account"
+      disableDeleteButton={decimal.toNumber(balance.amountDecimal) !== 0}
     />
   );
 };

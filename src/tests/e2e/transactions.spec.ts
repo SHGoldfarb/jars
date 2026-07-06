@@ -325,6 +325,7 @@ test.describe('transaction form', () => {
     const accountName = 'Archived checking account';
     const jarName = 'Archived vacation fund';
     const categoryName = 'Old freelance income';
+    const expenseCategoryName = 'Groceries';
     const description = 'Invoice for work done';
     const amount = '350000';
     const date = '2026-06-01T09:00';
@@ -332,6 +333,7 @@ test.describe('transaction form', () => {
     await createAccount(accountName);
     await createJar(jarName);
     await createCategory('Income', categoryName);
+    await createCategory('Expense', expenseCategoryName);
 
     // Create a transaction referencing these entities
     await createTransaction({
@@ -347,6 +349,18 @@ test.describe('transaction form', () => {
     // Verify the transaction exists
     await expect(movementsPage.createTransactionButton).toBeVisible();
     await expect(movementsPage.getTransaction(description)).toBeVisible();
+
+    // Create a transaction with reverse amount to be able to delete the account and jar
+    const reverseTransactionDescription = 'reverse transaction';
+    await createTransaction({
+      amount,
+      date,
+      description: reverseTransactionDescription,
+      type: 'Expense',
+      accountName,
+      jarName,
+      categoryName: expenseCategoryName,
+    });
 
     // Archive the entities
     await deleteAccount(accountName);

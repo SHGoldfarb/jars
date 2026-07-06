@@ -3,13 +3,16 @@ import { financeCommands } from 'src/services/finance/application';
 import { useParams } from '@tanstack/react-router';
 import { useJar } from 'src/hooks/useJar';
 import { GenericNameForm } from './GenericNameForm';
+import { useJarBalance } from 'src/hooks/useJarBalance';
+import { decimal } from 'src/services/finance';
 
 export const JarsEdit = () => {
   const { jarId } = useParams({ strict: false });
   const jar = useJar(jarId ?? '');
+  const balance = useJarBalance(jarId ?? '');
   const navigate = useNavigate();
 
-  if (!jar) {
+  if (!jar || !balance) {
     return null;
   }
 
@@ -44,6 +47,7 @@ export const JarsEdit = () => {
       }}
       fieldName="jarName"
       placeholder="Beach Trip"
+      disableDeleteButton={decimal.toNumber(balance.amountDecimal) !== 0}
     />
   );
 };

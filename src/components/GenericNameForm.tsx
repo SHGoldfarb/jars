@@ -19,6 +19,7 @@ export const GenericNameForm = ({
   onDelete,
   fieldName,
   placeholder,
+  disableDeleteButton,
 }: {
   initialName?: string;
   title: string;
@@ -27,6 +28,7 @@ export const GenericNameForm = ({
   onDelete?: () => void;
   fieldName: string;
   placeholder: string;
+  disableDeleteButton?: boolean;
 }) => {
   const form = useForm({
     defaultValues: {
@@ -82,7 +84,12 @@ export const GenericNameForm = ({
               </Button>
             </Link>
             {onDelete ? (
-              <Button variant="destructive" type="button" onClick={onDelete}>
+              <Button
+                variant="destructive"
+                type="button"
+                onClick={onDelete}
+                disabled={!!disableDeleteButton}
+              >
                 Delete
               </Button>
             ) : null}
