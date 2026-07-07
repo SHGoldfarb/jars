@@ -12,6 +12,8 @@ import {
   renameAccount,
   renameCategory,
   renameJar,
+  restoreJar,
+  restoreAccount,
   updateTransaction,
 } from '../model';
 import type { CurrencyAmount, Transaction } from '../model';
@@ -34,6 +36,11 @@ export const createFinanceCommands = (deps: FinanceRepositories) => ({
     return deps.accounts.save(archiveAccount(current));
   },
 
+  async restoreAccount({ accountId }: { accountId: string }) {
+    const current = await deps.accounts.getById(accountId);
+    return deps.accounts.save(restoreAccount(current));
+  },
+
   async createJar({ name }: { name: string }) {
     const jar = createJar({ id: generateId(), name });
     return deps.jars.save(jar);
@@ -47,6 +54,11 @@ export const createFinanceCommands = (deps: FinanceRepositories) => ({
   async archiveJar({ jarId }: { jarId: string }) {
     const current = await deps.jars.getById(jarId);
     return deps.jars.save(archiveJar(current));
+  },
+
+  async restoreJar({ jarId }: { jarId: string }) {
+    const current = await deps.jars.getById(jarId);
+    return deps.jars.save(restoreJar(current));
   },
 
   async createIncomeCategory({ name }: { name: string }) {

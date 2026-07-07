@@ -1,12 +1,13 @@
 import { useNavigate } from '@tanstack/react-router';
-import { financeCommands, TransactionUnsaved } from 'src/services/finance';
+import { TransactionUnsaved } from 'src/services/finance';
 import { TransactionForm } from './TransactionForm';
+import { transactionFormCommands } from 'src/services/transaction-form/application/commands';
 
 export const TransactionsNew = () => {
   const navigate = useNavigate();
   const onCancelLink = '/movements';
   const handleSubmit = async (value: TransactionUnsaved) => {
-    await financeCommands.createTransaction(value);
+    await transactionFormCommands.submitCreateTransaction(value);
     await navigate({ to: '/movements' });
   };
 

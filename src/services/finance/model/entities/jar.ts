@@ -29,5 +29,7 @@ export const renameJar = (jar: Jar, input: RenameJarInput) => {
   return Jar.parse({ ...jar, ...RenameJarInput.parse(input) });
 };
 
+export const restoreJar = (jar: Jar) => Jar.parse({ ...jar, archivedAtISO: undefined });
+
 export const archiveJar = (jar: Jar, archivedAtISO = new Date().toISOString()) =>
   Jar.parse({ ...jar, archivedAtISO });

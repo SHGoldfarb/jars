@@ -103,8 +103,8 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 **Account/jar integrity**
 
 - [x] Accounts and jars show current balance
-- [ ] User cannot delete an account that has a non-zero balance
-- [ ] User cannot delete a jar that has a non-zero balance
+- [x] User cannot delete an account that has a non-zero balance
+- [x] User cannot delete a jar that has a non-zero balance
 - [ ] If a deleted account acquires a non-zero balance (e.g. via transaction edit), it is automatically restored
 - [ ] If a deleted jar acquires a non-zero balance (e.g. via transaction edit), it is automatically restored
 

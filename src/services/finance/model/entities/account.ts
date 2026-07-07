@@ -31,3 +31,6 @@ export const renameAccount = (account: Account, input: RenameAccountInput) => {
 
 export const archiveAccount = (account: Account, archivedAtISO = new Date().toISOString()) =>
   Account.parse({ ...account, archivedAtISO });
+
+export const restoreAccount = (account: Account) =>
+  Account.parse({ ...account, archivedAtISO: undefined });
