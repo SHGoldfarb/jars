@@ -1,14 +1,16 @@
-import { useAccounts } from 'src/hooks/useAccounts';
-import { useCategoriesExpense, useCategoriesIncome } from 'src/hooks/useCategories';
-import { useJars } from 'src/hooks/useJars';
 import { transactionFormUtils } from 'src/lib/transactionFormUtils';
 import { formUtils } from 'src/lib/formUtils';
+import { useTransactionFormAccounts } from './useTransactionFormAccounts';
+import { useTransactionEditCurrentTransaction } from './useTransactionEditCurrentTransaction';
+import { useTransactionFormJars } from './useTransactionFormJars';
+import { useTransactionFormCategories } from './useTransactionFormCategories';
 
 export const useTransactionFormValidate = () => {
-  const { accounts } = useAccounts();
-  const { jars } = useJars();
-  const { categories: incomeCategories } = useCategoriesIncome();
-  const { categories: expenseCategories } = useCategoriesExpense();
+  const transaction = useTransactionEditCurrentTransaction();
+  const accounts = useTransactionFormAccounts(transaction?.id);
+  const jars = useTransactionFormJars(transaction?.id);
+  const incomeCategories = useTransactionFormCategories('income', transaction?.id);
+  const expenseCategories = useTransactionFormCategories('expense', transaction?.id);
 
   const accountIds = accounts.map((account) => account.id);
   const jarIds = jars.map((jar) => jar.id);

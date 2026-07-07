@@ -379,3 +379,65 @@ test.describe('transaction form', () => {
     await transactionFormPage.expectOptionToExist('Category', categoryName);
   });
 });
+
+test('after editing a transaction, it automatically restores archived jars and accounts if their balance is no longer zero', async ({
+  createDefaultData,
+  createTransaction,
+  deleteJar,
+  deleteAccount,
+  rootLayoutPage,
+  transactionFormPage,
+  movementsPage,
+  accountsPage,
+  jarsPage,
+}) => {
+  test.slow();
+
+  await createDefaultData();
+
+  const jarName = defaultData.jars[0];
+  const accountName = defaultData.accounts[0];
+  const transactionDescription = 'My Transaction';
+  const transactionAmount = '10000';
+  const transactionSecondAmount = '500';
+
+  await createTransaction({
+    accountName,
+    jarName,
+    type: 'Income',
+    description: transactionDescription,
+    amount: transactionAmount,
+  });
+
+  // Create a reverse transaction to be able to archive account and jar
+  await createTransaction({
+    accountName,
+    jarName,
+    type: 'Expense',
+    amount: transactionAmount,
+  });
+
+  // Archive account, jar
+  await deleteJar(jarName);
+  await deleteAccount(accountName);
+
+  // Ensure they no longer exist
+  await rootLayoutPage.navButton('Accounts').click();
+  await expect(accountsPage.createAccountButton).toBeVisible();
+  await accountsPage.expectAccountToNotExist(accountName);
+  await rootLayoutPage.navButton('Jars').click();
+  await expect(jarsPage.createJarButton).toBeVisible();
+  await jarsPage.expectJarToNotExist(jarName);
+
+  // Edit transaction amount
+  await rootLayoutPage.navButton('Movements').click();
+  await movementsPage.getTransaction(transactionDescription).click();
+  await transactionFormPage.fillAmount(transactionSecondAmount);
+  await transactionFormPage.submitButton.click();
+
+  // Account and jar should exist again
+  await rootLayoutPage.navButton('Accounts').click();
+  await accountsPage.expectAccountToExist(accountName);
+  await rootLayoutPage.navButton('Jars').click();
+  await jarsPage.expectJarToExist(jarName);
+});
