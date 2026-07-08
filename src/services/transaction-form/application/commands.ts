@@ -1,52 +1,34 @@
 import {
-  decimal,
   financeCommands,
   financeQueries,
   Transaction,
   TransactionUnsaved,
 } from 'src/services/finance';
+import { TransactionFormDomainCommands } from '../domain/commands';
 
 const createTransactionFormCommands = (
   financeQueriesDeps: typeof financeQueries,
   financeCommandsDeps: typeof financeCommands
 ) => {
-  // TODO: this is not very DDD...
-  const isJarBalanceNotZero = async (jarId: string) => {
-    const balance = await financeQueriesDeps.getJarBalance(jarId);
-    return decimal.toNumber(balance.amountDecimal) !== 0;
-  };
-
-  const isJarArchived = async (jarId: string) => {
-    const jar = await financeQueriesDeps.getJarById(jarId);
-    return !!jar.archivedAtISO;
-  };
-
-  const isAccountBalanceNotZero = async (accountId: string) => {
-    const balance = await financeQueriesDeps.getAccountBalance(accountId);
-    return decimal.toNumber(balance.amountDecimal) !== 0;
-  };
-
-  const isAccountArchived = async (accountId: string) => {
-    const account = await financeQueriesDeps.getAccountById(accountId);
-    return !!account.archivedAtISO;
+  const deps = {
+    restoreJar: async (jarId: string) => {
+      await financeCommandsDeps.restoreJar({ jarId });
+    },
+    restoreAccount: async (accountId: string) => {
+      await financeCommandsDeps.restoreAccount({ accountId });
+    },
+    updateTransaction: async (transaction: Transaction) => {
+      await financeCommandsDeps.updateTransaction(transaction);
+    },
+    getJarBalance: (jarId: string) => financeQueriesDeps.getJarBalance(jarId),
+    getAccountBalance: (accountId: string) => financeQueriesDeps.getAccountBalance(accountId),
+    getJar: (jarId: string) => financeQueriesDeps.getJarById(jarId),
+    getAccount: (accountId: string) => financeQueriesDeps.getAccountById(accountId),
   };
 
   return {
     submitEditTransaction: async (params: Transaction) => {
-      await financeCommandsDeps.updateTransaction(params);
-
-      // Restore jar if balance changes to not zero
-      if ((await isJarBalanceNotZero(params.jarId)) && (await isJarArchived(params.jarId))) {
-        await financeCommandsDeps.restoreJar({ jarId: params.jarId });
-      }
-
-      // Restore account if balance changes to not zero
-      if (
-        (await isAccountBalanceNotZero(params.accountId)) &&
-        (await isAccountArchived(params.accountId))
-      ) {
-        await financeCommandsDeps.restoreAccount({ accountId: params.accountId });
-      }
+      await TransactionFormDomainCommands.submitEditTransaction(params, deps);
     },
     submitCreateTransaction: (params: TransactionUnsaved) =>
       financeCommandsDeps.createTransaction(params),
