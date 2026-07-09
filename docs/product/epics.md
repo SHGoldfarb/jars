@@ -69,7 +69,7 @@ Create/edit/delete categories, scoped to income or expense.
 - [x] Add jars tests
 - [x] Add categories tests
 
-## Epic 5 — Transactions [IN PROGRESS]
+## Epic 5 — Transactions [DONE]
 
 Manual transaction entry (amount, date, description, type income/expense, category, jar).
 
@@ -114,15 +114,45 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 - [x] Refactor to follow Domain Driven Design more closely
 - [x] Auto open select fields and auto move to the next one
 - [x] Move date field to the start of the form, "enter" key on amount field moves focus to description.
-- [ ] Transaction form selectors include current entity, even if it is deleted (account, jar, category)
+- [x] Transaction form selectors include current entity, even if it is deleted (account, jar, category)
 
-## Epic 6 — Transfers
+## Epic 6 — Transfers [IN PROGRESS]
 
 Move money between accounts.
 
 ### Acceptance criteria
 
-WIP
+**Transfer entry**
+
+- [ ] User can create a transfer specifying: origin account, destination account, amount, date, and description
+- [ ] App validates amount is a positive number
+- [ ] Date defaults to today but can be changed
+- [ ] Origin and destination accounts must be different
+- [ ] Only active accounts are available for selection when creating or editing a transfer
+- [ ] User can edit any field of an existing transfer
+- [ ] User can delete a transfer
+
+**Listing**
+
+- [ ] All transfers are listed on the Movements screen, interleaved with transactions and sorted by date descending
+- [ ] Each transfer displays: amount, date, description, origin account, and destination account
+- [ ] Transfers are visually distinguishable from transactions on the Movements screen
+
+**Validation**
+
+- [ ] Origin account, destination account, amount, and date are required fields
+- [ ] Description is optional
+- [ ] Origin and destination accounts cannot be the same
+- [ ] Amount must be a positive number
+
+**Persistence**
+
+- [ ] Transfers persist across page refreshes
+
+**Account integrity**
+
+- [ ] Account balance derived from transfers will be covered in Epic 8
+- [ ] Transfer form selectors include archived accounts when editing a transfer that references them (same pattern as transactions)
 
 ## Epic 7 — Allocations
 
@@ -130,7 +160,37 @@ Move money between jars.
 
 ### Acceptance criteria
 
-WIP
+**Allocation entry**
+
+- [ ] User can create an allocation specifying: origin jar, destination jar, amount, date, and description
+- [ ] App validates amount is a positive number
+- [ ] Date defaults to today but can be changed
+- [ ] Origin and destination jars must be different
+- [ ] Only active jars are available for selection when creating or editing an allocation
+- [ ] User can edit any field of an existing allocation
+- [ ] User can delete an allocation
+
+**Listing**
+
+- [ ] All allocations are listed on the Movements screen, interleaved with transactions, transfers, and sorted by date descending
+- [ ] Each allocation displays: amount, date, description, origin jar, and destination jar
+- [ ] Allocations are visually distinguishable from transactions and transfers on the Movements screen
+
+**Validation**
+
+- [ ] Origin jar, destination jar, amount, and date are required fields
+- [ ] Description is optional
+- [ ] Origin and destination jars cannot be the same
+- [ ] Amount must be a positive number
+
+**Persistence**
+
+- [ ] Allocations persist across page refreshes
+
+**Jar integrity**
+
+- [ ] Jar balance derived from allocations will be covered in Epic 8
+- [ ] Allocation form selectors include archived jars when editing an allocation that references them (same pattern as transactions)
 
 ## Epic 8 — Balances
 
