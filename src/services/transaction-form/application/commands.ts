@@ -5,39 +5,19 @@ import {
   TransactionUnsaved,
 } from 'src/services/finance';
 import { TransactionFormDomainCommands } from '../domain/commands';
+import { transformFinanceApiToDeps, type Dependencies } from './interfaces';
 
-const createTransactionFormCommands = (
-  financeQueriesDeps: typeof financeQueries,
-  financeCommandsDeps: typeof financeCommands
-) => {
-  const deps = {
-    restoreJar: async (jarId: string) => {
-      await financeCommandsDeps.restoreJar({ jarId });
-    },
-    restoreAccount: async (accountId: string) => {
-      await financeCommandsDeps.restoreAccount({ accountId });
-    },
-    updateTransaction: async (transaction: Transaction) => {
-      await financeCommandsDeps.updateTransaction(transaction);
-    },
-    getJarBalance: (jarId: string) => financeQueriesDeps.getJarBalance(jarId),
-    getAccountBalance: (accountId: string) => financeQueriesDeps.getAccountBalance(accountId),
-    getJar: (jarId: string) => financeQueriesDeps.getJarById(jarId),
-    getAccount: (accountId: string) => financeQueriesDeps.getAccountById(accountId),
-  };
-
+const createTransactionFormCommands = (deps: Dependencies) => {
   return {
     submitEditTransaction: async (params: Transaction) => {
       await TransactionFormDomainCommands.submitEditTransaction(params, deps);
     },
-    submitCreateTransaction: (params: TransactionUnsaved) =>
-      financeCommandsDeps.createTransaction(params),
+    submitCreateTransaction: (params: TransactionUnsaved) => deps.createTransaction(params),
     deleteTransaction: (params: { transactionId: string }) =>
-      financeCommandsDeps.archiveTransaction(params),
+      deps.archiveTransaction(params.transactionId),
   };
 };
 
 export const transactionFormCommands = createTransactionFormCommands(
-  financeQueries,
-  financeCommands
+  transformFinanceApiToDeps(financeCommands, financeQueries)
 );
