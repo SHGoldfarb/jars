@@ -39,14 +39,14 @@ db.version(3).upgrade((tx) => {
 });
 
 const memoizedTable = <T extends { id: string }, U, V>(table: Table<T, U, V>) => {
-  const { versionedMemoize, versionInvalidator } = makeVersionedMemoize();
+  const { versionedMemoize, versionInvalidator } = makeVersionedMemoize(3);
 
   const getMap = versionedMemoize(async () => {
     const items = await table.toArray();
-    const emtpyMap: Record<string, T> = {};
+    const emptyMap: Record<string, T> = {};
     return items.reduce((acc, item) => {
       return { ...acc, [item.id]: item };
-    }, emtpyMap);
+    }, emptyMap);
   });
 
   const upsert = versionInvalidator((item: V) => table.put(item));

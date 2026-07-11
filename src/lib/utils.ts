@@ -16,7 +16,7 @@ export const runInOrder = async (fns: (() => Promise<void>)[]) => {
 
 export const createCacheForFunction = <T extends unknown[], U>(
   f: (...params: T) => U,
-  maxSize?: number
+  maxSize: number | null = 256
 ) => {
   const typedCache = () => {
     const cache = new Map<string, U>();
@@ -44,7 +44,7 @@ export const createCacheForFunction = <T extends unknown[], U>(
     }
     const result = f(...params);
     cache.set(key, result);
-    if (maxSize !== undefined && cache.size > maxSize) {
+    if (maxSize !== null && cache.size > maxSize) {
       // Delete the first (least recently used) entry
       const firstKey = cache.keys().next().value;
       if (firstKey !== undefined) {
@@ -57,9 +57,11 @@ export const createCacheForFunction = <T extends unknown[], U>(
   return computeWithCache;
 };
 
-// WARNING: No size limiter
-export const memoize = <T extends unknown[], U>(f: (...params: T) => U) => {
-  const computeWithCache = createCacheForFunction(f);
+export const memoize = <T extends unknown[], U>(
+  f: (...params: T) => U,
+  maxSize: number | null = 256
+) => {
+  const computeWithCache = createCacheForFunction(f, maxSize);
 
   const memoizedFunction = (...params: T) => {
     const key = JSON.stringify(params);
@@ -69,12 +71,11 @@ export const memoize = <T extends unknown[], U>(f: (...params: T) => U) => {
   return memoizedFunction;
 };
 
-// WARNING: Can easily grow in size to the point of causing memory issues
-export const makeVersionedMemoize = () => {
+export const makeVersionedMemoize = (maxSize: number | null = 256) => {
   let version = 0;
 
   const versionedMemoize = <T, U>(f: (...args: T[]) => U) => {
-    const memoized = memoize((_version: number, ...args: T[]) => f(...args));
+    const memoized = memoize((_version: number, ...args: T[]) => f(...args), maxSize);
     return (...args: T[]) => memoized(version, ...args);
   };
 

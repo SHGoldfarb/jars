@@ -41,7 +41,7 @@ test('unit tests', async () => {
         callCount++;
         return a;
       };
-      const cached2 = createCacheForFunction(countingFn);
+      const cached2 = createCacheForFunction(countingFn, null);
 
       for (let i = 0; i < 500; i++) {
         cached2(String(i), [i]);
