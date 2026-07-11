@@ -14,15 +14,43 @@ export const runInOrder = async (fns: (() => Promise<void>)[]) => {
   }, Promise.resolve());
 };
 
-export const createCacheForFunction = <T extends unknown[], U>(f: (...params: T) => U) => {
-  const cache: Record<string, U> = {};
+export const createCacheForFunction = <T extends unknown[], U>(
+  f: (...params: T) => U,
+  maxSize?: number
+) => {
+  const typedCache = () => {
+    const cache = new Map<string, U>();
+
+    const typedGet = (key: string) => {
+      if (cache.has(key)) {
+        const value = cache.get(key) as U;
+        return { success: true as const, value };
+      }
+      return { success: false as const };
+    };
+
+    return { cache, typedGet };
+  };
+
+  const { cache, typedGet } = typedCache();
 
   const computeWithCache = (key: string, params: T) => {
-    if (key in cache) {
-      return cache[key];
+    const { success, value } = typedGet(key);
+    if (success) {
+      // Move to the end to mark as most recently used
+      cache.delete(key);
+      cache.set(key, value);
+      return value;
     }
     const result = f(...params);
-    cache[key] = result;
+    cache.set(key, result);
+    if (maxSize !== undefined && cache.size > maxSize) {
+      // Delete the first (least recently used) entry
+      const firstKey = cache.keys().next().value;
+      if (firstKey !== undefined) {
+        cache.delete(firstKey);
+      }
+    }
     return result;
   };
 
