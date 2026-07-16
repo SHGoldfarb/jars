@@ -39,7 +39,7 @@ db.version(3).upgrade((tx) => {
 });
 
 const memoizedTable = <T extends { id: string }, U, V>(table: Table<T, U, V>) => {
-  const { versionedMemoize, versionInvalidator } = makeVersionedMemoize(3);
+  const { versionedMemoize, versionInvalidator, getCurrentVersion } = makeVersionedMemoize(3);
 
   const getMap = versionedMemoize(async () => {
     const items = await table.toArray();
@@ -51,7 +51,7 @@ const memoizedTable = <T extends { id: string }, U, V>(table: Table<T, U, V>) =>
 
   const upsert = versionInvalidator((item: V) => table.put(item));
 
-  return { getMap, upsert };
+  return { getMap, upsert, getStateVersion: getCurrentVersion };
 };
 
 export const DB = {

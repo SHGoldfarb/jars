@@ -91,5 +91,7 @@ export const makeVersionedMemoize = (maxSize: number | null = 256) => {
       return result;
     };
 
-  return { versionedMemoize, upVersion, versionInvalidator };
+  const getCurrentVersion = () => version;
+
+  return { versionedMemoize, upVersion, versionInvalidator, getCurrentVersion };
 };
