@@ -6,14 +6,16 @@ const createTransactionFormQueries = (financeQueriesDeps: typeof financeQueries)
     // The non archived accounts + the account the transaction being edited already belongs to,
     // even if it is archived.
     getAccountsForSelector: async (transactionId: string | undefined) => {
-      const accounts = await financeQueriesDeps.listAccounts();
+      const accounts = await financeQueriesDeps.accounts.list();
       if (transactionId) {
-        const transaction = await financeQueries.getTransactionById(transactionId);
+        const transaction = await financeQueries.transactions.getById(transactionId);
         const isTransactionAccountIncluded = accounts
           .map(({ id }) => id)
           .includes(transaction.accountId);
         if (!isTransactionAccountIncluded) {
-          const transactionAccount = await financeQueriesDeps.getAccountById(transaction.accountId);
+          const transactionAccount = await financeQueriesDeps.accounts.getById(
+            transaction.accountId
+          );
           return [transactionAccount, ...accounts];
         }
       }
@@ -24,12 +26,12 @@ const createTransactionFormQueries = (financeQueriesDeps: typeof financeQueries)
     // The non archived jars + the jar the transaction being edited already belongs to,
     // even if it is archived.
     getJarsForSelector: async (transactionId: string | undefined) => {
-      const jars = await financeQueriesDeps.listJars();
+      const jars = await financeQueriesDeps.jars.list();
       if (transactionId) {
-        const transaction = await financeQueries.getTransactionById(transactionId);
+        const transaction = await financeQueries.transactions.getById(transactionId);
         const isTransactionJarIncluded = jars.map(({ id }) => id).includes(transaction.jarId);
         if (!isTransactionJarIncluded) {
-          const transactionJar = await financeQueriesDeps.getJarById(transaction.jarId);
+          const transactionJar = await financeQueriesDeps.jars.getById(transaction.jarId);
           return [transactionJar, ...jars];
         }
       }
@@ -45,15 +47,15 @@ const createTransactionFormQueries = (financeQueriesDeps: typeof financeQueries)
     ) => {
       const categories =
         kind === 'income'
-          ? await financeQueriesDeps.listCategoriesIncome()
-          : await financeQueriesDeps.listCategoriesExpense();
+          ? await financeQueriesDeps.categories.listIncome()
+          : await financeQueriesDeps.categories.listExpense();
       if (transactionId) {
-        const transaction = await financeQueries.getTransactionById(transactionId);
+        const transaction = await financeQueries.transactions.getById(transactionId);
         const isTransactionCategoryIncluded = categories
           .map(({ id }) => id)
           .includes(transaction.categoryId);
         if (kind === transaction.kind && !isTransactionCategoryIncluded) {
-          const transactionCategory = await financeQueriesDeps.getCategoryById(
+          const transactionCategory = await financeQueriesDeps.categories.getById(
             transaction.categoryId
           );
           return [transactionCategory, ...categories];

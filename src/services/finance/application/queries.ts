@@ -24,7 +24,7 @@ export const createFinanceQueries = (deps: FinanceRepositories) => ({
     listExpense: async (params?: { includeArchived?: boolean }) =>
       financeDomainQueries.categories.list(await deps.categories.listExpense(), params ?? {}),
     getById: (categoryId: string) => deps.categories.getById(categoryId),
-    lastOperationId: () => deps.jars.getLastOperationId(),
+    lastOperationId: () => deps.categories.getLastOperationId(),
   },
   transactions: {
     list: async (params?: {

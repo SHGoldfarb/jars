@@ -14,13 +14,15 @@ export const transformFinanceApiToDeps = (
     restoreAccount: async (accountId: string) => {
       await financeCommands.accounts.restore({ accountId });
     },
-    updateTransaction: async (transaction: Parameters<FinanceCommands['transactions']['update']>[0]) => {
+    updateTransaction: async (
+      transaction: Parameters<FinanceCommands['transactions']['update']>[0]
+    ) => {
       await financeCommands.transactions.update(transaction);
     },
-    getJarBalance: (jarId: string) => financeQueries.getJarBalance(jarId),
-    getAccountBalance: (accountId: string) => financeQueries.getAccountBalance(accountId),
-    getJar: (jarId: string) => financeQueries.getJarById(jarId),
-    getAccount: (accountId: string) => financeQueries.getAccountById(accountId),
+    getJarBalance: (jarId: string) => financeQueries.jars.balance(jarId),
+    getAccountBalance: (accountId: string) => financeQueries.accounts.balance(accountId),
+    getJar: (jarId: string) => financeQueries.jars.getById(jarId),
+    getAccount: (accountId: string) => financeQueries.accounts.getById(accountId),
     createTransaction: (transaction: Parameters<FinanceCommands['transactions']['create']>[0]) =>
       financeCommands.transactions.create(transaction),
     archiveTransaction: (transactionId: string) =>
