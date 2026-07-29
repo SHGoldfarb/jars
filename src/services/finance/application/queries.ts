@@ -6,16 +6,12 @@ export const createFinanceQueries = (deps: FinanceRepositories) => ({
     list: async (params?: { includeArchived?: boolean }) =>
       financeDomainQueries.accounts.list(await deps.accounts.list(), params ?? {}),
     getById: (accountId: string) => deps.accounts.getById(accountId),
-    balance: async (accountId: string) =>
-      financeDomainQueries.accounts.balance(accountId, await deps.transactions.list()),
     lastOperationId: () => deps.accounts.getLastOperationId(),
   },
   jars: {
     list: async (params?: { includeArchived?: boolean }) =>
       financeDomainQueries.jars.list(await deps.jars.list(), params ?? {}),
     getById: (jarId: string) => deps.jars.getById(jarId),
-    balance: async (jarId: string) =>
-      financeDomainQueries.jars.balance(jarId, await deps.transactions.list()),
     lastOperationId: () => deps.jars.getLastOperationId(),
   },
   categories: {

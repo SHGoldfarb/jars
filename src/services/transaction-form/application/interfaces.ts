@@ -1,3 +1,4 @@
+import { balances } from 'src/services/balances';
 import type { financeCommands, financeQueries } from 'src/services/finance';
 
 type FinanceCommands = typeof financeCommands;
@@ -19,8 +20,8 @@ export const transformFinanceApiToDeps = (
     ) => {
       await financeCommands.transactions.update(transaction);
     },
-    getJarBalance: (jarId: string) => financeQueries.jars.balance(jarId),
-    getAccountBalance: (accountId: string) => financeQueries.accounts.balance(accountId),
+    getJarBalance: (jarId: string) => balances.queries.jars(jarId),
+    getAccountBalance: (accountId: string) => balances.queries.accounts(accountId),
     getJar: (jarId: string) => financeQueries.jars.getById(jarId),
     getAccount: (accountId: string) => financeQueries.accounts.getById(accountId),
     createTransaction: (transaction: Parameters<FinanceCommands['transactions']['create']>[0]) =>
