@@ -41,7 +41,7 @@ test('unit tests', async () => {
         callCount++;
         return a;
       };
-      const cached2 = createCacheForFunction(countingFn, null);
+      const cached2 = createCacheForFunction(countingFn, { maxSize: null });
 
       for (let i = 0; i < 500; i++) {
         cached2(String(i), [i]);
@@ -60,7 +60,7 @@ test('unit tests', async () => {
         callCount++;
         return a;
       };
-      const cachedCounting = createCacheForFunction(countingFn, 2);
+      const cachedCounting = createCacheForFunction(countingFn, { maxSize: 2 });
 
       cachedCounting('x', [1]);
       cachedCounting('y', [2]);
@@ -81,7 +81,7 @@ test('unit tests', async () => {
         callCount++;
         return a;
       };
-      const cachedCounting = createCacheForFunction(countingFn, 3);
+      const cachedCounting = createCacheForFunction(countingFn, { maxSize: 3 });
 
       cachedCounting('a', [1]);
       cachedCounting('b', [2]);
@@ -113,7 +113,7 @@ test('unit tests', async () => {
         callCount++;
         return a;
       };
-      const cached = createCacheForFunction(fn, 1);
+      const cached = createCacheForFunction(fn, { maxSize: 1 });
 
       cached('a', [1]);
       expect(callCount).toBe(1);
@@ -133,7 +133,7 @@ test('unit tests', async () => {
         callCount++;
         return a;
       };
-      const cached = createCacheForFunction(fn, 0);
+      const cached = createCacheForFunction(fn, { maxSize: 0 });
 
       cached('a', [1]);
       cached('a', [1]);

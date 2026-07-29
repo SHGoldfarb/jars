@@ -16,8 +16,11 @@ export const runInOrder = async (fns: (() => Promise<void>)[]) => {
 
 export const createCacheForFunction = <T extends unknown[], U>(
   f: (...params: T) => U,
-  maxSize: number | null = 256
+  options: {
+    maxSize?: number | null;
+  } = {}
 ) => {
+  const { maxSize } = { maxSize: 256, ...options };
   const typedCache = () => {
     const cache = new Map<string, U>();
 
@@ -59,9 +62,12 @@ export const createCacheForFunction = <T extends unknown[], U>(
 
 export const memoize = <T extends unknown[], U>(
   f: (...params: T) => U,
-  maxSize: number | null = 256
+  options: {
+    maxSize?: number | null;
+  } = {}
 ) => {
-  const computeWithCache = createCacheForFunction(f, maxSize);
+  const { maxSize } = { maxSize: 256, ...options };
+  const computeWithCache = createCacheForFunction(f, { maxSize });
 
   const memoizedFunction = (...params: T) => {
     const key = JSON.stringify(params);
@@ -71,11 +77,12 @@ export const memoize = <T extends unknown[], U>(
   return memoizedFunction;
 };
 
-export const makeVersionedMemoize = (maxSize: number | null = 256) => {
+export const makeVersionedMemoize = (options: { maxSize?: number | null } = {}) => {
+  const { maxSize } = { maxSize: 256, ...options };
   let version = 0;
 
   const versionedMemoize = <T extends unknown[], U>(f: (...args: T) => U) => {
-    const memoized = memoize((_version: number, ...args: T) => f(...args), maxSize);
+    const memoized = memoize((_version: number, ...args: T) => f(...args), { maxSize });
     return (...args: T) => memoized(version, ...args);
   };
 

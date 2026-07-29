@@ -26,7 +26,9 @@ const computeBalancesUncached = (transactions: Transaction[]) =>
     return balances;
   }, emptyBalances());
 
-const computeBalancesWithManualCache = createCacheForFunction(computeBalancesUncached);
+const computeBalancesWithManualCache = createCacheForFunction(computeBalancesUncached, {
+  maxSize: 1,
+});
 
 export const createBalancesGetters = ({
   dataStateId,

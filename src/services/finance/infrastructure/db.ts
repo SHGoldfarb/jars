@@ -39,7 +39,9 @@ db.version(3).upgrade((tx) => {
 });
 
 const memoizedTable = <T extends { id: string }, U, V>(table: Table<T, U, V>) => {
-  const { versionedMemoize, versionInvalidator, getCurrentVersion } = makeVersionedMemoize(3);
+  const { versionedMemoize, versionInvalidator, getCurrentVersion } = makeVersionedMemoize({
+    maxSize: 3,
+  });
 
   const getMap = versionedMemoize(async () => {
     const items = await table.toArray();
