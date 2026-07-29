@@ -6,7 +6,7 @@ export const CategoriesIncomeNew = () => {
   const navigate = useNavigate();
   const handleSubmit = async (name: string) => {
     try {
-      await financeCommands.createIncomeCategory({ name: name });
+      await financeCommands.categories.createIncome({ name: name });
       await navigate({ to: '/categories/income' });
     } catch (error) {
       console.error('Failed to create income category:', error);

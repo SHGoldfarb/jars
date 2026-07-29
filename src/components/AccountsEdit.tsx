@@ -18,7 +18,7 @@ export const AccountsEdit = () => {
 
   const handleSubmit = async (name: string) => {
     try {
-      await financeCommands.renameAccount({ accountId: account.id, name });
+      await financeCommands.accounts.rename({ accountId: account.id, name });
       await navigate({ to: '/accounts' });
     } catch (error) {
       console.error('Failed to update account:', error);
@@ -27,7 +27,7 @@ export const AccountsEdit = () => {
 
   const handleDelete = async () => {
     try {
-      await financeCommands.archiveAccount({ accountId: account.id });
+      await financeCommands.accounts.archive({ accountId: account.id });
       await navigate({ to: '/accounts' });
     } catch (error) {
       console.error('Failed to delete account:', error);

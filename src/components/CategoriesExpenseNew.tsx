@@ -6,7 +6,7 @@ export const CategoriesExpenseNew = () => {
   const navigate = useNavigate();
   const handleSubmit = async (name: string) => {
     try {
-      await financeCommands.createExpenseCategory({ name: name });
+      await financeCommands.categories.createExpense({ name: name });
       await navigate({ to: '/categories/expense' });
     } catch (error) {
       console.error('Failed to create expense category:', error);

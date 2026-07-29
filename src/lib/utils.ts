@@ -74,9 +74,9 @@ export const memoize = <T extends unknown[], U>(
 export const makeVersionedMemoize = (maxSize: number | null = 256) => {
   let version = 0;
 
-  const versionedMemoize = <T, U>(f: (...args: T[]) => U) => {
-    const memoized = memoize((_version: number, ...args: T[]) => f(...args), maxSize);
-    return (...args: T[]) => memoized(version, ...args);
+  const versionedMemoize = <T extends unknown[], U>(f: (...args: T) => U) => {
+    const memoized = memoize((_version: number, ...args: T) => f(...args), maxSize);
+    return (...args: T) => memoized(version, ...args);
   };
 
   const upVersion = () => {
@@ -84,8 +84,8 @@ export const makeVersionedMemoize = (maxSize: number | null = 256) => {
   };
 
   const versionInvalidator =
-    <T, U>(f: (...args: T[]) => U) =>
-    async (...args: T[]) => {
+    <T extends unknown[], U>(f: (...args: T) => U) =>
+    async (...args: T) => {
       const result = await f(...args);
       upVersion();
       return result;

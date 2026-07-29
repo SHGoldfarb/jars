@@ -15,7 +15,7 @@ export const CategoriesEdit = () => {
 
   const handleSubmit = async (name: string) => {
     try {
-      await financeCommands.renameCategory({ categoryId: category.id, name });
+      await financeCommands.categories.rename({ categoryId: category.id, name });
       await navigate({ to: `/categories/${category.kind}` });
     } catch (error) {
       console.error('Failed to update category:', error);
@@ -24,7 +24,7 @@ export const CategoriesEdit = () => {
 
   const handleDelete = async () => {
     try {
-      await financeCommands.archiveCategory({ categoryId: category.id });
+      await financeCommands.categories.archive({ categoryId: category.id });
       await navigate({ to: `/categories/${category.kind}` });
     } catch (error) {
       console.error('Failed to delete category:', error);

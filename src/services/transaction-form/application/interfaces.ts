@@ -9,22 +9,22 @@ export const transformFinanceApiToDeps = (
 ) => {
   return {
     restoreJar: async (jarId: string) => {
-      await financeCommands.restoreJar({ jarId });
+      await financeCommands.jars.restore({ jarId });
     },
     restoreAccount: async (accountId: string) => {
-      await financeCommands.restoreAccount({ accountId });
+      await financeCommands.accounts.restore({ accountId });
     },
-    updateTransaction: async (transaction: Parameters<FinanceCommands['updateTransaction']>[0]) => {
-      await financeCommands.updateTransaction(transaction);
+    updateTransaction: async (transaction: Parameters<FinanceCommands['transactions']['update']>[0]) => {
+      await financeCommands.transactions.update(transaction);
     },
     getJarBalance: (jarId: string) => financeQueries.getJarBalance(jarId),
     getAccountBalance: (accountId: string) => financeQueries.getAccountBalance(accountId),
     getJar: (jarId: string) => financeQueries.getJarById(jarId),
     getAccount: (accountId: string) => financeQueries.getAccountById(accountId),
-    createTransaction: (transaction: Parameters<FinanceCommands['createTransaction']>[0]) =>
-      financeCommands.createTransaction(transaction),
+    createTransaction: (transaction: Parameters<FinanceCommands['transactions']['create']>[0]) =>
+      financeCommands.transactions.create(transaction),
     archiveTransaction: (transactionId: string) =>
-      financeCommands.archiveTransaction({ transactionId }),
+      financeCommands.transactions.archive({ transactionId }),
   };
 };
 

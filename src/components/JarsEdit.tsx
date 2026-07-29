@@ -18,7 +18,7 @@ export const JarsEdit = () => {
 
   const handleSubmit = async (name: string) => {
     try {
-      await financeCommands.renameJar({ jarId: jar.id, name });
+      await financeCommands.jars.rename({ jarId: jar.id, name });
       await navigate({ to: '/jars' });
     } catch (error) {
       console.error('Failed to update jar:', error);
@@ -27,7 +27,7 @@ export const JarsEdit = () => {
 
   const handleDelete = async () => {
     try {
-      await financeCommands.archiveJar({ jarId: jar.id });
+      await financeCommands.jars.archive({ jarId: jar.id });
       await navigate({ to: '/jars' });
     } catch (error) {
       console.error('Failed to delete jar:', error);

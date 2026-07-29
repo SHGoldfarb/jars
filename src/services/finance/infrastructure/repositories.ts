@@ -20,6 +20,7 @@ const accountRepository: AccountRepository = {
   save: (account) => {
     return DB.accounts.upsert(Account.parse(account));
   },
+  getLastOperationId: () => DB.accounts.getStateVersion()
 };
 
 const jarRepository: JarRepository = {
@@ -35,6 +36,7 @@ const jarRepository: JarRepository = {
   save: (jar) => {
     return DB.jars.upsert(Jar.parse(jar));
   },
+  getLastOperationId: () => DB.jars.getStateVersion()
 };
 
 const categoryRepository: CategoryRepository = {
@@ -62,6 +64,7 @@ const categoryRepository: CategoryRepository = {
   save: (category) => {
     return DB.categories.upsert(Category.parse(category));
   },
+  getLastOperationId: () => DB.categories.getStateVersion()
 };
 
 const transactionRepository: TransactionRepository = {
@@ -77,6 +80,7 @@ const transactionRepository: TransactionRepository = {
   save: (transaction) => {
     return DB.transactions.upsert(Transaction.parse(transaction));
   },
+  getLastOperationId: () => DB.transactions.getStateVersion()
 };
 
 export const repositories = {

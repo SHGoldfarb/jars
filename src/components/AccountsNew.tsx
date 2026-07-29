@@ -6,7 +6,7 @@ export const AccountsNew = () => {
   const navigate = useNavigate();
   const handleSubmit = async (name: string) => {
     try {
-      await financeCommands.createAccount({ name: name });
+      await financeCommands.accounts.create({ name: name });
       await navigate({ to: '/accounts' });
     } catch (error) {
       console.error('Failed to create account:', error);

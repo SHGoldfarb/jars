@@ -6,7 +6,7 @@ export const JarsNew = () => {
   const navigate = useNavigate();
   const handleSubmit = async (name: string) => {
     try {
-      await financeCommands.createJar({ name: name });
+      await financeCommands.jars.create({ name: name });
       await navigate({ to: '/jars' });
     } catch (error) {
       console.error('Failed to create jar:', error);
