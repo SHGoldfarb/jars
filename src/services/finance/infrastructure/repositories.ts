@@ -6,49 +6,33 @@ import type {
   JarRepository,
   TransactionRepository,
 } from '../domain';
+import type z from 'zod';
 
-const accountRepository: AccountRepository = {
-  getById: async (accountId) => {
-    return Account.parse((await DB.accounts.getMap())[accountId]);
+const createDBTableRepository = <T extends z.ZodObject>(
+  Model: T,
+  table: 'accounts' | 'jars' | 'categories' | 'transactions'
+) => ({
+  getById: async (id: string) => {
+    return Model.parse((await DB[table].getMap())[id]);
   },
   list: async () => {
-    const accounts = await DB.accounts.getMap();
-    return Object.values(accounts)
-      .filter((account) => Account.safeParse(account).success)
-      .map((account) => Account.parse(account));
+    const items = await DB[table].getMap();
+    return Object.values(items)
+      .filter((item) => Model.safeParse(item).success)
+      .map((item) => Model.parse(item));
   },
-  save: (account) => {
-    return DB.accounts.upsert(Account.parse(account));
+  save: (item: z.infer<T>) => {
+    return DB[table].upsert(Model.parse(item));
   },
-  getLastOperationId: () => DB.accounts.getStateVersion()
-};
+  getLastOperationId: () => DB[table].getStateVersion(),
+});
 
-const jarRepository: JarRepository = {
-  getById: async (jarId) => {
-    return Jar.parse((await DB.jars.getMap())[jarId]);
-  },
-  list: async () => {
-    const jars = await DB.jars.getMap();
-    return Object.values(jars)
-      .filter((jar) => Jar.safeParse(jar).success)
-      .map((jar) => Jar.parse(jar));
-  },
-  save: (jar) => {
-    return DB.jars.upsert(Jar.parse(jar));
-  },
-  getLastOperationId: () => DB.jars.getStateVersion()
-};
+const accountRepository: AccountRepository = createDBTableRepository(Account, 'accounts');
+
+const jarRepository: JarRepository = createDBTableRepository(Jar, 'jars');
 
 const categoryRepository: CategoryRepository = {
-  getById: async (categoryId) => {
-    return Category.parse((await DB.categories.getMap())[categoryId]);
-  },
-  list: async () => {
-    const categories = await DB.categories.getMap();
-    return Object.values(categories)
-      .filter((category) => Category.safeParse(category).success)
-      .map((category) => Category.parse(category));
-  },
+  ...createDBTableRepository(Category, 'categories'),
   listIncome: async () => {
     const categories = await categoryRepository.list();
     return categories
@@ -61,27 +45,12 @@ const categoryRepository: CategoryRepository = {
       .filter((category) => category.kind === 'expense')
       .map((category) => CategoryExpense.parse(category));
   },
-  save: (category) => {
-    return DB.categories.upsert(Category.parse(category));
-  },
-  getLastOperationId: () => DB.categories.getStateVersion()
 };
 
-const transactionRepository: TransactionRepository = {
-  getById: async (transactionId) => {
-    return Transaction.parse((await DB.transactions.getMap())[transactionId]);
-  },
-  list: async () => {
-    const transactions = await DB.transactions.getMap();
-    return Object.values(transactions)
-      .filter((transaction) => Transaction.safeParse(transaction).success)
-      .map((transaction) => Transaction.parse(transaction));
-  },
-  save: (transaction) => {
-    return DB.transactions.upsert(Transaction.parse(transaction));
-  },
-  getLastOperationId: () => DB.transactions.getStateVersion()
-};
+const transactionRepository: TransactionRepository = createDBTableRepository(
+  Transaction,
+  'transactions'
+);
 
 export const repositories = {
   accounts: accountRepository,
