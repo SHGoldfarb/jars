@@ -1,5 +1,5 @@
 import { generateId } from 'src/lib/utils';
-import { archiveTransaction, createTransaction, updateTransaction } from '../../model';
+import { financeDomainCommands } from '../../domain';
 import type { CurrencyAmount, Transaction } from '../../model';
 import type { FinanceRepositories } from '../../domain';
 
@@ -15,20 +15,20 @@ interface CreateTransactionInput {
 
 export const createTransactionCommands = (deps: FinanceRepositories) => ({
   create: async (input: CreateTransactionInput) => {
-    const transaction = createTransaction({
+    const transaction = financeDomainCommands.transactions.create({
       id: generateId(),
-      ...input
+      ...input,
     });
     return deps.transactions.save(transaction);
   },
 
   update: async (transaction: Transaction) => {
-    const parsedTransaction = updateTransaction(transaction);
+    const parsedTransaction = financeDomainCommands.transactions.update(transaction);
     return deps.transactions.save(parsedTransaction);
   },
 
   archive: async ({ transactionId }: { transactionId: string }) => {
     const current = await deps.transactions.getById(transactionId);
-    return deps.transactions.save(archiveTransaction(current));
+    return deps.transactions.save(financeDomainCommands.transactions.archive(current));
   },
 });

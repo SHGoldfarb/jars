@@ -15,32 +15,3 @@ export const Transaction = z.object({
 });
 
 export type Transaction = z.infer<typeof Transaction>;
-
-export const TransactionUnsaved = z.object({
-  ...Transaction.shape,
-  id: Transaction.shape.id.optional(),
-});
-
-export type TransactionUnsaved = z.infer<typeof TransactionUnsaved>;
-
-const NewTransactionInput = z.object({
-  id: Identifiable.shape.id,
-  kind: Transaction.shape.kind,
-  accountId: Transaction.shape.accountId,
-  categoryId: Transaction.shape.categoryId,
-  jarId: Transaction.shape.jarId,
-  amount: Transaction.shape.amount,
-  dateISO: Transaction.shape.dateISO,
-  description: Transaction.shape.description,
-});
-
-type NewTransactionInput = z.infer<typeof NewTransactionInput>;
-
-export const createTransaction = (input: NewTransactionInput) => Transaction.parse(input);
-
-export const updateTransaction = (input: Transaction) => Transaction.parse(input);
-
-export const archiveTransaction = (
-  transaction: Transaction,
-  archivedAtISO = new Date().toISOString()
-) => Transaction.parse({ ...transaction, archivedAtISO });

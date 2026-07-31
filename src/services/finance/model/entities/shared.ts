@@ -16,9 +16,3 @@ export const Identifiable = z.object({
 export const Nameable = z.object({
   name: z.string().trim().min(1),
 });
-
-export const ensureActive = (entity: Archivable, entityName: string): void => {
-  if (entity.archivedAtISO) {
-    throw new Error(`${entityName} is archived`);
-  }
-};
