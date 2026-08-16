@@ -7,9 +7,11 @@ import { useTransactionEditCurrentTransaction } from 'src/hooks/useTransactionEd
 export const TransactionFormFieldJar = ({
   form,
   defaultOpen,
+  onChange,
 }: {
   form: TransactionFormType;
   defaultOpen: boolean;
+  onChange: (value: string) => void;
 }) => {
   const transactionBeingEdited = useTransactionEditCurrentTransaction();
   const jars = useTransactionFormJars(transactionBeingEdited?.id);
@@ -23,6 +25,7 @@ export const TransactionFormFieldJar = ({
             placeholder="Select jar"
             options={jars.map((jar) => ({ value: jar.id, label: jar.name }))}
             defaultOpen={defaultOpen}
+            onChange={onChange}
           />
         </TransactionFormFieldWrapper>
       )}

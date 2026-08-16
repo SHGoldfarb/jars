@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
   Field,
@@ -42,18 +42,16 @@ export const TransactionForm = ({
   const form = useTransactionForm({ onSubmit, defaultErrorMessage, defaultValues });
   const values = useStore(form.store, (state) => state.values);
 
-  useEffect(() => {
-    if (values.jarId) {
-      const timeoutId = setTimeout(() => {
+  const handleJarChange = (newValue: string) => {
+    // If jar is set and amount is empty, focus the amount field 0.1 seconds later
+    if (newValue) {
+      setTimeout(() => {
         if (!values.amount) {
           amountInputRef.current?.focus();
         }
       }, 100);
-      return () => {
-        clearTimeout(timeoutId);
-      };
     }
-  }, [values.jarId, values.amount]);
+  };
 
   return (
     <div className="w-full max-w-md p-6">
@@ -83,6 +81,7 @@ export const TransactionForm = ({
               <TransactionFormFieldJar
                 form={form}
                 defaultOpen={!!(values.accountId && !values.jarId)}
+                onChange={handleJarChange}
                 key={`jar - ${values.accountId}`}
               />
               <TransactionFormFieldAmount

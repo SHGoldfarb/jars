@@ -12,7 +12,7 @@ const getFirstErrorMessage = (errors: unknown[] | undefined): string | undefined
   }
 
   if (firstError && typeof firstError === 'object' && 'message' in firstError) {
-    const message = (firstError as { message?: unknown }).message;
+    const message = firstError.message;
     return typeof message === 'string' ? message : undefined;
   }
 
