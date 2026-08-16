@@ -5,6 +5,7 @@ import type {
   CategoryIncome,
   Jar,
   Transaction,
+  Transfer,
 } from '../model';
 
 export interface AccountRepository {
@@ -30,7 +31,7 @@ export interface CategoryRepository {
   getLastOperationId: () => number;
 }
 
-export interface TransactionOrderItem {
+export interface MovementOrderItem {
   dateISO?: 'asc' | 'desc';
 }
 
@@ -41,9 +42,17 @@ export interface TransactionRepository {
   getLastOperationId: () => number;
 }
 
+export interface TransferRepository {
+  getById(transferId: string): Promise<Transfer>;
+  list(): Promise<Transfer[]>;
+  save(transfer: Transfer): Promise<unknown>;
+  getLastOperationId: () => number;
+}
+
 export interface FinanceRepositories {
   accounts: AccountRepository;
   jars: JarRepository;
   categories: CategoryRepository;
   transactions: TransactionRepository;
+  transfers: TransferRepository;
 }

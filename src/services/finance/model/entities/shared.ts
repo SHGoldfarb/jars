@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { CurrencyAmount } from '../currency';
 
 export const idShape = z.uuidv4();
 export const dateTimeShape = z.iso.datetime();
@@ -16,3 +17,13 @@ export const Identifiable = z.object({
 export const Nameable = z.object({
   name: z.string().trim().min(1),
 });
+
+export const Movement = z.object({
+  ...Identifiable.shape,
+  ...Archivable.shape,
+  amount: CurrencyAmount,
+  dateISO: dateTimeShape,
+  description: z.string().trim(),
+});
+
+export type Movement = z.infer<typeof Movement>;

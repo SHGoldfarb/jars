@@ -1,6 +1,6 @@
 import * as z from 'zod';
 
-export const Decimal = z.object({
+const decimalSchema = z.object({
   // Examples
   // { value: "125", decimalPlaces: 2 } = 1.25
   // { value: "-50", decimalPlaces: 0 } = -50
@@ -9,7 +9,28 @@ export const Decimal = z.object({
   decimalPlaces: z.number().int(),
 });
 
-export type Decimal = z.infer<typeof Decimal>;
+export type Decimal = z.infer<typeof decimalSchema>;
+
+// Sign is determined solely by the `value` string: `decimalPlaces` scales
+// magnitude but never flips sign. All-zero strings (including "000") are zero.
+const isPositive = (decimal: Decimal): boolean =>
+  !decimal.value.startsWith('-') && !/^0+$/.test(decimal.value);
+
+const isNonNegative = (decimal: Decimal): boolean =>
+  // "-0", "-00", ... represent zero and are therefore non-negative.
+  !decimal.value.startsWith('-') || /^-0+$/.test(decimal.value);
+
+export const Decimal = Object.assign(decimalSchema, {
+  positive: () =>
+    decimalSchema.refine(isPositive, 'Decimal must be positive').brand<'PositiveDecimal'>(),
+  nonNegative: () =>
+    decimalSchema
+      .refine(isNonNegative, 'Decimal must be non-negative')
+      .brand<'NonNegativeDecimal'>(),
+});
+
+export type PositiveDecimal = z.infer<ReturnType<typeof Decimal.positive>>;
+export type NonNegativeDecimal = z.infer<ReturnType<typeof Decimal.nonNegative>>;
 
 const scaleDecimalValueToPlaces = (decimalValue: Decimal, targetPlaces: number) => {
   if (!Number.isInteger(targetPlaces)) {

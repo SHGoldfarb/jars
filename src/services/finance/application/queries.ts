@@ -30,6 +30,14 @@ export const createFinanceQueries = (deps: FinanceRepositories) => ({
     getById: (transactionId: string) => deps.transactions.getById(transactionId),
     lastOperationId: () => deps.transactions.getLastOperationId(),
   },
+  transfers: {
+    list: async (params?: {
+      includeArchived?: boolean;
+      orderBy?: { dateISO?: 'asc' | 'desc' }[];
+    }) => financeDomainQueries.transfers.list(await deps.transfers.list(), params ?? {}),
+    getById: (transactionId: string) => deps.transfers.getById(transactionId),
+    lastOperationId: () => deps.transfers.getLastOperationId(),
+  },
 });
 
 export const financeQueries = createFinanceQueries(repositories);

@@ -1,5 +1,5 @@
-import { Account, Category, Jar, Transaction } from '../model';
-import type { TransactionOrderItem } from './repositories';
+import { Account, Category, Jar, Movement, Transaction, Transfer } from '../model';
+import type { MovementOrderItem } from './repositories';
 
 const listJars = (jars: Jar[], params: { includeArchived?: boolean }) => {
   const { includeArchived = false } = params;
@@ -16,7 +16,7 @@ const listAccounts = (accounts: Account[], params: { includeArchived?: boolean }
   return accounts.filter((account) => includeArchived || !account.archivedAtISO);
 };
 
-const orderTransactions = (a: Transaction, b: Transaction, orderItem: TransactionOrderItem) => {
+const orderMovements = (a: Movement, b: Movement, orderItem: MovementOrderItem) => {
   let result: number | undefined = undefined;
   if (orderItem.dateISO === 'asc') {
     result = a.dateISO.localeCompare(b.dateISO);
@@ -30,14 +30,33 @@ const orderTransactions = (a: Transaction, b: Transaction, orderItem: Transactio
 
 const listTransactions = (
   transactions: Transaction[],
-  params: { includeArchived?: boolean; orderBy?: TransactionOrderItem[] }
+  params: { includeArchived?: boolean; orderBy?: MovementOrderItem[] }
 ) => {
   const { includeArchived = false, orderBy = [{ dateISO: 'desc' }] } = params;
   return transactions
     .filter((transaction) => includeArchived || !transaction.archivedAtISO)
     .sort((a, b) => {
       for (const orderItem of orderBy) {
-        const result = orderTransactions(a, b, orderItem);
+        const result = orderMovements(a, b, orderItem);
+        if (result !== 0) {
+          return result;
+        }
+      }
+
+      return 0;
+    });
+};
+
+const listTransfers = (
+  transfers: Transfer[],
+  params: { includeArchived?: boolean; orderBy?: MovementOrderItem[] }
+) => {
+  const { includeArchived = false, orderBy = [{ dateISO: 'desc' }] } = params;
+  return transfers
+    .filter((transfer) => includeArchived || !transfer.archivedAtISO)
+    .sort((a, b) => {
+      for (const orderItem of orderBy) {
+        const result = orderMovements(a, b, orderItem);
         if (result !== 0) {
           return result;
         }
@@ -59,5 +78,8 @@ export const financeDomainQueries = {
   },
   jars: {
     list: listJars,
+  },
+  transfers: {
+    list: listTransfers,
   },
 };
