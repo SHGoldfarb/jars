@@ -64,12 +64,15 @@ Queries need no change.
 
 New bounded service under `src/services/transfer-form/` (lighter than `transaction-form` — no balance gates):
 
-- **`application/commands.ts`** — `transferFormCommands.submitCreateTransfer(value: TransferUnsaved)`
-  → `financeCommands.transfers.create(value)`.
 - **`application/queries.ts`** — `transferFormQueries.getAccountsForSelector(transferId: string | undefined)`.
-  For this scope it returns `financeQueries.accounts.list()` (active only). Structured like
-  `transactionFormQueries.getAccountsForSelector` so the deferred edit work can add archived-account
-  inclusion (AC `155`) without reshaping it.
+  Returns active accounts, plus (when `transferId` is set) the transfer's origin/destination accounts
+  even if archived. Structured like `transactionFormQueries.getAccountsForSelector` so the deferred
+  edit work can rely on the archived-account inclusion (AC `155`) without reshaping it.
+
+No `commands.ts` module for now. Create is a plain proxy to `financeCommands.transfers.create`, so
+`TransfersNew` calls that directly — matching `AccountsNew` / `JarsNew`. A `transfer-form` commands
+module is introduced only when the deferred edit/delete/balance-restore work gives it real
+orchestration to hold (the way `transaction-form` carries `submitEditTransaction`).
 
 ## 4. Shared form utils (small refactor for DRY + type safety)
 
@@ -119,8 +122,8 @@ are already structurally typed — reuse those directly.
 - **`src/components/TransferForm.tsx`** — mirrors `TransactionForm.tsx`. Fields in order:
   Date → Origin account → Destination account → Amount → Description. Submit / Cancel (`/movements`).
   No delete for now. Skip the auto-open/auto-advance choreography for v1 (plain selects).
-- **`src/components/TransfersNew.tsx`** — mirrors `TransactionsNew.tsx`: `handleSubmit` →
-  `transferFormCommands.submitCreateTransfer(value)` → `navigate({ to: '/movements' })`.
+- **`src/components/TransfersNew.tsx`** — `handleSubmit` → `financeCommands.transfers.create(value)`
+  → `navigate({ to: '/movements' })` (same shape as `AccountsNew` / `JarsNew`).
 - **`src/components/TransferListItem.tsx`** — icon + origin account name → destination account name
   (via `useAccount`), description, `formatCurrencyAmount(amount)`, `formatDateISO(dateISO)`. Use a
   distinct lucide icon (e.g. `ArrowLeftRightIcon`) so it's minimally distinguishable — full polish is
@@ -199,7 +202,6 @@ pnpm test:chromium
 
 - `src/services/finance/domain/commands/transfer.ts`
 - `src/services/finance/application/commands/transfer.ts`
-- `src/services/transfer-form/application/commands.ts`
 - `src/services/transfer-form/application/queries.ts`
 - `src/lib/movementFormUtils.ts`
 - `src/lib/transferFormUtils.ts`
