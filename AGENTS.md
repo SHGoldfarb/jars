@@ -1,5 +1,9 @@
 # Agent Rules For This Repository
 
+## Read CONTRIBUTING.md Before Making Code Changes
+
+Before making any code changes, agents must read `/Users/samuelgoldfarb/jars/CONTRIBUTING.md` and follow the guidance in it.
+
 ## Type Safety Is Mandatory
 
 When editing code in this repository, agents must prefer type-safe solutions over quick fixes.
