@@ -1,5 +1,6 @@
-import { decimal, Transaction, type CurrencyAmount } from 'src/services/finance';
+import { decimal, Transaction } from 'src/services/finance';
 import * as z from 'zod';
+import { movementFormUtils } from './movementFormUtils';
 
 interface TransactionFormValues {
   amount: string;
@@ -11,14 +12,9 @@ interface TransactionFormValues {
   jarId: string;
 }
 
-const toDateInputValue = (date: Date) => date.toISOString().slice(0, 16);
-
-const dateLocalToUTC = (date: Date) =>
-  new Date(date.getTime() - new Date().getTimezoneOffset() * 60000);
-
 const getDefaultValues = (): TransactionFormValues => ({
   amount: '',
-  date: toDateInputValue(dateLocalToUTC(new Date())),
+  date: movementFormUtils.todayDateInputValue(),
   description: '',
   kind: '',
   accountId: '',
@@ -31,7 +27,7 @@ const toFormValues = (transaction: Transaction): TransactionFormValues => ({
     transaction.amount.currency === 'CLP'
       ? decimal.toNumber(transaction.amount.amountDecimal).toString()
       : '',
-  date: toDateInputValue(new Date(transaction.dateISO)),
+  date: movementFormUtils.toDateInputValue(new Date(transaction.dateISO)),
   description: transaction.description,
   kind: transaction.kind,
   accountId: transaction.accountId,
@@ -39,37 +35,9 @@ const toFormValues = (transaction: Transaction): TransactionFormValues => ({
   jarId: transaction.jarId,
 });
 
-const nonNegativeNumberRegex = /^\d+(\.\d+)?$/;
-
-const parseAmountToCLP = (value: string): CurrencyAmount => {
-  const amountDecimal = decimal.parseString(value);
-
-  return {
-    currency: 'CLP',
-    amountDecimal,
-  };
-};
-
-const parseDateInputToISO = (value: string) => {
-  const normalized = value.trim();
-
-  const date = new Date(`${normalized}:00.000Z`);
-  if (Number.isNaN(date.valueOf())) {
-    throw new Error('Date must be valid');
-  }
-
-  return date.toISOString();
-};
-
 const transactionValidators = {
-  amount: z
-    .string()
-    .trim()
-    .min(1, 'Amount is required')
-    .regex(nonNegativeNumberRegex, 'Amount must be a positive number')
-    .refine((val) => parseFloat(val) > 0, 'Amount must be greater than zero')
-    .transform((val) => parseAmountToCLP(val)),
-  date: z.string().trim().min(1, 'Date is required').transform(parseDateInputToISO),
+  amount: movementFormUtils.amountValidator,
+  date: movementFormUtils.dateValidator,
   description: z.string(),
   kind: z.enum(['income', 'expense']),
   accountId: z.string().trim().min(1, 'Account is required'),
@@ -111,33 +79,8 @@ const createFormSchema = (
     }
   });
 
-const inputProps = <
-  T extends {
-    name: unknown;
-    state: { value: unknown };
-    handleBlur: unknown;
-    handleChange: (value: T['state']['value']) => unknown;
-  },
->(
-  field: T
-): {
-  id: T['name'];
-  name: T['name'];
-  value: T['state']['value'];
-  onBlur: T['handleBlur'];
-  onChange: (e: { target: { value: T['state']['value'] } }) => void;
-} => ({
-  id: field.name,
-  name: field.name,
-  value: field.state.value,
-  onBlur: field.handleBlur,
-  onChange: (e) => {
-    field.handleChange(e.target.value);
-  },
-});
-
 export const transactionFormUtils = {
-  inputProps,
+  inputProps: movementFormUtils.inputProps,
   createFormSchema,
   getDefaultValues,
   toFormValues,
