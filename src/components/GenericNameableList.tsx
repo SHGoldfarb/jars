@@ -1,17 +1,15 @@
 import { ItemContent, ItemTitle } from 'components/ui/item';
-import { GenericList } from './GenericList';
+import { GenericList, type GenericListAction } from './GenericList';
 
 export const GenericNameableList = ({
   items,
-  addLabel,
-  addUrl,
+  actions,
 }: {
   items: { name: string; id: string; url: string }[];
-  addLabel: string;
-  addUrl: string;
+  actions: GenericListAction[];
 }) => {
   return (
-    <GenericList items={items} addLabel={addLabel} addUrl={addUrl}>
+    <GenericList items={items} actions={actions}>
       {(item) => (
         <ItemContent>
           <ItemTitle>{item.name}</ItemTitle>

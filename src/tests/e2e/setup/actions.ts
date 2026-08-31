@@ -1,6 +1,7 @@
 import { testUtils } from 'src/tests/utils.ts';
 import { test as base } from './pages.ts';
 import { transactionFormUtils } from 'src/lib/transactionFormUtils.ts';
+import { transferFormUtils } from 'src/lib/transferFormUtils.ts';
 
 export interface CreateTransactionParams {
   amount?: string;
@@ -12,11 +13,20 @@ export interface CreateTransactionParams {
   categoryName?: string;
 }
 
+export interface CreateTransferParams {
+  amount?: string;
+  date?: string;
+  description?: string;
+  originAccountName: string;
+  destinationAccountName: string;
+}
+
 const test = base.extend<{
   createAccount: (accountName: string) => Promise<void>;
   createJar: (jarName: string) => Promise<void>;
   createCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
   createTransaction: (params?: CreateTransactionParams) => Promise<void>;
+  createTransfer: (params: CreateTransferParams) => Promise<void>;
   deleteAccount: (accountName: string) => Promise<void>;
   deleteCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
   deleteJar: (jarName: string) => Promise<void>;
@@ -78,6 +88,24 @@ const test = base.extend<{
         await transactionFormPage.selectFirstCategory();
       }
       await transactionFormPage.submitButton.click();
+    });
+  },
+  createTransfer: async ({ rootLayoutPage, movementsPage, transferFormPage }, use) => {
+    await use(async (params: CreateTransferParams) => {
+      const defaultParams = {
+        amount: (1000 + testUtils.generateIntId()).toString(),
+        date: transferFormUtils.getDefaultValues().date,
+        description: `Transfer description${testUtils.generateId()}`,
+      } as const;
+
+      await rootLayoutPage.navButton('Movements').click();
+      await movementsPage.createTransferButton.click();
+      await transferFormPage.fillDate(params.date ?? defaultParams.date);
+      await transferFormPage.selectOriginAccount(params.originAccountName);
+      await transferFormPage.selectDestinationAccount(params.destinationAccountName);
+      await transferFormPage.fillAmount(params.amount ?? defaultParams.amount);
+      await transferFormPage.fillDescription(params.description ?? defaultParams.description);
+      await transferFormPage.submitButton.click();
     });
   },
   deleteAccount: async ({ rootLayoutPage, accountsPage, accountFormPage }, use) => {

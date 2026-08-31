@@ -1,7 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 
 export const jarsPageConstructor = (page: Page) => {
-  const goto = () => page.goto('/jars');
   const createJarButton = page.getByRole('link', { name: 'Add jar' });
   const getJar = (jarName: string) => page.getByRole('link', { name: jarName });
   const expectJarToExist = async (jarName: string) => {
@@ -13,7 +12,6 @@ export const jarsPageConstructor = (page: Page) => {
   const clickJar = (jarName: string) => getJar(jarName).click();
 
   return {
-    goto,
     createJarButton,
     getJar,
     expectJarToExist,

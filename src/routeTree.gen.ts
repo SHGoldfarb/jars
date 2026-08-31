@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as JarsIndexRouteImport } from './routes/jars/index'
 import { Route as CategoriesIndexRouteImport } from './routes/categories/index'
 import { Route as AccountsIndexRouteImport } from './routes/accounts/index'
+import { Route as TransfersNewRouteImport } from './routes/transfers/new'
 import { Route as TransactionsNewRouteImport } from './routes/transactions/new'
 import { Route as JarsNewRouteImport } from './routes/jars/new'
 import { Route as AccountsNewRouteImport } from './routes/accounts/new'
@@ -55,6 +56,11 @@ const CategoriesIndexRoute = CategoriesIndexRouteImport.update({
 const AccountsIndexRoute = AccountsIndexRouteImport.update({
   id: '/accounts/',
   path: '/accounts/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransfersNewRoute = TransfersNewRouteImport.update({
+  id: '/transfers/new',
+  path: '/transfers/new',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TransactionsNewRoute = TransactionsNewRouteImport.update({
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/accounts/new': typeof AccountsNewRoute
   '/jars/new': typeof JarsNewRoute
   '/transactions/new': typeof TransactionsNewRoute
+  '/transfers/new': typeof TransfersNewRoute
   '/accounts/': typeof AccountsIndexRoute
   '/categories/': typeof CategoriesIndexRoute
   '/jars/': typeof JarsIndexRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/accounts/new': typeof AccountsNewRoute
   '/jars/new': typeof JarsNewRoute
   '/transactions/new': typeof TransactionsNewRoute
+  '/transfers/new': typeof TransfersNewRoute
   '/accounts': typeof AccountsIndexRoute
   '/categories': typeof CategoriesIndexRoute
   '/jars': typeof JarsIndexRoute
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/accounts/new': typeof AccountsNewRoute
   '/jars/new': typeof JarsNewRoute
   '/transactions/new': typeof TransactionsNewRoute
+  '/transfers/new': typeof TransfersNewRoute
   '/accounts/': typeof AccountsIndexRoute
   '/categories/': typeof CategoriesIndexRoute
   '/jars/': typeof JarsIndexRoute
@@ -181,6 +190,7 @@ export interface FileRouteTypes {
     | '/accounts/new'
     | '/jars/new'
     | '/transactions/new'
+    | '/transfers/new'
     | '/accounts/'
     | '/categories/'
     | '/jars/'
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/accounts/new'
     | '/jars/new'
     | '/transactions/new'
+    | '/transfers/new'
     | '/accounts'
     | '/categories'
     | '/jars'
@@ -218,6 +229,7 @@ export interface FileRouteTypes {
     | '/accounts/new'
     | '/jars/new'
     | '/transactions/new'
+    | '/transfers/new'
     | '/accounts/'
     | '/categories/'
     | '/jars/'
@@ -238,6 +250,7 @@ export interface RootRouteChildren {
   AccountsNewRoute: typeof AccountsNewRoute
   JarsNewRoute: typeof JarsNewRoute
   TransactionsNewRoute: typeof TransactionsNewRoute
+  TransfersNewRoute: typeof TransfersNewRoute
   AccountsIndexRoute: typeof AccountsIndexRoute
   JarsIndexRoute: typeof JarsIndexRoute
   AccountsAccountIdEditRoute: typeof AccountsAccountIdEditRoute
@@ -287,6 +300,13 @@ declare module '@tanstack/react-router' {
       path: '/accounts'
       fullPath: '/accounts/'
       preLoaderRoute: typeof AccountsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transfers/new': {
+      id: '/transfers/new'
+      path: '/transfers/new'
+      fullPath: '/transfers/new'
+      preLoaderRoute: typeof TransfersNewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/transactions/new': {
@@ -398,6 +418,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountsNewRoute: AccountsNewRoute,
   JarsNewRoute: JarsNewRoute,
   TransactionsNewRoute: TransactionsNewRoute,
+  TransfersNewRoute: TransfersNewRoute,
   AccountsIndexRoute: AccountsIndexRoute,
   JarsIndexRoute: JarsIndexRoute,
   AccountsAccountIdEditRoute: AccountsAccountIdEditRoute,

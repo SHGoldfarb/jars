@@ -38,6 +38,17 @@ export const createFinanceQueries = (deps: FinanceRepositories) => ({
     getById: (transactionId: string) => deps.transfers.getById(transactionId),
     lastOperationId: () => deps.transfers.getLastOperationId(),
   },
+  movements: {
+    list: async (params?: {
+      includeArchived?: boolean;
+      orderBy?: { dateISO?: 'asc' | 'desc' }[];
+    }) =>
+      financeDomainQueries.movements.list(
+        await deps.transactions.list(),
+        await deps.transfers.list(),
+        params ?? {}
+      ),
+  },
 });
 
 export const financeQueries = createFinanceQueries(repositories);

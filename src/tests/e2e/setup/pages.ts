@@ -11,6 +11,7 @@ import {
   transactionFormPageConstructor,
   type TransactionFormPage,
 } from '../pages/transactionForm.page';
+import { transferFormPageConstructor, type TransferFormPage } from '../pages/transferForm.page';
 
 const test = base.extend<{
   accountsPage: AccountsPage;
@@ -22,6 +23,7 @@ const test = base.extend<{
   rootLayoutPage: RootLayoutPage;
   movementsPage: MovementsPage;
   transactionFormPage: TransactionFormPage;
+  transferFormPage: TransferFormPage;
 }>({
   rootLayoutPage: async ({ page }, use) => {
     await page.goto('/');
@@ -51,6 +53,9 @@ const test = base.extend<{
   },
   transactionFormPage: async ({ page }, use) => {
     await use(transactionFormPageConstructor(page));
+  },
+  transferFormPage: async ({ page }, use) => {
+    await use(transferFormPageConstructor(page));
   },
 });
 

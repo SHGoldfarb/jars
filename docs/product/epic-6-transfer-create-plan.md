@@ -105,7 +105,9 @@ orchestration to hold (the way `transaction-form` carries `submitEditTransaction
 - **`src/hooks/useTransferFormValidate.ts`** — mirrors `useTransactionFormValidate.ts`; pulls active
   accounts from `useTransferFormAccounts`, builds `createFormSchema(accountIds)`.
 - **`src/hooks/useTransferFormAccounts.ts`** — `useQuery(['transferFormQueries.getAccountsForSelector', transferId], …)`.
-- **`src/hooks/useTransfers.ts`** — `useQuery(['financeQueries.listTransfers'], () => financeQueries.transfers.list())`.
+- **`src/hooks/useMovements.ts`** — `useQuery(['financeQueries.listMovements'], () => financeQueries.movements.list())`.
+  Replaces the old `useTransactions` hook for the Movements screen; `useTransactions.ts` and the
+  transient `useTransfers.ts` are deleted (nothing else referenced them).
 
 ## 6. Components
 
@@ -116,9 +118,11 @@ importing the shared `movementFormUtils`. `TransactionFormFieldSelect` and `Tran
 are already structurally typed — reuse those directly.
 
 - **`src/components/TransferFormFieldAccount.tsx`** — parameterized: props `form`,
-  `name: 'originAccountId' | 'destinationAccountId'`, `label`, `defaultOpen`, `excludeAccountId?`.
-  Renders `TransactionFormFieldSelect` with active accounts, filtering out `excludeAccountId` (soft UX
-  guard for AC `130`; the schema is the hard guard).
+  `name: 'originAccountId' | 'destinationAccountId'`, `label`, `placeholder`, `defaultOpen?`.
+  Renders `TransactionFormFieldSelect` with all active accounts. No cross-field option filtering —
+  origin ≠ destination is enforced solely by the schema (a `excludeAccountId` filter was dropped
+  during implementation: it would have made AC `130` unreachable through the UI and untestable, and
+  the transaction form does no cross-field option filtering either).
 - **`src/components/TransferForm.tsx`** — mirrors `TransactionForm.tsx`. Fields in order:
   Date → Origin account → Destination account → Amount → Description. Submit / Cancel (`/movements`).
   No delete for now. Skip the auto-open/auto-advance choreography for v1 (plain selects).
@@ -131,19 +135,34 @@ are already structurally typed — reuse those directly.
 
 ## 7. Movements listing (minimal interleave)
 
-`src/components/Movements.tsx` currently maps `useTransactions()` into `GenericList`. Change to merge
-both sources:
+The merge + sort is a **query in the `finance` service**, not component logic (`Movement` is already a
+domain concept there and both entity types are owned by that bounded context — no new service):
 
-- Build a tagged array: transactions → `{ ...t, movementType: 'transaction', url: '/transactions/$id/edit' }`,
-  transfers → `{ ...t, movementType: 'transfer', url: '/transfers/$id/edit' }`.
-- Sort combined list by `dateISO` desc (matches existing transaction default; satisfies AC `137`'s sort).
-- Render `movementType === 'transfer' ? <TransferListItem> : <TransactionListItem>`.
+- **`src/services/finance/domain/queries.ts`** — new `listMovements(transactions, transfers, params)`
+  reusing `listTransactions` / `listTransfers` for the `includeArchived` filter, then merging and
+  re-sorting via the existing `orderMovements`. Exports
+  `type MovementListEntry = ({ movementType: 'transaction' } & Transaction) | ({ movementType: 'transfer' } & Transfer)`
+  (`movementType` tag, since `Transaction` already has its own `kind` field). Registered as
+  `financeDomainQueries.movements.list`.
+- **`src/services/finance/application/queries.ts`** — `financeQueries.movements.list(params?)` fetches
+  both repos and delegates to the domain query. Default order is `dateISO` desc (satisfies AC `137`'s sort).
 
-`GenericList` API: it takes a single `addLabel`/`addUrl`. Generalize to
-**`addActions: { label: string; url: string }[]`** and render one link row per action. Update the
-existing callers (`Movements`, `Accounts`, `Jars`, `CategoriesIncome`, `CategoriesExpense`) —
-mechanical. Movements passes
-`[{ label: 'Add transaction', url: '/transactions/new' }, { label: 'Add transfer', url: '/transfers/new' }]`.
+`src/components/Movements.tsx` now just calls `useMovements()`, attaches a `url` per entry
+(`/transactions/$id/edit` for transactions, `undefined` for transfers), and renders
+`movementType === 'transfer' ? <TransferListItem transfer={item} /> : <TransactionListItem transaction={item} />`.
+
+`GenericList` change: replace `addLabel` / `addUrl` with a single
+`actions: { label: string; url: string }[]` (exported as `GenericListAction`) rendered as link rows,
+and make item `url` optional (`T extends { id: string; url?: string }`) — rows without a `url` render
+un-wrapped instead of inside a `<Link>`. All callers move to `actions`: `Accounts`, `Jars`,
+`GenericNameableList` (which also swaps its own `addLabel`/`addUrl` for `actions`, propagated from
+`CategoriesIncome` / `CategoriesExpense`). Movements passes both add rows via `actions`. Transfer
+rows have no `url` for now, so they are non-interactive until the deferred `/transfers/$transferId/edit`
+route exists.
+
+`src/tests/e2e/movements.spec.ts` — the "sorted by date descending" test indexes `nth()` into the
+list's links; the new "Add transfer" link shifts those, so it now filters `hasNotText: /^Add /` and
+indexes from `nth(0)`.
 
 ## 8. Route
 
@@ -158,32 +177,38 @@ export const Route = createFileRoute('/transfers/new')({ component: TransfersNew
 ## 9. Tests
 
 **E2E — new `src/tests/e2e/pages/transferForm.page.ts`** (mirror `transactionForm.page.ts`):
-`gotoCreate('/transfers/new')`, `submitButton`, `amountInput`, `dateInput`, `descriptionInput`,
-`originAccountSelect`, `destinationAccountSelect`, `selectOriginAccount(name)`,
-`selectDestinationAccount(name)`, `fill*` helpers.
+`submitButton`, `amountInput`, `dateInput`, `descriptionInput`, `originAccountSelect`,
+`destinationAccountSelect`, `selectOriginAccount(name)`, `selectDestinationAccount(name)`, `fill*`
+helpers. No `page.goto` helper — tests reach the form by clicking (`navButton('Movements')` →
+`createTransferButton`); the app loads once via the `rootLayoutPage` fixture's `page.goto('/')`.
 
-**Wiring:** add `transferFormPage` fixture in `src/tests/e2e/setup.ts`; add `createTransfer(params)`
-action in `src/tests/e2e/setup/actions.ts`. Add `createTransferButton` to `movements.page.ts` (reuse
-`getTransaction` as a generic `getMovement`).
+**Wiring:** add `transferFormPage` fixture in `src/tests/e2e/setup/pages.ts`; add `createTransfer(params)`
+action in `src/tests/e2e/setup/actions.ts`; add `createTransferButton` to `movements.page.ts`.
+Transfer rows aren't links, so the create/persist assertions use plain `page.getByText(...)` on the
+user-visible content (`origin → destination`, description, formatted amount, formatted date) rather
+than scoping to a row element.
 
-**New `src/tests/e2e/transfers.spec.ts`:**
+**New `src/tests/e2e/transfers.spec.ts`** (each validation isolated, matching the transaction suite):
 
 - **can create a transfer** — create 2 accounts, fill origin/destination/amount/date/description,
-  submit, assert the row appears on Movements with both account names, formatted amount, formatted
+  submit, assert the row appears on Movements with `origin → destination`, formatted amount, formatted
   date (AC `127`, `148`–`150`).
+- **persists across a page reload** — create via `createTransfer`, `page.reload()`, still visible
+  (AC `150`).
 - **date defaults to today** — open form, assert `dateInput` value equals
   `transferFormUtils.getDefaultValues().date` (AC `129`).
-- **validations** — submit empty → "Origin account is required" / "Destination account is required" /
-  "Amount is required" / "Date is required"; non-numeric amount → "Amount must be a positive number";
-  `0` → "Amount must be greater than zero" (AC `128`, `143`–`144`, `146`).
+- **required fields** — submit empty → "Origin account is required" / "Destination account is
+  required" / "Amount is required" (AC `143`).
+- **amount must be a positive number** — origin+destination valid, `asdf` → "Amount must be a
+  positive number"; `0` → "Amount must be greater than zero" (AC `128`, `144`, `146`).
 - **origin ≠ destination** — pick the same account for both → "Origin and destination accounts must be
   different" (AC `130`, `145`).
 - **only active accounts selectable** — create an account, archive it, assert it's absent from both
   selectors (AC `131`).
 
-**Unit — `src/tests/unit/unit.spec.ts`:** add a step group for `financeDomainCommands.transfers.create`
-— throws when `originAccountId === destinationAccountId`; returns a parsed `Transfer` otherwise.
-(First domain unit coverage; CONTRIBUTING asks for domain/application unit tests.)
+No unit test — behavior is fully covered e2e. Unit tests are reserved for logic that is both hard to
+exercise through behavior and critical to get exactly right (e.g. the LRU cache in `unit.spec.ts`);
+the origin ≠ destination rule is neither.
 
 ## 10. Checks to run
 
@@ -208,7 +233,7 @@ pnpm test:chromium
 - `src/hooks/useTransferForm.ts`
 - `src/hooks/useTransferFormValidate.ts`
 - `src/hooks/useTransferFormAccounts.ts`
-- `src/hooks/useTransfers.ts`
+- `src/hooks/useMovements.ts`
 - `src/components/TransferForm.tsx`
 - `src/components/TransferFormFieldAccount.tsx`
 - `src/components/TransferFormFieldDate.tsx`
@@ -224,13 +249,18 @@ pnpm test:chromium
 
 - `src/services/finance/domain/commands/index.ts`
 - `src/services/finance/application/commands/index.ts`
+- `src/services/finance/domain/queries.ts` (+ `application/queries.ts`) — `movements.list` query
 - `src/lib/transactionFormUtils.ts` (re-import shared helpers)
 - `src/components/Movements.tsx`
-- `src/components/GenericList.tsx` (+ its other callers: `Accounts`, `Jars`, `CategoriesIncome`, `CategoriesExpense`)
-- `src/tests/e2e/setup.ts`
+- `src/components/GenericList.tsx` — `actions: GenericListAction[]` replaces `addLabel`/`addUrl`; optional item `url`
+- `src/components/GenericNameableList.tsx`, `Accounts.tsx`, `Jars.tsx`, `CategoriesIncome.tsx`, `CategoriesExpense.tsx` — moved to `actions`
+- `src/routeTree.gen.ts` (regenerated for `/transfers/new`)
+- `src/tests/e2e/setup/pages.ts`
 - `src/tests/e2e/setup/actions.ts`
 - `src/tests/e2e/pages/movements.page.ts`
-- `src/tests/unit/unit.spec.ts`
+- `src/tests/e2e/movements.spec.ts` (index shift from the new "Add transfer" link)
+
+**Deleted:** `src/hooks/useTransactions.ts`, `src/hooks/useTransfers.ts` (superseded by `useMovements`).
 
 ---
 

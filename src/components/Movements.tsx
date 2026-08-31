@@ -1,20 +1,30 @@
-import { useTransactions } from 'src/hooks/useTransactions';
+import type { MovementListEntry } from 'src/services/finance';
+import { useMovements } from 'src/hooks/useMovements';
 import { GenericList } from './GenericList';
 import { TransactionListItem } from './TransactionListItem';
+import { TransferListItem } from './TransferListItem';
+
+const movementUrl = (movement: MovementListEntry) =>
+  movement.movementType === 'transaction' ? `/transactions/${movement.id}/edit` : undefined;
 
 export const Movements = () => {
-  const { transactions } = useTransactions();
+  const { movements } = useMovements();
 
   return (
     <GenericList
-      items={transactions.map((transaction) => ({
-        ...transaction,
-        url: `/transactions/${transaction.id}/edit`,
-      }))}
-      addLabel="Add transaction"
-      addUrl="/transactions/new"
+      items={movements.map((movement) => ({ ...movement, url: movementUrl(movement) }))}
+      actions={[
+        { label: 'Add transaction', url: '/transactions/new' },
+        { label: 'Add transfer', url: '/transfers/new' },
+      ]}
     >
-      {(transaction) => <TransactionListItem transaction={transaction} />}
+      {(item) =>
+        item.movementType === 'transfer' ? (
+          <TransferListItem transfer={item} />
+        ) : (
+          <TransactionListItem transaction={item} />
+        )
+      }
     </GenericList>
   );
 };

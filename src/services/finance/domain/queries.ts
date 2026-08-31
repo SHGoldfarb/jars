@@ -66,6 +66,40 @@ const listTransfers = (
     });
 };
 
+export type MovementListEntry =
+  | ({ movementType: 'transaction' } & Transaction)
+  | ({ movementType: 'transfer' } & Transfer);
+
+const listMovements = (
+  transactions: Transaction[],
+  transfers: Transfer[],
+  params: { includeArchived?: boolean; orderBy?: MovementOrderItem[] }
+): MovementListEntry[] => {
+  const { orderBy = [{ dateISO: 'desc' }] } = params;
+
+  const entries: MovementListEntry[] = [
+    ...listTransactions(transactions, params).map((transaction) => ({
+      movementType: 'transaction' as const,
+      ...transaction,
+    })),
+    ...listTransfers(transfers, params).map((transfer) => ({
+      movementType: 'transfer' as const,
+      ...transfer,
+    })),
+  ];
+
+  return entries.sort((a, b) => {
+    for (const orderItem of orderBy) {
+      const result = orderMovements(a, b, orderItem);
+      if (result !== 0) {
+        return result;
+      }
+    }
+
+    return 0;
+  });
+};
+
 export const financeDomainQueries = {
   transactions: {
     list: listTransactions,
@@ -81,5 +115,8 @@ export const financeDomainQueries = {
   },
   transfers: {
     list: listTransfers,
+  },
+  movements: {
+    list: listMovements,
   },
 };

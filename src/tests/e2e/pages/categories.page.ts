@@ -1,7 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 
 export const categoriesPageConstructor = (page: Page) => {
-  const goto = () => page.goto('/categories');
   const createCategoryButton = (kind: 'Income' | 'Expense') =>
     page.getByRole('link', { name: `Add ${kind} category` });
 
@@ -30,7 +29,6 @@ export const categoriesPageConstructor = (page: Page) => {
     expectCategoryToExist,
     expectCategoryToNotExist,
     getCategory,
-    goto,
     tabButton,
     expensesTabButton,
     incomeTabButton,

@@ -3,32 +3,41 @@ import { Link } from '@tanstack/react-router';
 import { Separator } from './ui/separator';
 import { Fragment } from 'react';
 
-export const GenericList = <T extends { id: string; url: string }>({
+export interface GenericListAction {
+  label: string;
+  url: string;
+}
+
+export const GenericList = <T extends { id: string; url?: string }>({
   items,
-  addLabel,
-  addUrl,
+  actions,
   children,
 }: {
   items: T[];
-  addLabel: string;
-  addUrl: string;
+  actions: GenericListAction[];
   children: (item: T) => React.ReactNode;
 }) => {
   return (
     <ItemGroup className="max-w-lg mx-auto gap-0">
-      <Link to={addUrl}>
-        <Item>
-          <ItemContent>
-            <ItemTitle className="mx-auto font-bold">{addLabel}</ItemTitle>
-          </ItemContent>
-        </Item>
-      </Link>
+      {actions.map((action) => (
+        <Link key={action.url} to={action.url}>
+          <Item>
+            <ItemContent>
+              <ItemTitle className="mx-auto font-bold">{action.label}</ItemTitle>
+            </ItemContent>
+          </Item>
+        </Link>
+      ))}
       {items.map((item) => (
         <Fragment key={item.id}>
           <Separator />
-          <Link to={item.url}>
+          {item.url ? (
+            <Link to={item.url}>
+              <Item>{children(item)}</Item>
+            </Link>
+          ) : (
             <Item>{children(item)}</Item>
-          </Link>
+          )}
         </Fragment>
       ))}
     </ItemGroup>

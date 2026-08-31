@@ -53,11 +53,12 @@ test.describe('movements list ordering', () => {
     const transactionLinks = page
       .getByRole('list')
       .filter({ hasText: 'Add transaction' })
-      .getByRole('link');
+      .getByRole('link')
+      .filter({ hasNotText: /^Add / });
 
     // Verify transactions are sorted by date descending (newest first)
-    await expect(transactionLinks.nth(1)).toContainText('Newest transaction');
-    await expect(transactionLinks.nth(2)).toContainText('Middle transaction');
-    await expect(transactionLinks.nth(3)).toContainText('Oldest transaction');
+    await expect(transactionLinks.nth(0)).toContainText('Newest transaction');
+    await expect(transactionLinks.nth(1)).toContainText('Middle transaction');
+    await expect(transactionLinks.nth(2)).toContainText('Oldest transaction');
   });
 });

@@ -10,8 +10,7 @@ export const CategoriesExpense = () => {
         ...category,
         url: `/categories/${category.id}/edit`,
       }))}
-      addLabel="Add Expense category"
-      addUrl="/categories/expense/new"
+      actions={[{ label: 'Add Expense category', url: '/categories/expense/new' }]}
     />
   );
 };

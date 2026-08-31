@@ -4,7 +4,6 @@ export const transactionFormPageConstructor = (page: Page) => {
   const closeDropdowns = async () => {
     await page.keyboard.press('Escape');
   };
-  const gotoCreate = () => page.goto('/transactions/new');
   const submitButtonLocator = page.getByRole('button', { name: 'Submit' });
   const submitButton = {
     click: async () => {
@@ -101,7 +100,6 @@ export const transactionFormPageConstructor = (page: Page) => {
   };
 
   return {
-    gotoCreate,
     submitButton,
     amountInput,
     dateInput,

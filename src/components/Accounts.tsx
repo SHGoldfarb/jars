@@ -7,7 +7,7 @@ export const Accounts = () => {
   const items = accounts.map((account) => ({ ...account, url: `/accounts/${account.id}/edit` }));
 
   return (
-    <GenericList items={items} addLabel="Add account" addUrl="/accounts/new">
+    <GenericList items={items} actions={[{ label: 'Add account', url: '/accounts/new' }]}>
       {(item) => <AccountItem account={item} />}
     </GenericList>
   );

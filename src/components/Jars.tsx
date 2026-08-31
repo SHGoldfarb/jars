@@ -8,8 +8,7 @@ export const Jars = () => {
   return (
     <GenericList
       items={jars.map((jar) => ({ ...jar, url: `/jars/${jar.id}/edit` }))}
-      addLabel="Add jar"
-      addUrl="/jars/new"
+      actions={[{ label: 'Add jar', url: '/jars/new' }]}
     >
       {(item) => <JarItem jar={item} />}
     </GenericList>
