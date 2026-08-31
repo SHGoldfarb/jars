@@ -1,3 +1,4 @@
+import { useStore } from '@tanstack/react-form';
 import { type TransferFormType } from 'src/hooks/useTransferForm';
 import { TransactionFormFieldWrapper } from 'src/components/TransactionFormFieldWrapper';
 import { TransactionFormFieldSelect } from './TransactionFormFieldSelect';
@@ -17,6 +18,8 @@ export const TransferFormFieldAccount = ({
   defaultOpen?: boolean;
 }) => {
   const accounts = useTransferFormAccounts(undefined);
+  const otherName = name === 'originAccountId' ? 'destinationAccountId' : 'originAccountId';
+  const otherAccountId = useStore(form.store, (state) => state.values[otherName]);
 
   return (
     <form.Field name={name}>
@@ -25,7 +28,9 @@ export const TransferFormFieldAccount = ({
           <TransactionFormFieldSelect
             field={field}
             placeholder={placeholder}
-            options={accounts.map((account) => ({ value: account.id, label: account.name }))}
+            options={accounts
+              .filter((account) => account.id !== otherAccountId)
+              .map((account) => ({ value: account.id, label: account.name }))}
             defaultOpen={defaultOpen}
           />
         </TransactionFormFieldWrapper>

@@ -134,25 +134,30 @@ test.describe('transfer form validation', () => {
     await expect(page.getByText('$0', { exact: true })).toBeVisible();
   });
 
-  test('origin and destination must be different', async ({
+  test('a selected account is not offered in the other selector', async ({
     createAccount,
     rootLayoutPage,
     movementsPage,
     transferFormPage,
-    page,
   }) => {
-    const accountName = 'Shared account';
-    await createAccount(accountName);
+    test.slow();
+    const firstName = 'First account';
+    const secondName = 'Second account';
+    await createAccount(firstName);
+    await createAccount(secondName);
 
     await rootLayoutPage.navButton('Movements').click();
     await movementsPage.createTransferButton.click();
 
-    await transferFormPage.selectOriginAccount(accountName);
-    await transferFormPage.selectDestinationAccount(accountName);
-    await transferFormPage.fillAmount('1000');
-    await transferFormPage.submitButton.click();
+    // Picking an origin account removes it from the destination options...
+    await transferFormPage.selectOriginAccount(firstName);
+    await transferFormPage.expectOptionToNotExist('Destination account', firstName);
+    await transferFormPage.expectOptionToExist('Destination account', secondName);
 
-    await expect(page.getByText('Origin and destination accounts must be different')).toBeVisible();
+    // ...and picking a destination account removes it from the origin options.
+    await transferFormPage.selectDestinationAccount(secondName);
+    await transferFormPage.expectOptionToNotExist('Origin account', secondName);
+    await transferFormPage.expectOptionToExist('Origin account', firstName);
   });
 
   test('only active accounts are selectable', async ({
