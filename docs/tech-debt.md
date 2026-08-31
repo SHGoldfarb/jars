@@ -14,7 +14,7 @@ user-facing.
       type is exported through the public `src/services/finance` barrel.
 
 <!--
-Keep this example when the list empties out, so the next entry follows the same shape:
+Example item. Keep when the list empties out, so the next entry follows the same shape:
 
 - [ ] **Imperative title naming the fix** — what is wrong, and why it is debt rather than a bug.
       May name the files or commands for a reader to check. Keep the list roughly in priority order.
