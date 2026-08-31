@@ -71,8 +71,8 @@ The main application code lives under `src/` and is grouped by responsibility:
 - `src/routes/` - TanStack Router route files
 - `src/presentation/` - view-layer presentation logic
   - `formatters/` - currency and date formatting
-- `src/lib/` - framework-agnostic technical utilities (`cn`, `generateId`, memoization,
-  `Decimal` arithmetic, generic form-error helpers)
+- `src/lib/` - framework-agnostic technical utilities with no domain or business knowledge (`cn`, `generateId`, memoization,
+  `Decimal` arithmetic, generic form helpers, `datetime-local` input conversion)
 - `src/services/` - bounded contexts
   - `finance/` - the core finance context
     - `application/` - command/query orchestration (`commands/`)
@@ -81,8 +81,9 @@ The main application code lives under `src/` and is grouped by responsibility:
     - `model/` - domain entities (`entities/`)
   - `balances/` - account and jar balances derived from finance (`application/`, `domain/`)
   - `transaction-form/` - transaction form orchestration (`application/`, `domain/`)
-  - `transfer-form/` - transfer form orchestration (`application/`)
+  - `transfer-form/` - transfer form orchestration (`application/`, `domain/`)
   - `shared/` - shared kernel: value objects used by more than one context (`CurrencyAmount`)
+    and the boundary parsing that produces them (`currencyInput`)
 - `src/tests/unit/` - unit tests
 - `src/tests/e2e/` - Playwright end-to-end tests
   - `pages/` - page objects
@@ -106,14 +107,13 @@ services/shared                shared kernel - domain value objects
 lib                            technical primitives, no domain knowledge
 ```
 
-`src/lib/` sits at the bottom and should not import from `src/services/`. The distinction between
-`lib/` and `services/shared/` is domain knowledge, not generality: `Decimal` is pure arithmetic and
-lives in `lib/`, while `CurrencyAmount` enforces a business rule (it refuses to sum different
-currencies) and therefore belongs in `services/shared/`.
+### Context Barrels
 
-Known exception: `src/lib/{movement,transaction,transfer}FormUtils.ts` still import from
-`src/services/finance`. They are form-to-domain mapping rather than technical utilities and belong
-in the `*-form` contexts; treat them as pending cleanup, not as precedent.
+Every bounded context exposes one public surface from its `index.ts`, and consumers import that
+barrel rather than reaching into `application/` or `domain/`. This keeps a context free to move
+things between its own layers without touching the UI. Name the exports explicitly
+(`export const transactionForm = { commands, queries, ... }`) instead of `export *`, so nothing
+becomes public by accident.
 
 ## Testing
 

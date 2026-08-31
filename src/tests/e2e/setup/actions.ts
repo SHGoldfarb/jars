@@ -1,7 +1,8 @@
 import { testUtils } from 'src/tests/utils.ts';
 import { test as base } from './pages.ts';
-import { transactionFormUtils } from 'src/lib/transactionFormUtils.ts';
-import { transferFormUtils } from 'src/lib/transferFormUtils.ts';
+
+// A fixed, valid datetime-local value for movements whose date the caller doesn't care about.
+const DEFAULT_MOVEMENT_DATE = '2026-02-10T09:00';
 
 export interface CreateTransactionParams {
   amount?: string;
@@ -61,7 +62,7 @@ const test = base.extend<{
     await use(async (params?: CreateTransactionParams) => {
       const defaultParams = {
         amount: (1000 + testUtils.generateIntId()).toString(),
-        date: transactionFormUtils.getDefaultValues().date,
+        date: DEFAULT_MOVEMENT_DATE,
         description: `Transaction description${testUtils.generateId()}`,
         type: 'Expense',
       } as const;
@@ -94,7 +95,7 @@ const test = base.extend<{
     await use(async (params: CreateTransferParams) => {
       const defaultParams = {
         amount: (1000 + testUtils.generateIntId()).toString(),
-        date: transferFormUtils.getDefaultValues().date,
+        date: DEFAULT_MOVEMENT_DATE,
         description: `Transfer description${testUtils.generateId()}`,
       } as const;
 

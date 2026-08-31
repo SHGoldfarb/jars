@@ -1,5 +1,5 @@
 import { TransactionUnsaved } from 'src/services/finance';
-import { transactionFormUtils, type TransactionFormValues } from 'src/lib/transactionFormUtils';
+import { transactionForm, type TransactionFormValues } from 'src/services/transaction-form';
 import { useTransactionFormValidate } from 'src/hooks/useTransactionFormValidate';
 import { useForm } from '@tanstack/react-form';
 
@@ -15,7 +15,7 @@ export const useTransactionForm = ({
   const { validateWithSchema, transactionFormSchema } = useTransactionFormValidate();
 
   return useForm({
-    defaultValues: defaultValues ?? transactionFormUtils.getDefaultValues(),
+    defaultValues: defaultValues ?? transactionForm.getDefaultValues(),
     validators: { onSubmit: ({ value }) => validateWithSchema(value) },
     onSubmit: async ({ value, formApi }) => {
       try {

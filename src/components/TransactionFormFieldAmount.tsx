@@ -2,7 +2,7 @@ import React from 'react';
 import { Input } from 'src/components/ui/input';
 import { type TransactionFormType } from 'src/hooks/useTransactionForm';
 import { TransactionFormFieldWrapper } from 'src/components/TransactionFormFieldWrapper';
-import { transactionFormUtils } from 'src/lib/transactionFormUtils';
+import { formUtils } from 'src/lib/formUtils';
 
 export const TransactionFormFieldAmount = ({
   form,
@@ -21,7 +21,7 @@ export const TransactionFormFieldAmount = ({
             ref={inputRef}
             inputMode="decimal"
             placeholder="10000"
-            {...transactionFormUtils.inputProps(field)}
+            {...formUtils.inputProps(field)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();

@@ -1,5 +1,5 @@
 import { TransferUnsaved } from 'src/services/finance';
-import { transferFormUtils, type TransferFormValues } from 'src/lib/transferFormUtils';
+import { transferForm, type TransferFormValues } from 'src/services/transfer-form';
 import { useTransferFormValidate } from 'src/hooks/useTransferFormValidate';
 import { useForm } from '@tanstack/react-form';
 
@@ -15,7 +15,7 @@ export const useTransferForm = ({
   const { validateWithSchema, transferFormSchema } = useTransferFormValidate();
 
   return useForm({
-    defaultValues: defaultValues ?? transferFormUtils.getDefaultValues(),
+    defaultValues: defaultValues ?? transferForm.getDefaultValues(),
     validators: { onSubmit: ({ value }) => validateWithSchema(value) },
     onSubmit: async ({ value, formApi }) => {
       try {

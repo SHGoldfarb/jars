@@ -11,7 +11,7 @@ import { Button } from 'src/components/ui/button';
 import { TransferUnsaved } from 'src/services/finance';
 import { formUtils } from 'src/lib/formUtils';
 import { useTransferForm } from 'src/hooks/useTransferForm';
-import { type TransferFormValues } from 'src/lib/transferFormUtils';
+import { type TransferFormValues } from 'src/services/transfer-form';
 import { TransferFormFieldDate } from './TransferFormFieldDate';
 import { TransferFormFieldAccount } from './TransferFormFieldAccount';
 import { TransferFormFieldAmount } from './TransferFormFieldAmount';

@@ -19,7 +19,7 @@ import { TransactionFormFieldKind } from './TransactionFormFieldKind';
 import { TransactionFormFieldAccount } from './TransactionFormFieldAccount';
 import { TransactionFormFieldJar } from './TransactionFormFieldJar';
 import { TransactionFormFieldCategory } from './TransactionFormFieldCategory';
-import { type TransactionFormValues } from 'src/lib/transactionFormUtils';
+import { type TransactionFormValues } from 'src/services/transaction-form';
 import { useStore } from '@tanstack/react-form';
 
 export const TransactionForm = ({

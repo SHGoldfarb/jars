@@ -1,4 +1,4 @@
-import { transferFormUtils } from 'src/lib/transferFormUtils';
+import { transferForm } from 'src/services/transfer-form';
 import { formUtils } from 'src/lib/formUtils';
 import { useTransferFormAccounts } from './useTransferFormAccounts';
 
@@ -7,7 +7,7 @@ export const useTransferFormValidate = () => {
 
   const accountIds = accounts.map((account) => account.id);
 
-  const transferFormSchema = transferFormUtils.createFormSchema(accountIds);
+  const transferFormSchema = transferForm.createFormSchema(accountIds);
 
   return {
     validateWithSchema: (value: Parameters<typeof formUtils.validateWithSchema>[0]) =>

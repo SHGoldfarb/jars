@@ -1,4 +1,4 @@
-import { transactionFormUtils } from 'src/lib/transactionFormUtils';
+import { transactionForm } from 'src/services/transaction-form';
 import { formUtils } from 'src/lib/formUtils';
 import { useTransactionFormAccounts } from './useTransactionFormAccounts';
 import { useTransactionEditCurrentTransaction } from './useTransactionEditCurrentTransaction';
@@ -17,7 +17,7 @@ export const useTransactionFormValidate = () => {
   const incomeCategoryIds = incomeCategories.map((category) => category.id);
   const expenseCategoryIds = expenseCategories.map((category) => category.id);
 
-  const transactionFormSchema = transactionFormUtils.createFormSchema(
+  const transactionFormSchema = transactionForm.createFormSchema(
     accountIds,
     jarIds,
     incomeCategoryIds,

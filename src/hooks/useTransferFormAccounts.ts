@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { transferFormQueries } from 'src/services/transfer-form/application/queries';
+import { transferForm } from 'src/services/transfer-form';
 
 export const useTransferFormAccounts = (transferId: string | undefined) => {
   const { data } = useQuery({
     queryKey: ['transferFormQueries.getAccountsForSelector', transferId],
-    queryFn: () => transferFormQueries.getAccountsForSelector(transferId),
+    queryFn: () => transferForm.queries.getAccountsForSelector(transferId),
   });
   return data ?? [];
 };

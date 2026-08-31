@@ -49,7 +49,33 @@ const validateWithSchema = <T extends object>(
   };
 };
 
+const inputProps = <
+  T extends {
+    name: unknown;
+    state: { value: unknown };
+    handleBlur: unknown;
+    handleChange: (value: T['state']['value']) => unknown;
+  },
+>(
+  field: T
+): {
+  id: T['name'];
+  name: T['name'];
+  value: T['state']['value'];
+  onBlur: T['handleBlur'];
+  onChange: (e: { target: { value: T['state']['value'] } }) => void;
+} => ({
+  id: field.name,
+  name: field.name,
+  value: field.state.value,
+  onBlur: field.handleBlur,
+  onChange: (e) => {
+    field.handleChange(e.target.value);
+  },
+});
+
 export const formUtils = {
   getFirstErrorMessage,
   validateWithSchema,
+  inputProps,
 };

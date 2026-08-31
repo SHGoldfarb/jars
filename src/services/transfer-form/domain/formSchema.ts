@@ -1,7 +1,6 @@
-import { decimal } from 'src/lib/decimal';
-import { Transfer } from 'src/services/finance';
 import * as z from 'zod';
-import { movementFormUtils } from './movementFormUtils';
+import { dateInput } from 'src/lib/dateInput';
+import { currencyInput } from 'src/services/shared';
 
 interface TransferFormValues {
   amount: string;
@@ -13,26 +12,15 @@ interface TransferFormValues {
 
 const getDefaultValues = (): TransferFormValues => ({
   amount: '',
-  date: movementFormUtils.todayDateInputValue(),
+  date: dateInput.todayDateInputValue(),
   description: '',
   originAccountId: '',
   destinationAccountId: '',
 });
 
-const toFormValues = (transfer: Transfer): TransferFormValues => ({
-  amount:
-    transfer.amount.currency === 'CLP'
-      ? decimal.toNumber(transfer.amount.amountDecimal).toString()
-      : '',
-  date: movementFormUtils.toDateInputValue(new Date(transfer.dateISO)),
-  description: transfer.description,
-  originAccountId: transfer.originAccountId,
-  destinationAccountId: transfer.destinationAccountId,
-});
-
 const transferValidators = {
-  amount: movementFormUtils.amountValidator,
-  date: movementFormUtils.dateValidator,
+  amount: z.string().trim().min(1, 'Amount is required').pipe(currencyInput.parser),
+  date: z.string().trim().min(1, 'Date is required').transform(dateInput.parseToISO),
   description: z.string(),
   originAccountId: z.string().trim().min(1, 'Origin account is required'),
   destinationAccountId: z.string().trim().min(1, 'Destination account is required'),
@@ -69,11 +57,9 @@ const createFormSchema = (activeAccountIds: string[]) =>
     }
   });
 
-export const transferFormUtils = {
-  inputProps: movementFormUtils.inputProps,
-  createFormSchema,
+export const transferFormSchema = {
   getDefaultValues,
-  toFormValues,
+  createFormSchema,
 };
 
 export type { TransferFormValues };

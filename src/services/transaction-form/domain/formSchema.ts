@@ -1,7 +1,6 @@
-import { decimal } from 'src/lib/decimal';
-import { Transaction } from 'src/services/finance';
 import * as z from 'zod';
-import { movementFormUtils } from './movementFormUtils';
+import { dateInput } from 'src/lib/dateInput';
+import { currencyInput } from 'src/services/shared';
 
 interface TransactionFormValues {
   amount: string;
@@ -15,7 +14,7 @@ interface TransactionFormValues {
 
 const getDefaultValues = (): TransactionFormValues => ({
   amount: '',
-  date: movementFormUtils.todayDateInputValue(),
+  date: dateInput.todayDateInputValue(),
   description: '',
   kind: '',
   accountId: '',
@@ -23,22 +22,9 @@ const getDefaultValues = (): TransactionFormValues => ({
   jarId: '',
 });
 
-const toFormValues = (transaction: Transaction): TransactionFormValues => ({
-  amount:
-    transaction.amount.currency === 'CLP'
-      ? decimal.toNumber(transaction.amount.amountDecimal).toString()
-      : '',
-  date: movementFormUtils.toDateInputValue(new Date(transaction.dateISO)),
-  description: transaction.description,
-  kind: transaction.kind,
-  accountId: transaction.accountId,
-  categoryId: transaction.categoryId,
-  jarId: transaction.jarId,
-});
-
 const transactionValidators = {
-  amount: movementFormUtils.amountValidator,
-  date: movementFormUtils.dateValidator,
+  amount: z.string().trim().min(1, 'Amount is required').pipe(currencyInput.parser),
+  date: z.string().trim().min(1, 'Date is required').transform(dateInput.parseToISO),
   description: z.string(),
   kind: z.enum(['income', 'expense']),
   accountId: z.string().trim().min(1, 'Account is required'),
@@ -80,11 +66,9 @@ const createFormSchema = (
     }
   });
 
-export const transactionFormUtils = {
-  inputProps: movementFormUtils.inputProps,
-  createFormSchema,
+export const transactionFormSchema = {
   getDefaultValues,
-  toFormValues,
+  createFormSchema,
 };
 
 export type { TransactionFormValues };
