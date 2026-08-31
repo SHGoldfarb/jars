@@ -3,16 +3,6 @@
 Known engineering debt, roughly in priority order. Unlike `product/epics.md`, nothing here is
 user-facing.
 
-- [ ] **Import `finance` through its barrel** — 16 files (for example `src/hooks/useAccounts.ts` and
-      `src/components/TransfersNew.tsx`) reach into `src/services/finance/application` instead of the
-      context barrel. Worth doing together with the `Allocation` cleanup below: `finance/index.ts` is
-      still `export *`, so pointing more call sites at it spreads a surface nobody chose.
-- [ ] **Enforce the dependency direction in ESLint** — the layering in `CONTRIBUTING.md` is
-      documented but unchecked, which is how it drifted in the first place. Now that every context
-      has a barrel, a `no-restricted-imports` rule banning `src/services/*/*/**` covers most of it.
-- [ ] **Clean up `Allocation` in `entities/legacy.ts`** — an unimplemented, unvalidated hand-written
-      type is exported through the public `src/services/finance` barrel.
-
 <!--
 Example item. Keep when the list empties out, so the next entry follows the same shape:
 
