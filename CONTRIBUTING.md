@@ -37,6 +37,9 @@ Use `pnpm test:chromium` when you only want the Chromium Playwright project.
 
 - Prefer small, focused changes.
 - Prefer arrow functions over function declarations and object method shorthand for consistency.
+- Don't reach for `useMemo`, `useCallback`, or `React.memo` prophylactically. Add them only for a
+  measured need — a real referential-identity consumer or a genuinely expensive computation — and
+  match how neighbouring components derive their data.
 - Keep TypeScript strict and type-safe.
 - Avoid `any`, unsafe casts, and non-null assertions unless there is no safer alternative and the tradeoff is clearly explained.
 - Update or add tests when behavior changes.
@@ -51,6 +54,10 @@ This repo follows DDD principles as closely as practical for a frontend applicat
 - UI components and hooks should talk to application services, not persistence details.
 - Infrastructure should stay behind repository or adapter boundaries.
 - Validation belongs at boundaries, while domain rules should be enforced as close to the model as possible.
+- Don't add a service or application layer that only forwards to another layer. A form-specific
+  command module earns its place only when it holds real orchestration (cross-entity validation,
+  restore-on-edit, and so on); a plain create flow calls the finance application commands directly
+  from its hook or component (see `AccountsNew`, `JarsNew`).
 
 When adding new behavior, prefer changes that preserve these boundaries instead of introducing direct cross-layer coupling.
 
@@ -75,9 +82,22 @@ Keep new files aligned with the existing layer they belong to. If a change cross
 
 ## Testing
 
-- Add or update unit tests for domain and application behavior.
-- Keep Playwright tests focused on user-visible flows.
-- Prefer verifying behavior through public contracts rather than internal implementation details.
+- Default to end-to-end (Playwright) tests that exercise real user-visible flows. Reserve unit
+  tests for logic that is both hard to exercise through behavior and critical to get exactly right
+  (for example, the LRU cache in `unit.spec.ts`). A domain rule already covered by an e2e flow does
+  not also need a unit test.
+- Never compute an expected value with the same code that produces it in the app. Pure programming
+  utilities (e.g. `runInOrder`) are fine to reuse; anything that encodes a business rule or
+  behavior — formatters, parsers, domain and application logic — is not, because recomputing with
+  it means the test only re-derives the app's own result and cannot catch a regression in that
+  code. When the input is hardcoded, hardcode the expected output too, and pin `locale` /
+  `timezoneId` when needed for determinism.
+- Locate elements by user-visible content or ARIA role, never by implementation-detail selectors
+  (`data-slot`, CSS classes, test-only attributes).
+- Navigate by interacting with the UI (click nav links and buttons), not `page.goto(url)`. A full
+  URL load re-boots the app and slows the suite; the app is loaded once by the root fixture.
+- Keep e2e assertions isolated per behavior (one validation rule per test), matching the existing
+  specs.
 
 ## Pull Requests
 
