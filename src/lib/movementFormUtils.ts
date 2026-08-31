@@ -37,8 +37,7 @@ const amountValidator = z
   .string()
   .trim()
   .min(1, 'Amount is required')
-  .regex(nonNegativeNumberRegex, 'Amount must be a positive number')
-  .refine((val) => parseFloat(val) > 0, 'Amount must be greater than zero')
+  .regex(nonNegativeNumberRegex, 'Amount must be a non-negative number')
   .transform((val) => parseAmountToCLP(val));
 
 const dateValidator = z.string().trim().min(1, 'Date is required').transform(parseDateInputToISO);

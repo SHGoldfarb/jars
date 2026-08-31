@@ -1,5 +1,9 @@
 # Agent Rules For This Repository
 
+## Read README.md For Project Context
+
+Before doing anything, agents must read `/Users/samuelgoldfarb/jars/README.md` for context on what this project is about.
+
 ## Read CONTRIBUTING.md Before Making Code Changes
 
 Before making any code changes, agents must read `/Users/samuelgoldfarb/jars/CONTRIBUTING.md` and follow the guidance in it.

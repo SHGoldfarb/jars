@@ -80,7 +80,7 @@ test.describe('transfer form validation', () => {
     );
   });
 
-  test('amount must be a positive number', async ({
+  test('amount must be a non-negative number', async ({
     createAccount,
     rootLayoutPage,
     movementsPage,
@@ -99,11 +99,39 @@ test.describe('transfer form validation', () => {
 
     await transferFormPage.fillAmount('asdf');
     await transferFormPage.submitButton.click();
-    await expect(page.getByText('Amount must be a positive number')).toBeVisible();
+    await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
 
-    await transferFormPage.fillAmount('0');
+    await transferFormPage.fillAmount('-1');
     await transferFormPage.submitButton.click();
-    await expect(page.getByText('Amount must be greater than zero')).toBeVisible();
+    await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
+  });
+
+  test('amount can be zero', async ({
+    createAccount,
+    rootLayoutPage,
+    movementsPage,
+    transferFormPage,
+    page,
+  }) => {
+    test.slow();
+    const description = 'Zero transfer';
+    await createAccount('Origin acc');
+    await createAccount('Destination acc');
+
+    await rootLayoutPage.navButton('Movements').click();
+    await movementsPage.createTransferButton.click();
+
+    await transferFormPage.selectOriginAccount('Origin acc');
+    await transferFormPage.selectDestinationAccount('Destination acc');
+    await transferFormPage.fillAmount('0');
+    await transferFormPage.fillDescription(description);
+    await transferFormPage.submitButton.click();
+
+    await expect(movementsPage.createTransferButton).toBeVisible();
+    await expect(page.getByText('Amount must be a non-negative number')).toBeHidden();
+    await expect(page.getByText(description)).toBeVisible();
+    await expect(page.getByText('Origin acc → Destination acc')).toBeVisible();
+    await expect(page.getByText('$0', { exact: true })).toBeVisible();
   });
 
   test('origin and destination must be different', async ({

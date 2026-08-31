@@ -245,19 +245,46 @@ test.describe('transaction form', () => {
       )
     );
 
-    // Validates amount is number
+    // Validates amount is a number
     await transactionFormPage.amountInput.fill('asdf');
     await transactionFormPage.selectAccount(defaultData.accounts[0]);
     await transactionFormPage.selectType('Income');
     await transactionFormPage.selectCategory(defaultData.incomeCategories[0]);
     await transactionFormPage.selectJar(defaultData.jars[0]);
     await transactionFormPage.submitButton.click();
-    await expect(page.getByText('Amount must be a positive number')).toBeVisible();
+    await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
 
-    // Validates amount is positive
-    await transactionFormPage.amountInput.fill('0');
+    // Rejects a negative amount
+    await transactionFormPage.amountInput.fill('-1');
     await transactionFormPage.submitButton.click();
-    await expect(page.getByText('Amount must be greater than zero')).toBeVisible();
+    await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
+  });
+
+  test('accepts a zero amount', async ({
+    transactionFormPage,
+    page,
+    createDefaultData,
+    rootLayoutPage,
+    movementsPage,
+  }) => {
+    await createDefaultData();
+
+    await rootLayoutPage.navButton('Movements').click();
+    await movementsPage.createTransactionButton.click();
+
+    const description = 'Zero amount transaction';
+    await transactionFormPage.fillAmount('0');
+    await transactionFormPage.fillDescription(description);
+    await transactionFormPage.selectType('Income');
+    await transactionFormPage.selectAccount(defaultData.accounts[0]);
+    await transactionFormPage.selectCategory(defaultData.incomeCategories[0]);
+    await transactionFormPage.selectJar(defaultData.jars[0]);
+    await transactionFormPage.submitButton.click();
+
+    await expect(movementsPage.createTransactionButton).toBeVisible();
+    await expect(page.getByText('Amount must be a non-negative number')).toBeHidden();
+    const transactionLink = movementsPage.getTransaction(description);
+    await expect(transactionLink).toBeVisible();
   });
 
   test('form loads existing transaction into fields', async ({
