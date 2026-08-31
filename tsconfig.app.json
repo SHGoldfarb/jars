@@ -24,10 +24,10 @@
     /* Alias for shadcn */
     "paths": {
       "src/*": ["./src/*"],
-      "components/*": ["./src/components/*"]
+      "components/*": ["./src/components/*"],
     },
 
-    "strict": true
+    "strict": true,
   },
-  "include": ["src"]
+  "include": ["src"],
 }

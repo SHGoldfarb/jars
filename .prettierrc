@@ -5,5 +5,11 @@
   "trailingComma": "es5",
   "printWidth": 100,
   "bracketSameLine": false,
-  "arrowParens": "always"
+  "arrowParens": "always",
+  "overrides": [
+    {
+      "files": [".zed/**/*.json", "tsconfig*.json"],
+      "options": { "parser": "jsonc" }
+    }
+  ]
 }

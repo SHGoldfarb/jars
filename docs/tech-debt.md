@@ -12,8 +12,6 @@ user-facing.
       has a barrel, a `no-restricted-imports` rule banning `src/services/*/*/**` covers most of it.
 - [ ] **Clean up `Allocation` in `entities/legacy.ts`** — an unimplemented, unvalidated hand-written
       type is exported through the public `src/services/finance` barrel.
-- [ ] **Fix the 7 prettier failures** — `pnpm format:check` is failing on the shadcn `ui/*` files and
-      `.vscode/mcp.json`.
 
 <!--
 Keep this example when the list empties out, so the next entry follows the same shape:
