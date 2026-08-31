@@ -9,6 +9,22 @@ import jsxA11y from 'eslint-plugin-jsx-a11y';
 import prettier from 'eslint-config-prettier';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
+// Dependency direction, as documented in CONTRIBUTING.md:
+//   components / hooks / routes -> presentation -> services/* -> services/shared -> lib
+const ui = ['src/components/**', 'src/hooks/**', 'src/routes/**'];
+const presentation = ['src/presentation/**'];
+const contexts = ['src/services/*', 'src/services/*/**'];
+const otherContexts = [...contexts, '!src/services/shared', '!src/services/shared/**'];
+
+// Every bounded context is reached through its barrel, never through its layers.
+const contextInternals = {
+  group: ['src/services/*/**', '**/services/*/**'],
+  message:
+    'Import a bounded context through its barrel (src/services/<context>), not its internal layers.',
+};
+
+const restrictImports = (...patterns) => ['error', { patterns }];
+
 export default defineConfig([
   globalIgnores(['dist', 'node_modules', 'coverage', 'dev-dist']),
   {
@@ -60,6 +76,46 @@ export default defineConfig([
           allow: [{ from: 'file', name: ['Redirect'] }],
         },
       ],
+
+      // Dependency direction
+      'no-restricted-imports': restrictImports(contextInternals),
+    },
+  },
+  {
+    files: ['src/presentation/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': restrictImports(contextInternals, {
+        group: ui,
+        message:
+          'presentation sits below the UI tier and must not import components, hooks or routes.',
+      }),
+    },
+  },
+  {
+    files: ['src/services/**/*.ts'],
+    rules: {
+      'no-restricted-imports': restrictImports(contextInternals, {
+        group: [...ui, ...presentation],
+        message: 'A bounded context must not import UI or presentation code.',
+      }),
+    },
+  },
+  {
+    files: ['src/services/shared/**/*.ts'],
+    rules: {
+      'no-restricted-imports': restrictImports(contextInternals, {
+        group: [...ui, ...presentation, ...otherContexts],
+        message: 'The shared kernel sits below the bounded contexts and must not import them.',
+      }),
+    },
+  },
+  {
+    files: ['src/lib/**/*.ts'],
+    rules: {
+      'no-restricted-imports': restrictImports({
+        group: [...ui, ...presentation, ...contexts],
+        message: 'lib holds technical primitives and must not import domain or view code.',
+      }),
     },
   },
   {
