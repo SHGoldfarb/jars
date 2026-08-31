@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { financeCommands } from 'src/services/finance/application';
+import { financeCommands } from 'src/services/finance';
 import { GenericNameForm } from './GenericNameForm';
 
 export const CategoriesExpenseNew = () => {

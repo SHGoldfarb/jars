@@ -1,6 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { TransferUnsaved } from 'src/services/finance';
-import { financeCommands } from 'src/services/finance/application';
+import { financeCommands, TransferUnsaved } from 'src/services/finance';
 import { TransferForm } from './TransferForm';
 
 export const TransfersNew = () => {

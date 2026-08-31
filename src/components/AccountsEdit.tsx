@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { financeCommands } from 'src/services/finance/application';
+import { financeCommands } from 'src/services/finance';
 import { useParams } from '@tanstack/react-router';
 import { useAccount } from 'src/hooks/useAccount';
 import { GenericNameForm } from './GenericNameForm';

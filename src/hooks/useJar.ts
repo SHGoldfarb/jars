@@ -1,4 +1,4 @@
-import { financeQueries } from 'src/services/finance/application';
+import { financeQueries } from 'src/services/finance';
 import { useQuery } from '@tanstack/react-query';
 
 export const useJar = (jarId: string) =>
