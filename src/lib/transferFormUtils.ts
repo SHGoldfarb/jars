@@ -1,4 +1,5 @@
-import { decimal, Transfer } from 'src/services/finance';
+import { decimal } from 'src/lib/decimal';
+import { Transfer } from 'src/services/finance';
 import * as z from 'zod';
 import { movementFormUtils } from './movementFormUtils';
 

@@ -1,6 +1,7 @@
 import { generateId } from 'src/lib/utils';
 import { financeDomainCommands } from '../../domain';
-import type { CurrencyAmount, Transfer } from '../../model';
+import type { Transfer } from '../../model';
+import type { CurrencyAmount } from 'src/services/shared';
 import type { FinanceRepositories } from '../../domain';
 
 interface CreateTransferInput {

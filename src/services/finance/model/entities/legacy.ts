@@ -1,4 +1,4 @@
-import type { CurrencyAmount } from '../currency';
+import type { CurrencyAmount } from 'src/services/shared';
 import type { Archivable } from './shared';
 
 // ---------------------------------------------------------

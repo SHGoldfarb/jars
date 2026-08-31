@@ -1,5 +1,6 @@
 import { createCacheForFunction } from 'src/lib/utils';
-import { type Transaction, type CurrencyAmount, currency } from 'src/services/finance';
+import type { Transaction } from 'src/services/finance';
+import { type CurrencyAmount, currency } from 'src/services/shared';
 
 const emptyBalances = () => ({
   jars: {} as Record<string, CurrencyAmount>,

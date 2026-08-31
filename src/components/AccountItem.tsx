@@ -1,6 +1,6 @@
 import { ItemContent, ItemTitle } from 'components/ui/item';
 import { useAccountBalance } from 'src/hooks/useAccountBalance';
-import { decimal } from 'src/services/finance';
+import { decimal } from 'src/lib/decimal';
 import { formatCurrencyAmount } from 'src/presentation/formatters/currencyFormatter';
 
 export const AccountItem = ({ account }: { account: { id: string; name: string } }) => {

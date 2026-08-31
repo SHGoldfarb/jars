@@ -4,7 +4,7 @@ import { useParams } from '@tanstack/react-router';
 import { useJar } from 'src/hooks/useJar';
 import { GenericNameForm } from './GenericNameForm';
 import { useJarBalance } from 'src/hooks/useJarBalance';
-import { decimal } from 'src/services/finance';
+import { decimal } from 'src/lib/decimal';
 
 export const JarsEdit = () => {
   const { jarId } = useParams({ strict: false });

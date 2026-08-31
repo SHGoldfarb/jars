@@ -66,19 +66,54 @@ When adding new behavior, prefer changes that preserve these boundaries instead 
 The main application code lives under `src/` and is grouped by responsibility:
 
 - `src/components/` - React UI components
+  - `ui/` - shadcn primitives
 - `src/hooks/` - React hooks that bridge UI and application services
 - `src/routes/` - TanStack Router route files
-- `src/services/finance/` - finance bounded context and domain code
-  - `application/` - command/query orchestration
-  - `domain/` - repository contracts and domain-facing abstractions
-  - `infrastructure/` - Dexie and other persistence adapters
-  - `model/` - domain entities and value objects
-  - `policies/` - business validation and rules
-- `src/services/shared/` - shared value objects and utilities
+- `src/presentation/` - view-layer presentation logic
+  - `formatters/` - currency and date formatting
+- `src/lib/` - framework-agnostic technical utilities (`cn`, `generateId`, memoization,
+  `Decimal` arithmetic, generic form-error helpers)
+- `src/services/` - bounded contexts
+  - `finance/` - the core finance context
+    - `application/` - command/query orchestration (`commands/`)
+    - `domain/` - repository contracts and domain commands (`commands/`)
+    - `infrastructure/` - Dexie and other persistence adapters
+    - `model/` - domain entities (`entities/`)
+  - `balances/` - account and jar balances derived from finance (`application/`, `domain/`)
+  - `transaction-form/` - transaction form orchestration (`application/`, `domain/`)
+  - `transfer-form/` - transfer form orchestration (`application/`)
+  - `shared/` - shared kernel: value objects used by more than one context (`CurrencyAmount`)
 - `src/tests/unit/` - unit tests
 - `src/tests/e2e/` - Playwright end-to-end tests
+  - `pages/` - page objects
+  - `setup/` - shared fixtures and actions
 
 Keep new files aligned with the existing layer they belong to. If a change crosses layers, prefer adding a boundary or adapter instead of moving the responsibility into the wrong folder.
+
+### Dependency Direction
+
+Imports point downward through these tiers, never back up:
+
+```
+components / hooks / routes    UI
+        ↓
+presentation                   formatting and view mapping
+        ↓
+services/{finance,balances,*-form}   bounded contexts
+        ↓
+services/shared                shared kernel - domain value objects
+        ↓
+lib                            technical primitives, no domain knowledge
+```
+
+`src/lib/` sits at the bottom and should not import from `src/services/`. The distinction between
+`lib/` and `services/shared/` is domain knowledge, not generality: `Decimal` is pure arithmetic and
+lives in `lib/`, while `CurrencyAmount` enforces a business rule (it refuses to sum different
+currencies) and therefore belongs in `services/shared/`.
+
+Known exception: `src/lib/{movement,transaction,transfer}FormUtils.ts` still import from
+`src/services/finance`. They are form-to-domain mapping rather than technical utilities and belong
+in the `*-form` contexts; treat them as pending cleanup, not as precedent.
 
 ## Testing
 

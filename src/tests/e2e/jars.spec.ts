@@ -2,7 +2,7 @@ import { expect } from '@playwright/test';
 import { defaultData, test } from './setup';
 import { runInOrder } from 'src/lib/utils';
 import { formatCurrencyAmount } from 'src/presentation/formatters/currencyFormatter';
-import { currency } from 'src/services/finance';
+import { currency } from 'src/services/shared';
 
 test('can create jar', async ({ rootLayoutPage, jarsPage, jarFormPage }) => {
   const jarName = 'Test Jar';

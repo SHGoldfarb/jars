@@ -1,4 +1,5 @@
-import { decimal, type CurrencyAmount } from 'src/services/finance';
+import { decimal } from 'src/lib/decimal';
+import type { CurrencyAmount } from 'src/services/shared';
 
 const formatters = {
   USD: (amount: number) =>

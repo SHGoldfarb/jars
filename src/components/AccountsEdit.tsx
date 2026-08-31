@@ -4,7 +4,7 @@ import { useParams } from '@tanstack/react-router';
 import { useAccount } from 'src/hooks/useAccount';
 import { GenericNameForm } from './GenericNameForm';
 import { useAccountBalance } from 'src/hooks/useAccountBalance';
-import { decimal } from 'src/services/finance';
+import { decimal } from 'src/lib/decimal';
 
 export const AccountsEdit = () => {
   const { accountId } = useParams({ strict: false });

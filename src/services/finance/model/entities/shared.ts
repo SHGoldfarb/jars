@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { CurrencyAmount } from '../currency';
+import { CurrencyAmount } from 'src/services/shared';
 
 export const idShape = z.uuidv4();
 export const dateTimeShape = z.iso.datetime();

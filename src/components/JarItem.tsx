@@ -1,6 +1,6 @@
 import { ItemContent, ItemTitle } from 'components/ui/item';
 import { useJarBalance } from 'src/hooks/useJarBalance';
-import { decimal } from 'src/services/finance';
+import { decimal } from 'src/lib/decimal';
 import { formatCurrencyAmount } from 'src/presentation/formatters/currencyFormatter';
 
 export const JarItem = ({ jar }: { jar: { id: string; name: string } }) => {

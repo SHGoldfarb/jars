@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { Decimal, decimal } from './decimal';
+import { Decimal, decimal } from 'src/lib/decimal';
 
 export const CurrencyAmount = z.object({
   currency: z.enum(['CLP', 'USD']),

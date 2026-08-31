@@ -2,7 +2,7 @@ import { expect } from '@playwright/test';
 import { defaultData, test } from './setup';
 import { runInOrder } from 'src/lib/utils';
 import { formatCurrencyAmount } from 'src/presentation/formatters/currencyFormatter';
-import { decimal } from 'src/services/finance';
+import { decimal } from 'src/lib/decimal';
 import { formatDateISO } from 'src/presentation/formatters/dateFormatters';
 
 test('can create income transaction', async ({
