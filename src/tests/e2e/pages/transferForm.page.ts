@@ -14,6 +14,7 @@ export const transferFormPageConstructor = (page: Page) => {
     },
     locator: () => submitButtonLocator,
   };
+  const deleteButton = page.getByRole('button', { name: 'Delete' });
   const amountInput = page.getByLabel('Amount');
   const dateInput = page.getByLabel('Date');
   const descriptionInput = page.getByLabel('Description');
@@ -60,6 +61,7 @@ export const transferFormPageConstructor = (page: Page) => {
 
   return {
     submitButton,
+    deleteButton,
     amountInput,
     dateInput,
     descriptionInput,

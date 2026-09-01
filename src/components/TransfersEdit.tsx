@@ -16,6 +16,14 @@ export const TransfersEdit = () => {
     await financeCommands.transfers.update({ ...transfer, ...value });
     await navigate({ to: '/movements' });
   };
+  const handleDelete = async () => {
+    try {
+      await financeCommands.transfers.archive({ transferId: transfer.id });
+      await navigate({ to: '/movements' });
+    } catch (error) {
+      console.error('Failed to delete transfer:', error);
+    }
+  };
 
   return (
     <TransferForm
@@ -24,6 +32,9 @@ export const TransfersEdit = () => {
       onCancelRoute="/movements"
       defaultErrorMessage="Error editing transfer"
       defaultValues={transferForm.toFormValues(transfer)}
+      onDelete={() => {
+        void handleDelete();
+      }}
     />
   );
 };

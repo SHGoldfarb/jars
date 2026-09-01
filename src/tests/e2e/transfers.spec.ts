@@ -248,6 +248,38 @@ test('can edit a transfer', async ({
   await expect(page.getByText(initialDescription)).toBeHidden();
 });
 
+test('can delete a transfer', async ({
+  createAccount,
+  createTransfer,
+  movementsPage,
+  transferFormPage,
+}) => {
+  test.slow();
+  const originName = 'Deletable origin';
+  const destinationName = 'Deletable destination';
+  const description = 'Transfer to delete';
+
+  await createAccount(originName);
+  await createAccount(destinationName);
+
+  await createTransfer({
+    description,
+    originAccountName: originName,
+    destinationAccountName: destinationName,
+  });
+
+  // Verify the transfer exists, then open its edit form
+  await expect(movementsPage.createTransferButton).toBeVisible();
+  await expect(movementsPage.getMovement(description)).toBeVisible();
+  await movementsPage.getMovement(description).click();
+
+  await transferFormPage.deleteButton.click();
+
+  // Verify the transfer no longer exists on the movements page
+  await expect(movementsPage.createTransferButton).toBeVisible();
+  await expect(movementsPage.getMovement(description)).toBeHidden();
+});
+
 test('when editing a transfer, selectors include archived accounts that the transfer references', async ({
   createAccount,
   createTransfer,

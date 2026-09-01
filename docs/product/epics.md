@@ -129,8 +129,8 @@ Move money between accounts.
 - [x] Date defaults to today but can be changed
 - [x] Origin and destination accounts must be different
 - [x] Only active accounts are available for selection when creating or editing a transfer
-- [ ] User can edit any field of an existing transfer
-- [ ] User can delete a transfer
+- [x] User can edit any field of an existing transfer
+- [x] User can delete a transfer
 
 **Listing**
 

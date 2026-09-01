@@ -21,12 +21,14 @@ export const TransferForm = ({
   title,
   onSubmit,
   onCancelRoute,
+  onDelete,
   defaultErrorMessage,
   defaultValues,
 }: {
   title: string;
   onSubmit: (value: TransferUnsaved) => Promise<void>;
   onCancelRoute: string;
+  onDelete?: () => void;
   defaultErrorMessage: string;
   defaultValues?: TransferFormValues;
 }) => {
@@ -74,6 +76,11 @@ export const TransferForm = ({
                 Cancel
               </Button>
             </Link>
+            {onDelete ? (
+              <Button variant="destructive" type="button" onClick={onDelete}>
+                Delete
+              </Button>
+            ) : null}
           </Field>
         </FieldGroup>
       </form>
