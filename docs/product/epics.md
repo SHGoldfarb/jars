@@ -131,6 +131,7 @@ Move money between accounts.
 - [x] Only active accounts are available for selection when creating or editing a transfer
 - [x] User can edit any field of an existing transfer
 - [x] User can delete a transfer
+- [ ] Transfers are included in the accounts balance calculation.
 
 **Listing**
 
@@ -144,10 +145,6 @@ Move money between accounts.
 - [ ] Description is optional
 - [ ] Origin and destination accounts cannot be the same
 - [ ] Amount must be a positive number
-
-**Persistence**
-
-- [ ] Transfers persist across page refreshes
 
 **Account integrity**
 
@@ -169,6 +166,7 @@ Move money between jars.
 - [ ] Only active jars are available for selection when creating or editing an allocation
 - [ ] User can edit any field of an existing allocation
 - [ ] User can delete an allocation
+- [ ] Allocations are included in the jars balance calculation.
 
 **Listing**
 
@@ -192,15 +190,7 @@ Move money between jars.
 - [ ] Jar balance derived from allocations will be covered in Epic 8
 - [ ] Allocation form selectors include archived jars when editing an allocation that references them (same pattern as transactions)
 
-## Epic 8 — Balances
-
-Account balance is shown, derived from transactions and transfers. Jar balance is shown, derived from transactions and allocations.
-
-### Acceptance criteria
-
-WIP
-
-## Epic 9 — Data Management
+## Epic 8 — Data Management
 
 Create backup, restore from backup (JSON). Export data (CSV). Configure automatic backup to cloud (Google Drive?). Clear all data.
 
@@ -208,7 +198,7 @@ Create backup, restore from backup (JSON). Export data (CSV). Configure automati
 
 WIP
 
-## Epic 10 — Statistics
+## Epic 9 — Statistics
 
 View incomes/expenses breakdown, evolution, etc.
 
@@ -223,5 +213,5 @@ WIP
 - switch between dark/light modes
 - multi currency
 - localization (language, money amount format)
-- Bookmarks (favorites)
-- Recurring transactions
+- Bookmarks (favorites - auto populate)
+- Auto recurring transactions
