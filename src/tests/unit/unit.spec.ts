@@ -7,7 +7,7 @@ test('unit tests', async () => {
       const fn = (a: number, b: number) => a + b;
       const cached = createCacheForFunction(fn);
 
-      const result = cached('key1', [1, 2]);
+      const result = cached({ key: 'key1', params: [1, 2] });
       expect(result).toBe(3);
     });
 
@@ -19,9 +19,9 @@ test('unit tests', async () => {
       };
       const cached = createCacheForFunction(fn);
 
-      cached('key1', [5]);
-      cached('key1', [5]);
-      cached('key1', [5]);
+      cached({ key: 'key1', params: [5] });
+      cached({ key: 'key1', params: [5] });
+      cached({ key: 'key1', params: [5] });
 
       expect(callCount).toBe(1);
     });
@@ -30,8 +30,8 @@ test('unit tests', async () => {
       const fn = (a: number) => a * 10;
       const cached = createCacheForFunction(fn);
 
-      expect(cached('a', [1])).toBe(10);
-      expect(cached('b', [2])).toBe(20);
+      expect(cached({ key: 'a', params: [1] })).toBe(10);
+      expect(cached({ key: 'b', params: [2] })).toBe(20);
     });
 
     await test.step('without maxSize the cache grows without limit', () => {
@@ -44,11 +44,11 @@ test('unit tests', async () => {
       const cached2 = createCacheForFunction(countingFn, { maxSize: null });
 
       for (let i = 0; i < 500; i++) {
-        cached2(String(i), [i]);
+        cached2({ key: String(i), params: [i] });
       }
       // First 500 insertions
       for (let i = 0; i < 500; i++) {
-        cached2(String(i), [i]);
+        cached2({ key: String(i), params: [i] });
       }
       // All 500 should be cache hits
       expect(callCount).toBe(500);
@@ -62,15 +62,15 @@ test('unit tests', async () => {
       };
       const cachedCounting = createCacheForFunction(countingFn, { maxSize: 2 });
 
-      cachedCounting('x', [1]);
-      cachedCounting('y', [2]);
+      cachedCounting({ key: 'x', params: [1] });
+      cachedCounting({ key: 'y', params: [2] });
       // Cache: [x, y]
-      cachedCounting('z', [3]);
+      cachedCounting({ key: 'z', params: [3] });
       // Should evict 'x', cache: [y, z]
 
       expect(callCount).toBe(3);
 
-      cachedCounting('x', [1]);
+      cachedCounting({ key: 'x', params: [1] });
       // 'x' was evicted, should re-compute
       expect(callCount).toBe(4);
     });
@@ -83,27 +83,27 @@ test('unit tests', async () => {
       };
       const cachedCounting = createCacheForFunction(countingFn, { maxSize: 3 });
 
-      cachedCounting('a', [1]);
-      cachedCounting('b', [2]);
-      cachedCounting('c', [3]);
+      cachedCounting({ key: 'a', params: [1] });
+      cachedCounting({ key: 'b', params: [2] });
+      cachedCounting({ key: 'c', params: [3] });
       // Cache: [a, b, c]
 
       // Re-access 'a'
-      cachedCounting('a', [1]);
+      cachedCounting({ key: 'a', params: [1] });
       // Cache order: [b, c, a]
 
       // Insert 'd' -> evicts 'b'. Cache: [c, a, d]
-      cachedCounting('d', [4]);
+      cachedCounting({ key: 'd', params: [4] });
       // Insert 'e' -> evicts 'c'. Cache: [a, d, e]
-      cachedCounting('e', [5]);
+      cachedCounting({ key: 'e', params: [5] });
 
       // callCount == 5 for 5 unique inserts (a, b, c, d, e)
       expect(callCount).toBe(5);
 
       // 'b' and 'c' should have been evicted
-      cachedCounting('b', [2]);
+      cachedCounting({ key: 'b', params: [2] });
       expect(callCount).toBe(6);
-      cachedCounting('c', [3]);
+      cachedCounting({ key: 'c', params: [3] });
       expect(callCount).toBe(7);
     });
 
@@ -115,14 +115,14 @@ test('unit tests', async () => {
       };
       const cached = createCacheForFunction(fn, { maxSize: 1 });
 
-      cached('a', [1]);
+      cached({ key: 'a', params: [1] });
       expect(callCount).toBe(1);
 
-      cached('b', [2]);
+      cached({ key: 'b', params: [2] });
       expect(callCount).toBe(2);
       // 'a' was evicted
 
-      cached('a', [1]);
+      cached({ key: 'a', params: [1] });
       expect(callCount).toBe(3);
       // 'b' was evicted, 'a' re-computed
     });
@@ -135,9 +135,9 @@ test('unit tests', async () => {
       };
       const cached = createCacheForFunction(fn, { maxSize: 0 });
 
-      cached('a', [1]);
-      cached('a', [1]);
-      cached('a', [1]);
+      cached({ key: 'a', params: [1] });
+      cached({ key: 'a', params: [1] });
+      cached({ key: 'a', params: [1] });
       expect(callCount).toBe(3);
     });
   });

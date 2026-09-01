@@ -48,7 +48,10 @@ export const createBalancesGetters = ({
   transfers: Transfer[];
   dataStateId: string;
 }) => {
-  const balances = computeBalancesWithManualCache(dataStateId, [transactions, transfers]);
+  const balances = computeBalancesWithManualCache({
+    key: dataStateId,
+    params: [transactions, transfers],
+  });
 
   return {
     jars: (jarId: string) => {

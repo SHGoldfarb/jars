@@ -37,9 +37,7 @@ export const createCacheForFunction = <T extends unknown[], U>(
 
   const { cache, typedGet } = typedCache();
 
-  const computeWithCache = (key: string, params: T) => {
-    // TODO: use named parameters ({ key, params }) for better
-    // readability when calling computeWithCache
+  const computeWithCache = ({ key, params }: { key: string; params: T }) => {
     const { success, value } = typedGet(key);
     if (success) {
       // Move to the end to mark as most recently used
@@ -73,7 +71,7 @@ export const memoize = <T extends unknown[], U>(
 
   const memoizedFunction = (...params: T) => {
     const key = JSON.stringify(params);
-    return computeWithCache(key, params);
+    return computeWithCache({ key, params });
   };
 
   return memoizedFunction;
