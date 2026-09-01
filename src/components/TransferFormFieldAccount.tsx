@@ -11,12 +11,14 @@ export const TransferFormFieldAccount = ({
   label,
   placeholder,
   defaultOpen,
+  onChange,
 }: {
   form: TransferFormType;
   name: 'originAccountId' | 'destinationAccountId';
   label: string;
   placeholder: string;
   defaultOpen?: boolean;
+  onChange?: (value: string) => void;
 }) => {
   const transferBeingEdited = useTransferEditCurrentTransfer();
   const accounts = useTransferFormAccounts(transferBeingEdited?.id);
@@ -34,6 +36,7 @@ export const TransferFormFieldAccount = ({
               .filter((account) => account.id !== otherAccountId)
               .map((account) => ({ value: account.id, label: account.name }))}
             defaultOpen={defaultOpen}
+            onChange={onChange}
           />
         </TransactionFormFieldWrapper>
       )}

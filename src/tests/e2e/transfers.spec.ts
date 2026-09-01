@@ -317,3 +317,36 @@ test('when editing a transfer, selectors include archived accounts that the tran
   await transferFormPage.expectOptionToExist('Origin account', originName);
   await transferFormPage.expectOptionToExist('Destination account', destinationName);
 });
+
+test('focus flows from one field to the next as a new transfer is filled in', async ({
+  createAccount,
+  rootLayoutPage,
+  movementsPage,
+  transferFormPage,
+  page,
+}) => {
+  const originName = 'Focus flow origin';
+  const destinationName = 'Focus flow destination';
+
+  await createAccount(originName);
+  await createAccount(destinationName);
+
+  await rootLayoutPage.navButton('Movements').click();
+  await movementsPage.createTransferButton.click();
+
+  // The origin account selector opens on its own
+  await expect(page.getByRole('option', { name: originName, exact: true })).toBeVisible();
+  await page.getByRole('option', { name: originName, exact: true }).click();
+
+  // Picking the origin account opens the destination account selector
+  await expect(page.getByRole('option', { name: destinationName, exact: true })).toBeVisible();
+  await page.getByRole('option', { name: destinationName, exact: true }).click();
+
+  // Picking the destination account moves focus to the amount field
+  await expect(transferFormPage.amountInput).toBeFocused();
+  await transferFormPage.amountInput.fill('1000');
+
+  // Enter on the amount field moves focus to the description field
+  await transferFormPage.amountInput.press('Enter');
+  await expect(transferFormPage.descriptionInput).toBeFocused();
+});

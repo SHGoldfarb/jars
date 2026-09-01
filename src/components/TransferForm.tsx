@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
   Field,
@@ -16,6 +17,7 @@ import { TransferFormFieldDate } from './TransferFormFieldDate';
 import { TransferFormFieldAccount } from './TransferFormFieldAccount';
 import { TransferFormFieldAmount } from './TransferFormFieldAmount';
 import { TransferFormFieldDescription } from './TransferFormFieldDescription';
+import { useStore } from '@tanstack/react-form';
 
 export const TransferForm = ({
   title,
@@ -32,7 +34,21 @@ export const TransferForm = ({
   defaultErrorMessage: string;
   defaultValues?: TransferFormValues;
 }) => {
+  const descriptionInputRef = useRef<HTMLInputElement>(null);
+  const amountInputRef = useRef<HTMLInputElement>(null);
   const form = useTransferForm({ onSubmit, defaultErrorMessage, defaultValues });
+  const values = useStore(form.store, (state) => state.values);
+
+  const handleDestinationAccountChange = (newValue: string) => {
+    // If the destination account is set and amount is empty, focus the amount field 0.1 seconds later
+    if (newValue) {
+      setTimeout(() => {
+        if (!values.amount) {
+          amountInputRef.current?.focus();
+        }
+      }, 100);
+    }
+  };
 
   return (
     <div className="w-full max-w-md p-6">
@@ -53,15 +69,25 @@ export const TransferForm = ({
                 name="originAccountId"
                 label="Origin account"
                 placeholder="Select origin account"
+                defaultOpen={!values.originAccountId}
               />
               <TransferFormFieldAccount
                 form={form}
                 name="destinationAccountId"
                 label="Destination account"
                 placeholder="Select destination account"
+                defaultOpen={!!(values.originAccountId && !values.destinationAccountId)}
+                onChange={handleDestinationAccountChange}
+                key={`destinationAccount - ${values.originAccountId}`}
               />
-              <TransferFormFieldAmount form={form} />
-              <TransferFormFieldDescription form={form} />
+              <TransferFormFieldAmount
+                form={form}
+                inputRef={amountInputRef}
+                onEnter={() => {
+                  descriptionInputRef.current?.focus();
+                }}
+              />
+              <TransferFormFieldDescription form={form} inputRef={descriptionInputRef} />
             </FieldGroup>
           </FieldSet>
 
