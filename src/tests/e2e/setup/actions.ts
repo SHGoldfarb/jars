@@ -134,7 +134,7 @@ const test = base.extend<{
   deleteTransaction: async ({ rootLayoutPage, movementsPage, transactionFormPage }, use) => {
     await use(async (transactionDescription) => {
       await rootLayoutPage.navButton('Movements').click();
-      await movementsPage.getTransaction(transactionDescription).click();
+      await movementsPage.getMovement(transactionDescription).click();
       await transactionFormPage.deleteButton.click();
     });
   },

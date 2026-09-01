@@ -1,9 +1,11 @@
 import { transferForm } from 'src/services/transfer-form';
 import { formUtils } from 'src/lib/formUtils';
 import { useTransferFormAccounts } from './useTransferFormAccounts';
+import { useTransferEditCurrentTransfer } from './useTransferEditCurrentTransfer';
 
 export const useTransferFormValidate = () => {
-  const accounts = useTransferFormAccounts(undefined);
+  const transfer = useTransferEditCurrentTransfer();
+  const accounts = useTransferFormAccounts(transfer?.id);
 
   const accountIds = accounts.map((account) => account.id);
 

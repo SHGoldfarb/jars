@@ -3,6 +3,7 @@ import { type TransferFormType } from 'src/hooks/useTransferForm';
 import { TransactionFormFieldWrapper } from 'src/components/TransactionFormFieldWrapper';
 import { TransactionFormFieldSelect } from './TransactionFormFieldSelect';
 import { useTransferFormAccounts } from 'src/hooks/useTransferFormAccounts';
+import { useTransferEditCurrentTransfer } from 'src/hooks/useTransferEditCurrentTransfer';
 
 export const TransferFormFieldAccount = ({
   form,
@@ -17,7 +18,8 @@ export const TransferFormFieldAccount = ({
   placeholder: string;
   defaultOpen?: boolean;
 }) => {
-  const accounts = useTransferFormAccounts(undefined);
+  const transferBeingEdited = useTransferEditCurrentTransfer();
+  const accounts = useTransferFormAccounts(transferBeingEdited?.id);
   const otherName = name === 'originAccountId' ? 'destinationAccountId' : 'originAccountId';
   const otherAccountId = useStore(form.store, (state) => state.values[otherName]);
 

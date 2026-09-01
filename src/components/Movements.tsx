@@ -5,7 +5,9 @@ import { TransactionListItem } from './TransactionListItem';
 import { TransferListItem } from './TransferListItem';
 
 const movementUrl = (movement: MovementListEntry) =>
-  movement.movementType === 'transaction' ? `/transactions/${movement.id}/edit` : undefined;
+  movement.movementType === 'transaction'
+    ? `/transactions/${movement.id}/edit`
+    : `/transfers/${movement.id}/edit`;
 
 export const Movements = () => {
   const { movements } = useMovements();

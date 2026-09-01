@@ -182,3 +182,104 @@ test.describe('transfer form validation', () => {
     await transferFormPage.expectOptionToNotExist('Destination account', archivedName);
   });
 });
+
+test('can edit a transfer', async ({
+  createAccount,
+  createTransfer,
+  movementsPage,
+  transferFormPage,
+  page,
+}) => {
+  test.slow();
+  // Initial data
+  const initialOriginName = 'Initial origin';
+  const initialDestinationName = 'Initial destination';
+  const initialDescription = 'Initial transfer';
+  const initialAmount = '150000';
+  const initialDate = '2026-06-15T10:00';
+
+  // New data (every field will change)
+  const newOriginName = 'New origin';
+  const newDestinationName = 'New destination';
+  const newDescription = 'Edited transfer';
+  const newAmount = '275000';
+  const newDate = '2026-07-11T08:45';
+
+  await createAccount(initialOriginName);
+  await createAccount(initialDestinationName);
+  await createAccount(newOriginName);
+  await createAccount(newDestinationName);
+
+  await createTransfer({
+    amount: initialAmount,
+    date: initialDate,
+    description: initialDescription,
+    originAccountName: initialOriginName,
+    destinationAccountName: initialDestinationName,
+  });
+
+  // Verify the initial transfer exists, then open its edit form
+  await expect(movementsPage.createTransferButton).toBeVisible();
+  await movementsPage.getMovement(initialDescription).click();
+
+  // The form is populated with the transfer's current values
+  await expect(transferFormPage.dateInput).toHaveValue(initialDate);
+  await expect(transferFormPage.originAccountSelect).toContainText(initialOriginName);
+  await expect(transferFormPage.destinationAccountSelect).toContainText(initialDestinationName);
+  await expect(transferFormPage.amountInput).toHaveValue(initialAmount);
+  await expect(transferFormPage.descriptionInput).toHaveValue(initialDescription);
+
+  // Change every field of the transfer
+  await transferFormPage.fillDate(newDate);
+  await transferFormPage.selectOriginAccount(newOriginName);
+  await transferFormPage.selectDestinationAccount(newDestinationName);
+  await transferFormPage.fillAmount(newAmount);
+  await transferFormPage.fillDescription(newDescription);
+  await transferFormPage.submitButton.click();
+
+  // Verify the transfer now shows the new values on the movements page. Expected strings are
+  // hardcoded for the hardcoded inputs above (amount '275000' -> CLP, '2026-07-11T08:45' -> UTC).
+  await expect(movementsPage.createTransferButton).toBeVisible();
+  const transferLink = movementsPage.getMovement(newDescription);
+  await expect(transferLink).toBeVisible();
+  await expect(transferLink.getByText(`${newOriginName} → ${newDestinationName}`)).toBeVisible();
+  await expect(transferLink.getByText('$275.000')).toBeVisible();
+  await expect(transferLink.getByText('7/11/2026, 8:45:00 AM')).toBeVisible();
+  await expect(page.getByText(initialDescription)).toBeHidden();
+});
+
+test('when editing a transfer, selectors include archived accounts that the transfer references', async ({
+  createAccount,
+  createTransfer,
+  deleteAccount,
+  rootLayoutPage,
+  movementsPage,
+  transferFormPage,
+}) => {
+  test.slow();
+  const originName = 'Archived origin account';
+  const destinationName = 'Archived destination account';
+  const description = 'Transfer between archived accounts';
+
+  await createAccount(originName);
+  await createAccount(destinationName);
+
+  await createTransfer({
+    description,
+    originAccountName: originName,
+    destinationAccountName: destinationName,
+  });
+
+  await expect(movementsPage.createTransferButton).toBeVisible();
+
+  await deleteAccount(originName);
+  await deleteAccount(destinationName);
+
+  // Open the edit form for the transfer that references the archived accounts
+  await rootLayoutPage.navButton('Movements').click();
+  await movementsPage.getMovement(description).click();
+
+  // The archived accounts are still offered because the transfer references them
+  await transferFormPage.expectOptionToExist('Origin account', originName);
+  await transferFormPage.expectOptionToExist('Destination account', destinationName);
+});

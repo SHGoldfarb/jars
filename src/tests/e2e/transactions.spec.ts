@@ -37,7 +37,7 @@ test('can create income transaction', async ({
   await transactionFormPage.submitButton.click();
 
   await expect(movementsPage.createTransactionButton).toBeVisible();
-  const transactionLink = movementsPage.getTransaction(description);
+  const transactionLink = movementsPage.getMovement(description);
   await expect(transactionLink).toBeVisible();
   await expect(transactionLink.getByText(categoryName)).toBeVisible();
   await expect(transactionLink.getByText(jarName)).toBeVisible();
@@ -98,10 +98,10 @@ test('can edit transaction', async ({
 
   // Verify the initial transaction exists
   await expect(movementsPage.createTransactionButton).toBeVisible();
-  await expect(movementsPage.getTransaction(initialDescription)).toBeVisible();
+  await expect(movementsPage.getMovement(initialDescription)).toBeVisible();
 
   // Open the edit form by clicking the transaction link
-  await movementsPage.getTransaction(initialDescription).click();
+  await movementsPage.getMovement(initialDescription).click();
 
   // Change every field of the transaction
   await transactionFormPage.fillAmount(newAmount);
@@ -115,7 +115,7 @@ test('can edit transaction', async ({
 
   // Verify the transaction now shows the new values on movements page
   await expect(movementsPage.createTransactionButton).toBeVisible();
-  const transactionLink = movementsPage.getTransaction(newDescription);
+  const transactionLink = movementsPage.getMovement(newDescription);
   await expect(transactionLink).toBeVisible();
   await expect(transactionLink.getByText(newCategoryName)).toBeVisible();
   await expect(transactionLink.getByText(newJarName)).toBeVisible();
@@ -154,17 +154,17 @@ test('can delete transaction', async ({
 
   // Verify the transaction exists
   await expect(movementsPage.createTransactionButton).toBeVisible();
-  await expect(movementsPage.getTransaction(description)).toBeVisible();
+  await expect(movementsPage.getMovement(description)).toBeVisible();
 
   // Open the edit form by clicking the transaction link
-  await movementsPage.getTransaction(description).click();
+  await movementsPage.getMovement(description).click();
 
   // Delete the transaction
   await page.getByRole('button', { name: 'Delete' }).click();
 
   // Verify the transaction no longer exists on the movements page
   await expect(movementsPage.createTransactionButton).toBeVisible();
-  await expect(movementsPage.getTransaction(description)).not.toBeVisible();
+  await expect(movementsPage.getMovement(description)).not.toBeVisible();
 });
 
 test.describe('transaction form', () => {
@@ -283,7 +283,7 @@ test.describe('transaction form', () => {
 
     await expect(movementsPage.createTransactionButton).toBeVisible();
     await expect(page.getByText('Amount must be a non-negative number')).toBeHidden();
-    const transactionLink = movementsPage.getTransaction(description);
+    const transactionLink = movementsPage.getMovement(description);
     await expect(transactionLink).toBeVisible();
   });
 
@@ -324,7 +324,7 @@ test.describe('transaction form', () => {
     });
 
     // Open the edit form
-    await movementsPage.getTransaction(description).click();
+    await movementsPage.getMovement(description).click();
 
     // Verify each field has the transaction's values loaded
     await expect(transactionFormPage.amountInput).toHaveValue(amount);
@@ -376,7 +376,7 @@ test.describe('transaction form', () => {
 
     // Verify the transaction exists
     await expect(movementsPage.createTransactionButton).toBeVisible();
-    await expect(movementsPage.getTransaction(description)).toBeVisible();
+    await expect(movementsPage.getMovement(description)).toBeVisible();
 
     // Create a transaction with reverse amount to be able to delete the account and jar
     const reverseTransactionDescription = 'reverse transaction';
@@ -397,7 +397,7 @@ test.describe('transaction form', () => {
 
     // Navigate back to movements and open the edit form for the transaction
     await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.getTransaction(description).click();
+    await movementsPage.getMovement(description).click();
 
     // The archived entities should still be visible in the selectors
     // because the transaction references them
@@ -458,7 +458,7 @@ test('after editing a transaction, it automatically restores archived jars and a
 
   // Edit transaction amount
   await rootLayoutPage.navButton('Movements').click();
-  await movementsPage.getTransaction(transactionDescription).click();
+  await movementsPage.getMovement(transactionDescription).click();
   await transactionFormPage.fillAmount(transactionSecondAmount);
   await transactionFormPage.submitButton.click();
 
