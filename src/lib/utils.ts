@@ -38,6 +38,8 @@ export const createCacheForFunction = <T extends unknown[], U>(
   const { cache, typedGet } = typedCache();
 
   const computeWithCache = (key: string, params: T) => {
+    // TODO: use named parameters ({ key, params }) for better
+    // readability when calling computeWithCache
     const { success, value } = typedGet(key);
     if (success) {
       // Move to the end to mark as most recently used

@@ -1,8 +1,6 @@
 import { expect } from '@playwright/test';
 import { defaultData, test } from './setup';
 import { runInOrder } from 'src/lib/utils';
-import { formatCurrencyAmount } from 'src/presentation/formatters/currencyFormatter';
-import { currency } from 'src/services/shared';
 
 test('can create account', async ({ rootLayoutPage, accountsPage, accountFormPage }) => {
   const accountName = 'Test Account';
@@ -72,6 +70,8 @@ test('accounts show balance', async ({
   createDefaultData,
   createTransaction,
   deleteTransaction,
+  createTransfer,
+  deleteTransfer,
   rootLayoutPage,
   accountsPage,
   createAccount,
@@ -85,6 +85,8 @@ test('accounts show balance', async ({
   const secondAccountName = 'Checking Account';
   const incomeTransactionAmount = 10000;
   const expenseTransactionAmount = 3000;
+  const outgoingTransferAmount = 5000;
+  const incomingTransferAmount = 2000;
 
   await createDefaultData();
   await createAccount(secondAccountName);
@@ -130,12 +132,38 @@ test('accounts show balance', async ({
     jarName,
     categoryName: expenseCategoryName,
   });
+  // A transfer out of the account should substract from its balance
+  await createTransfer({
+    amount: outgoingTransferAmount.toString(),
+    date,
+    description: 'outgoing transfer',
+    originAccountName: accountName,
+    destinationAccountName: secondAccountName,
+  });
+  // A transfer into the account should add to its balance
+  await createTransfer({
+    amount: incomingTransferAmount.toString(),
+    date,
+    description: 'incoming transfer',
+    originAccountName: secondAccountName,
+    destinationAccountName: accountName,
+  });
+  // Deleted transfer should not count
+  const deletedTransferDescription = 'deleted transfer';
+  await createTransfer({
+    amount: '54321',
+    date,
+    description: deletedTransferDescription,
+    originAccountName: secondAccountName,
+    destinationAccountName: accountName,
+  });
+  await deleteTransfer(deletedTransferDescription);
 
   await rootLayoutPage.navButton('Accounts').click();
 
-  await expect(accountsPage.getAccount(accountName)).toContainText(
-    formatCurrencyAmount(currency.new(incomeTransactionAmount - expenseTransactionAmount))
-  );
+  // Expected string is hardcoded for the hardcoded amounts above:
+  // 10000 income - 3000 expense - 5000 transferred out + 2000 transferred in -> CLP.
+  await expect(accountsPage.getAccount(accountName)).toContainText('$4.000');
 });
 
 test('delete button is disabled for accounts with non zero balance', async ({

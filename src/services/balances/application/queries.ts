@@ -4,8 +4,12 @@ import { createBalancesGetters } from '../domain/queries';
 const createBalanceQueries = (financeQueriesDeps: typeof financeQueries) => {
   const getBalances = async () => {
     const transactions = await financeQueriesDeps.transactions.list();
-    const dataStateId = financeQueriesDeps.transactions.lastOperationId();
-    return createBalancesGetters({ transactions, dataStateId });
+    const transfers = await financeQueriesDeps.transfers.list();
+    const dataStateId = [
+      financeQueriesDeps.transactions.lastOperationId(),
+      financeQueriesDeps.transfers.lastOperationId(),
+    ].join(':');
+    return createBalancesGetters({ transactions, transfers, dataStateId });
   };
 
   return {

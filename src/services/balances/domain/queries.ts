@@ -1,5 +1,5 @@
 import { createCacheForFunction } from 'src/lib/utils';
-import type { Transaction } from 'src/services/finance';
+import type { Transaction, Transfer } from 'src/services/finance';
 import { type CurrencyAmount, currency } from 'src/services/shared';
 
 const emptyBalances = () => ({
@@ -7,25 +7,33 @@ const emptyBalances = () => ({
   accounts: {} as Record<string, CurrencyAmount>,
 });
 
-const computeBalancesUncached = (transactions: Transaction[]) =>
-  transactions.reduce((balances, transaction) => {
-    const { jars, accounts } = balances;
-    if (!(transaction.jarId in jars)) {
-      jars[transaction.jarId] = currency.new(0, 'CLP');
-    }
+type Balances = ReturnType<typeof emptyBalances>;
 
-    if (!(transaction.accountId in accounts)) {
-      accounts[transaction.accountId] = currency.new(0, 'CLP');
-    }
+const addTo = (holders: Record<string, CurrencyAmount>, id: string, amount: CurrencyAmount) => {
+  const current = id in holders ? holders[id] : currency.new(0, 'CLP');
+  holders[id] = currency.sum(current, amount);
+};
 
-    const amount =
-      transaction.kind === 'income' ? transaction.amount : currency.negate(transaction.amount);
+const applyTransaction = (balances: Balances, transaction: Transaction) => {
+  const amount =
+    transaction.kind === 'income' ? transaction.amount : currency.negate(transaction.amount);
 
-    jars[transaction.jarId] = currency.sum(jars[transaction.jarId], amount);
-    accounts[transaction.accountId] = currency.sum(accounts[transaction.accountId], amount);
+  addTo(balances.jars, transaction.jarId, amount);
+  addTo(balances.accounts, transaction.accountId, amount);
 
-    return balances;
-  }, emptyBalances());
+  return balances;
+};
+
+// A transfer moves money between accounts, so it leaves jar balances untouched.
+const applyTransfer = (balances: Balances, transfer: Transfer) => {
+  addTo(balances.accounts, transfer.originAccountId, currency.negate(transfer.amount));
+  addTo(balances.accounts, transfer.destinationAccountId, transfer.amount);
+
+  return balances;
+};
+
+const computeBalancesUncached = (transactions: Transaction[], transfers: Transfer[]) =>
+  transfers.reduce(applyTransfer, transactions.reduce(applyTransaction, emptyBalances()));
 
 const computeBalancesWithManualCache = createCacheForFunction(computeBalancesUncached, {
   maxSize: 1,
@@ -34,11 +42,13 @@ const computeBalancesWithManualCache = createCacheForFunction(computeBalancesUnc
 export const createBalancesGetters = ({
   dataStateId,
   transactions,
+  transfers,
 }: {
   transactions: Transaction[];
-  dataStateId: number;
+  transfers: Transfer[];
+  dataStateId: string;
 }) => {
-  const balances = computeBalancesWithManualCache(dataStateId.toString(), [transactions]);
+  const balances = computeBalancesWithManualCache(dataStateId, [transactions, transfers]);
 
   return {
     jars: (jarId: string) => {

@@ -32,6 +32,7 @@ const test = base.extend<{
   deleteCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
   deleteJar: (jarName: string) => Promise<void>;
   deleteTransaction: (transactionDescription: string) => Promise<void>;
+  deleteTransfer: (transferDescription: string) => Promise<void>;
 }>({
   createAccount: async ({ accountsPage, accountFormPage, rootLayoutPage }, use) => {
     await use(async (accountName: string) => {
@@ -136,6 +137,13 @@ const test = base.extend<{
       await rootLayoutPage.navButton('Movements').click();
       await movementsPage.getMovement(transactionDescription).click();
       await transactionFormPage.deleteButton.click();
+    });
+  },
+  deleteTransfer: async ({ rootLayoutPage, movementsPage, transferFormPage }, use) => {
+    await use(async (transferDescription) => {
+      await rootLayoutPage.navButton('Movements').click();
+      await movementsPage.getMovement(transferDescription).click();
+      await transferFormPage.deleteButton.click();
     });
   },
 });

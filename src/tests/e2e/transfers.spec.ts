@@ -296,7 +296,9 @@ test('when editing a transfer, selectors include archived accounts that the tran
   await createAccount(originName);
   await createAccount(destinationName);
 
+  // A zero amount keeps both account balances at zero, so they can still be archived.
   await createTransfer({
+    amount: '0',
     description,
     originAccountName: originName,
     destinationAccountName: destinationName,
