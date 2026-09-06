@@ -45,145 +45,77 @@ test('can create an allocation', async ({
   await expect(page.getByText('5/20/2026, 3:20:00 PM')).toBeVisible();
 });
 
-// TODO: fold all form behavior tests into a single one
-test('allocation date defaults to today', async ({
+test('allocation form defaults, jar options and validation', async ({
+  createJar,
+  deleteJar,
   rootLayoutPage,
   movementsPage,
   allocationFormPage,
+  page,
 }) => {
+  test.slow();
+  const originName = 'Origin jar name';
+  const destinationName = 'Destination jar name';
+  const archivedName = 'Archived jar';
+  const description = 'Zero allocation';
+
+  await createJar(originName);
+  await createJar(destinationName);
+  await createJar(archivedName);
+  await deleteJar(archivedName);
+
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.createAllocationButton.click();
 
   // Date field is prefilled with today (UTC, per test.use above) in datetime-local format
   const today = new Date().toISOString().slice(0, 10);
   await expect(allocationFormPage.dateInput).toHaveValue(new RegExp(`^${today}T\\d{2}:\\d{2}$`));
-});
 
-test.describe('allocation form validation', () => {
-  test('required fields', async ({
-    createJar,
-    rootLayoutPage,
-    movementsPage,
-    allocationFormPage,
-    page,
-  }) => {
-    await createJar('Some jar');
+  // Submitting an empty form reports every required field
+  await allocationFormPage.submitButton.click();
+  await runInOrder(
+    ['Origin jar is required', 'Destination jar is required', 'Amount is required'].map(
+      (message) => async () => {
+        await expect(page.getByText(message)).toBeVisible();
+      }
+    )
+  );
 
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.createAllocationButton.click();
+  // Only active jars are selectable
+  await allocationFormPage.expectOptionToExist('Origin jar', originName);
+  await allocationFormPage.expectOptionToNotExist('Origin jar', archivedName);
+  await allocationFormPage.expectOptionToNotExist('Destination jar', archivedName);
 
-    await allocationFormPage.submitButton.click();
-    await runInOrder(
-      ['Origin jar is required', 'Destination jar is required', 'Amount is required'].map(
-        (message) => async () => {
-          await expect(page.getByText(message)).toBeVisible();
-        }
-      )
-    );
-  });
+  // Picking an origin jar removes it from the destination options...
+  await allocationFormPage.selectOriginJar(originName);
+  await allocationFormPage.expectOptionToNotExist('Destination jar', originName);
+  await allocationFormPage.expectOptionToExist('Destination jar', destinationName);
 
-  test('amount must be a non-negative number', async ({
-    createJar,
-    rootLayoutPage,
-    movementsPage,
-    allocationFormPage,
-    page,
-  }) => {
-    test.slow();
-    await createJar('Origin jar name');
-    await createJar('Destination jar name');
+  // ...and picking a destination jar removes it from the origin options. Between the two,
+  // origin and destination can never be made equal through the UI.
+  await allocationFormPage.selectDestinationJar(destinationName);
+  await allocationFormPage.expectOptionToNotExist('Origin jar', destinationName);
+  await allocationFormPage.expectOptionToExist('Origin jar', originName);
 
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.createAllocationButton.click();
+  // The amount must be a number, and it must not be negative
+  await allocationFormPage.fillAmount('asdf');
+  await allocationFormPage.submitButton.click();
+  await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
 
-    await allocationFormPage.selectOriginJar('Origin jar name');
-    await allocationFormPage.selectDestinationJar('Destination jar name');
+  await allocationFormPage.fillAmount('-1');
+  await allocationFormPage.submitButton.click();
+  await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
 
-    await allocationFormPage.fillAmount('asdf');
-    await allocationFormPage.submitButton.click();
-    await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
+  // Zero is accepted, so the form submits and the allocation shows up on the movements page
+  await allocationFormPage.fillAmount('0');
+  await allocationFormPage.fillDescription(description);
+  await allocationFormPage.submitButton.click();
 
-    await allocationFormPage.fillAmount('-1');
-    await allocationFormPage.submitButton.click();
-    await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
-  });
-
-  test('amount can be zero', async ({
-    createJar,
-    rootLayoutPage,
-    movementsPage,
-    allocationFormPage,
-    page,
-  }) => {
-    test.slow();
-    const description = 'Zero allocation';
-    await createJar('Origin jar name');
-    await createJar('Destination jar name');
-
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.createAllocationButton.click();
-
-    await allocationFormPage.selectOriginJar('Origin jar name');
-    await allocationFormPage.selectDestinationJar('Destination jar name');
-    await allocationFormPage.fillAmount('0');
-    await allocationFormPage.fillDescription(description);
-    await allocationFormPage.submitButton.click();
-
-    await expect(movementsPage.createAllocationButton).toBeVisible();
-    await expect(page.getByText('Amount must be a non-negative number')).toBeHidden();
-    await expect(page.getByText(description)).toBeVisible();
-    await expect(page.getByText('Origin jar name → Destination jar name')).toBeVisible();
-    await expect(page.getByText('$0', { exact: true })).toBeVisible();
-  });
-
-  test('a selected jar is not offered in the other selector', async ({
-    createJar,
-    rootLayoutPage,
-    movementsPage,
-    allocationFormPage,
-  }) => {
-    test.slow();
-    const firstName = 'First jar';
-    const secondName = 'Second jar';
-    await createJar(firstName);
-    await createJar(secondName);
-
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.createAllocationButton.click();
-
-    // Picking an origin jar removes it from the destination options...
-    await allocationFormPage.selectOriginJar(firstName);
-    await allocationFormPage.expectOptionToNotExist('Destination jar', firstName);
-    await allocationFormPage.expectOptionToExist('Destination jar', secondName);
-
-    // ...and picking a destination jar removes it from the origin options. Between the two,
-    // origin and destination can never be made equal through the UI.
-    await allocationFormPage.selectDestinationJar(secondName);
-    await allocationFormPage.expectOptionToNotExist('Origin jar', secondName);
-    await allocationFormPage.expectOptionToExist('Origin jar', firstName);
-  });
-
-  test('only active jars are selectable', async ({
-    createJar,
-    deleteJar,
-    rootLayoutPage,
-    movementsPage,
-    allocationFormPage,
-  }) => {
-    test.slow();
-    const activeName = 'Active jar';
-    const archivedName = 'Archived jar';
-    await createJar(activeName);
-    await createJar(archivedName);
-    await deleteJar(archivedName);
-
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.createAllocationButton.click();
-
-    await allocationFormPage.expectOptionToExist('Origin jar', activeName);
-    await allocationFormPage.expectOptionToNotExist('Origin jar', archivedName);
-    await allocationFormPage.expectOptionToNotExist('Destination jar', archivedName);
-  });
+  await expect(movementsPage.createAllocationButton).toBeVisible();
+  await expect(page.getByText('Amount must be a non-negative number')).toBeHidden();
+  await expect(page.getByText(description)).toBeVisible();
+  await expect(page.getByText(`${originName} → ${destinationName}`)).toBeVisible();
+  await expect(page.getByText('$0', { exact: true })).toBeVisible();
 });
 
 test('focus flows from one field to the next as a new allocation is filled in', async ({
