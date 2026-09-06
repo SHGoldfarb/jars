@@ -82,6 +82,7 @@ The main application code lives under `src/` and is grouped by responsibility:
   - `balances/` - account and jar balances derived from finance (`application/`, `domain/`)
   - `transaction-form/` - transaction form orchestration (`application/`, `domain/`)
   - `transfer-form/` - transfer form orchestration (`application/`, `domain/`)
+  - `allocation-form/` - allocation form orchestration (`application/`, `domain/`)
   - `shared/` - shared kernel: value objects used by more than one context (`CurrencyAmount`)
     and the boundary parsing that produces them (`currencyInput`)
 - `src/tests/unit/` - unit tests

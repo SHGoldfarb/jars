@@ -158,30 +158,30 @@ Move money between jars.
 
 **Allocation entry**
 
-- [ ] User can create an allocation specifying: origin jar, destination jar, amount, date, and description
-- [ ] App validates amount is a non-negative number
-- [ ] Date defaults to today but can be changed
-- [ ] Origin and destination jars must be different
+- [x] User can create an allocation specifying: origin jar, destination jar, amount, date, and description
+- [x] App validates amount is a non-negative number
+- [x] Date defaults to today but can be changed
+- [x] Origin and destination jars must be different
 - [ ] Only active jars are available for selection when creating or editing an allocation
 - [ ] User can edit any field of an existing allocation
 - [ ] User can delete an allocation
 
 **Listing**
 
-- [ ] All allocations are listed on the Movements screen, interleaved with transactions, transfers, and sorted by date descending
-- [ ] Each allocation displays: amount, date, description, origin jar, and destination jar
+- [x] All allocations are listed on the Movements screen, interleaved with transactions, transfers, and sorted by date descending
+- [x] Each allocation displays: amount, date, description, origin jar, and destination jar
 - [ ] Allocations are visually distinguishable from transactions and transfers on the Movements screen
 
 **Validation**
 
-- [ ] Origin jar, destination jar, amount, and date are required fields
-- [ ] Description is optional
-- [ ] Origin and destination jars cannot be the same
-- [ ] Amount must be a non-negative number
+- [x] Origin jar, destination jar, amount, and date are required fields
+- [x] Description is optional
+- [x] Origin and destination jars cannot be the same
+- [x] Amount must be a non-negative number
 
 **Persistence**
 
-- [ ] Allocations persist across page refreshes
+- [x] Allocations persist across page refreshes
 
 **Jar integrity**
 
