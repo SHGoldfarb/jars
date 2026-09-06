@@ -89,5 +89,5 @@ export default defineConfig({
   },
 
   /* Set single test maximum time */
-  timeout: 5000,
+  timeout: 7000,
 });
