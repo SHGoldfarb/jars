@@ -1,5 +1,6 @@
 import type {
   Account,
+  Allocation,
   Category,
   CategoryExpense,
   CategoryIncome,
@@ -49,10 +50,18 @@ export interface TransferRepository {
   getLastOperationId: () => number;
 }
 
+export interface AllocationRepository {
+  getById(allocationId: string): Promise<Allocation>;
+  list(): Promise<Allocation[]>;
+  save(allocation: Allocation): Promise<unknown>;
+  getLastOperationId: () => number;
+}
+
 export interface FinanceRepositories {
   accounts: AccountRepository;
   jars: JarRepository;
   categories: CategoryRepository;
   transactions: TransactionRepository;
   transfers: TransferRepository;
+  allocations: AllocationRepository;
 }

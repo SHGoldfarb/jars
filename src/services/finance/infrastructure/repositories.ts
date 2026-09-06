@@ -1,6 +1,7 @@
 import { DB } from './db';
 import {
   Account,
+  Allocation,
   Category,
   CategoryExpense,
   CategoryIncome,
@@ -10,6 +11,7 @@ import {
 } from '../model';
 import type {
   AccountRepository,
+  AllocationRepository,
   CategoryRepository,
   JarRepository,
   TransactionRepository,
@@ -19,7 +21,7 @@ import type z from 'zod';
 
 const createDBTableRepository = <T extends z.ZodObject>(
   Model: T,
-  table: 'accounts' | 'jars' | 'categories' | 'transactions' | 'transfers'
+  table: 'accounts' | 'jars' | 'categories' | 'transactions' | 'transfers' | 'allocations'
 ) => ({
   getById: async (id: string) => {
     return Model.parse((await DB[table].getMap())[id]);
@@ -63,10 +65,16 @@ const transactionRepository: TransactionRepository = createDBTableRepository(
 
 const transferRepository: TransferRepository = createDBTableRepository(Transfer, 'transfers');
 
+const allocationRepository: AllocationRepository = createDBTableRepository(
+  Allocation,
+  'allocations'
+);
+
 export const repositories = {
   accounts: accountRepository,
   jars: jarRepository,
   categories: categoryRepository,
   transactions: transactionRepository,
   transfers: transferRepository,
+  allocations: allocationRepository,
 };

@@ -1,4 +1,4 @@
-import { Account, Category, Jar, Movement, Transaction, Transfer } from '../model';
+import { Account, Allocation, Category, Jar, Movement, Transaction, Transfer } from '../model';
 import type { MovementOrderItem } from './repositories';
 
 const listJars = (jars: Jar[], params: { includeArchived?: boolean }) => {
@@ -28,52 +28,52 @@ const orderMovements = (a: Movement, b: Movement, orderItem: MovementOrderItem) 
   return result ?? 0;
 };
 
-const listTransactions = (
-  transactions: Transaction[],
-  params: { includeArchived?: boolean; orderBy?: MovementOrderItem[] }
-) => {
-  const { includeArchived = false, orderBy = [{ dateISO: 'desc' }] } = params;
-  return transactions
-    .filter((transaction) => includeArchived || !transaction.archivedAtISO)
-    .sort((a, b) => {
-      for (const orderItem of orderBy) {
-        const result = orderMovements(a, b, orderItem);
-        if (result !== 0) {
-          return result;
-        }
-      }
+const compareByOrderBy = (a: Movement, b: Movement, orderBy: MovementOrderItem[]) => {
+  for (const orderItem of orderBy) {
+    const result = orderMovements(a, b, orderItem);
+    if (result !== 0) {
+      return result;
+    }
+  }
 
-      return 0;
-    });
+  return 0;
 };
 
-const listTransfers = (
-  transfers: Transfer[],
-  params: { includeArchived?: boolean; orderBy?: MovementOrderItem[] }
-) => {
-  const { includeArchived = false, orderBy = [{ dateISO: 'desc' }] } = params;
-  return transfers
-    .filter((transfer) => includeArchived || !transfer.archivedAtISO)
-    .sort((a, b) => {
-      for (const orderItem of orderBy) {
-        const result = orderMovements(a, b, orderItem);
-        if (result !== 0) {
-          return result;
-        }
-      }
+interface MovementListParams {
+  includeArchived?: boolean;
+  orderBy?: MovementOrderItem[];
+}
 
-      return 0;
-    });
+// Every movement kind is listed the same way: drop the archived ones unless asked for, then
+// order by the shared Movement fields. The kind only decides the element type.
+const listMovementsOfType = <T extends Movement>(items: T[], params: MovementListParams): T[] => {
+  const { includeArchived = false, orderBy = [{ dateISO: 'desc' }] } = params;
+  return items
+    .filter((item) => includeArchived || !item.archivedAtISO)
+    .sort((a, b) => compareByOrderBy(a, b, orderBy));
 };
+
+const listTransactions = (transactions: Transaction[], params: MovementListParams) =>
+  listMovementsOfType(transactions, params);
+
+const listTransfers = (transfers: Transfer[], params: MovementListParams) =>
+  listMovementsOfType(transfers, params);
+
+const listAllocations = (allocations: Allocation[], params: MovementListParams) =>
+  listMovementsOfType(allocations, params);
 
 export type MovementListEntry =
   | ({ movementType: 'transaction' } & Transaction)
-  | ({ movementType: 'transfer' } & Transfer);
+  | ({ movementType: 'transfer' } & Transfer)
+  | ({ movementType: 'allocation' } & Allocation);
 
 const listMovements = (
-  transactions: Transaction[],
-  transfers: Transfer[],
-  params: { includeArchived?: boolean; orderBy?: MovementOrderItem[] }
+  {
+    transactions,
+    transfers,
+    allocations,
+  }: { transactions: Transaction[]; transfers: Transfer[]; allocations: Allocation[] },
+  params: MovementListParams
 ): MovementListEntry[] => {
   const { orderBy = [{ dateISO: 'desc' }] } = params;
 
@@ -86,18 +86,13 @@ const listMovements = (
       movementType: 'transfer' as const,
       ...transfer,
     })),
+    ...listAllocations(allocations, params).map((allocation) => ({
+      movementType: 'allocation' as const,
+      ...allocation,
+    })),
   ];
 
-  return entries.sort((a, b) => {
-    for (const orderItem of orderBy) {
-      const result = orderMovements(a, b, orderItem);
-      if (result !== 0) {
-        return result;
-      }
-    }
-
-    return 0;
-  });
+  return entries.sort((a, b) => compareByOrderBy(a, b, orderBy));
 };
 
 export const financeDomainQueries = {
@@ -115,6 +110,9 @@ export const financeDomainQueries = {
   },
   transfers: {
     list: listTransfers,
+  },
+  allocations: {
+    list: listAllocations,
   },
   movements: {
     list: listMovements,

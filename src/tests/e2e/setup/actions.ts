@@ -22,12 +22,21 @@ export interface CreateTransferParams {
   destinationAccountName: string;
 }
 
+export interface CreateAllocationParams {
+  amount?: string;
+  date?: string;
+  description?: string;
+  originJarName: string;
+  destinationJarName: string;
+}
+
 const test = base.extend<{
   createAccount: (accountName: string) => Promise<void>;
   createJar: (jarName: string) => Promise<void>;
   createCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
   createTransaction: (params?: CreateTransactionParams) => Promise<void>;
   createTransfer: (params: CreateTransferParams) => Promise<void>;
+  createAllocation: (params: CreateAllocationParams) => Promise<void>;
   deleteAccount: (accountName: string) => Promise<void>;
   deleteCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
   deleteJar: (jarName: string) => Promise<void>;
@@ -108,6 +117,24 @@ const test = base.extend<{
       await transferFormPage.fillAmount(params.amount ?? defaultParams.amount);
       await transferFormPage.fillDescription(params.description ?? defaultParams.description);
       await transferFormPage.submitButton.click();
+    });
+  },
+  createAllocation: async ({ rootLayoutPage, movementsPage, allocationFormPage }, use) => {
+    await use(async (params: CreateAllocationParams) => {
+      const defaultParams = {
+        amount: (1000 + testUtils.generateIntId()).toString(),
+        date: DEFAULT_MOVEMENT_DATE,
+        description: `Allocation description${testUtils.generateId()}`,
+      } as const;
+
+      await rootLayoutPage.navButton('Movements').click();
+      await movementsPage.createAllocationButton.click();
+      await allocationFormPage.fillDate(params.date ?? defaultParams.date);
+      await allocationFormPage.selectOriginJar(params.originJarName);
+      await allocationFormPage.selectDestinationJar(params.destinationJarName);
+      await allocationFormPage.fillAmount(params.amount ?? defaultParams.amount);
+      await allocationFormPage.fillDescription(params.description ?? defaultParams.description);
+      await allocationFormPage.submitButton.click();
     });
   },
   deleteAccount: async ({ rootLayoutPage, accountsPage, accountFormPage }, use) => {

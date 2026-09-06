@@ -125,7 +125,7 @@ Move money between accounts.
 **Transfer entry**
 
 - [x] User can create a transfer specifying: origin account, destination account, amount, date, and description
-- [x] App validates amount is a positive number
+- [x] App validates amount is a non-negative number
 - [x] Date defaults to today but can be changed
 - [x] Origin and destination accounts must be different
 - [x] Only active accounts are available for selection when creating or editing a transfer
@@ -159,7 +159,7 @@ Move money between jars.
 **Allocation entry**
 
 - [ ] User can create an allocation specifying: origin jar, destination jar, amount, date, and description
-- [ ] App validates amount is a positive number
+- [ ] App validates amount is a non-negative number
 - [ ] Date defaults to today but can be changed
 - [ ] Origin and destination jars must be different
 - [ ] Only active jars are available for selection when creating or editing an allocation
@@ -177,7 +177,7 @@ Move money between jars.
 - [ ] Origin jar, destination jar, amount, and date are required fields
 - [ ] Description is optional
 - [ ] Origin and destination jars cannot be the same
-- [ ] Amount must be a positive number
+- [ ] Amount must be a non-negative number
 
 **Persistence**
 

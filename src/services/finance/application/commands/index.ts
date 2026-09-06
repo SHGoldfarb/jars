@@ -5,6 +5,7 @@ import { createJarCommands } from './jar';
 import { createCategoryCommands } from './category';
 import { createTransactionCommands } from './transaction';
 import { createTransferCommands } from './transfer';
+import { createAllocationCommands } from './allocation';
 
 const createFinanceCommands = (deps: FinanceRepositories) => ({
   accounts: createAccountCommands(deps),
@@ -12,6 +13,7 @@ const createFinanceCommands = (deps: FinanceRepositories) => ({
   categories: createCategoryCommands(deps),
   transactions: createTransactionCommands(deps),
   transfers: createTransferCommands(deps),
+  allocations: createAllocationCommands(deps),
 });
 
 export const financeCommands = createFinanceCommands(repositories);

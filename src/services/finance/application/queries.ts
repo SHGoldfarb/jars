@@ -38,14 +38,25 @@ export const createFinanceQueries = (deps: FinanceRepositories) => ({
     getById: (transactionId: string) => deps.transfers.getById(transactionId),
     lastOperationId: () => deps.transfers.getLastOperationId(),
   },
+  allocations: {
+    list: async (params?: {
+      includeArchived?: boolean;
+      orderBy?: { dateISO?: 'asc' | 'desc' }[];
+    }) => financeDomainQueries.allocations.list(await deps.allocations.list(), params ?? {}),
+    getById: (allocationId: string) => deps.allocations.getById(allocationId),
+    lastOperationId: () => deps.allocations.getLastOperationId(),
+  },
   movements: {
     list: async (params?: {
       includeArchived?: boolean;
       orderBy?: { dateISO?: 'asc' | 'desc' }[];
     }) =>
       financeDomainQueries.movements.list(
-        await deps.transactions.list(),
-        await deps.transfers.list(),
+        {
+          transactions: await deps.transactions.list(),
+          transfers: await deps.transfers.list(),
+          allocations: await deps.allocations.list(),
+        },
         params ?? {}
       ),
   },
