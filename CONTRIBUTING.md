@@ -132,8 +132,7 @@ becomes public by accident.
   (`data-slot`, CSS classes, test-only attributes).
 - Navigate by interacting with the UI (click nav links and buttons), not `page.goto(url)`. A full
   URL load re-boots the app and slows the suite; the app is loaded once by the root fixture.
-- Keep e2e assertions isolated per behavior (one validation rule per test), matching the existing
-  specs.
+- Keep e2e tests separated per use case. Multiple behavior assertions in the same test is allowed as long as they belong to the same use case.
 
 ## Pull Requests
 

@@ -44,143 +44,76 @@ test('can create a transfer', async ({
   await expect(page.getByText('5/20/2026, 3:20:00 PM')).toBeVisible();
 });
 
-test('transfer date defaults to today', async ({
+test('transfer form defaults, account options and validation', async ({
+  createAccount,
+  deleteAccount,
   rootLayoutPage,
   movementsPage,
   transferFormPage,
+  page,
 }) => {
+  test.slow();
+  const originName = 'Origin acc';
+  const destinationName = 'Destination acc';
+  const archivedName = 'Archived account';
+  const description = 'Zero transfer';
+
+  await createAccount(originName);
+  await createAccount(destinationName);
+  await createAccount(archivedName);
+  await deleteAccount(archivedName);
+
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.createTransferButton.click();
 
   // Date field is prefilled with today (UTC, per test.use above) in datetime-local format
   const today = new Date().toISOString().slice(0, 10);
   await expect(transferFormPage.dateInput).toHaveValue(new RegExp(`^${today}T\\d{2}:\\d{2}$`));
-});
 
-test.describe('transfer form validation', () => {
-  test('required fields', async ({
-    createAccount,
-    rootLayoutPage,
-    movementsPage,
-    transferFormPage,
-    page,
-  }) => {
-    await createAccount('Some account');
+  // Submitting an empty form reports every required field
+  await transferFormPage.submitButton.click();
+  await runInOrder(
+    ['Origin account is required', 'Destination account is required', 'Amount is required'].map(
+      (message) => async () => {
+        await expect(page.getByText(message)).toBeVisible();
+      }
+    )
+  );
 
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.createTransferButton.click();
+  // Only active accounts are selectable
+  await transferFormPage.expectOptionToExist('Origin account', originName);
+  await transferFormPage.expectOptionToNotExist('Origin account', archivedName);
+  await transferFormPage.expectOptionToNotExist('Destination account', archivedName);
 
-    await transferFormPage.submitButton.click();
-    await runInOrder(
-      ['Origin account is required', 'Destination account is required', 'Amount is required'].map(
-        (message) => async () => {
-          await expect(page.getByText(message)).toBeVisible();
-        }
-      )
-    );
-  });
+  // Picking an origin account removes it from the destination options...
+  await transferFormPage.selectOriginAccount(originName);
+  await transferFormPage.expectOptionToNotExist('Destination account', originName);
+  await transferFormPage.expectOptionToExist('Destination account', destinationName);
 
-  test('amount must be a non-negative number', async ({
-    createAccount,
-    rootLayoutPage,
-    movementsPage,
-    transferFormPage,
-    page,
-  }) => {
-    test.slow();
-    await createAccount('Origin acc');
-    await createAccount('Destination acc');
+  // ...and picking a destination account removes it from the origin options.
+  await transferFormPage.selectDestinationAccount(destinationName);
+  await transferFormPage.expectOptionToNotExist('Origin account', destinationName);
+  await transferFormPage.expectOptionToExist('Origin account', originName);
 
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.createTransferButton.click();
+  // The amount must be a number, and it must not be negative
+  await transferFormPage.fillAmount('asdf');
+  await transferFormPage.submitButton.click();
+  await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
 
-    await transferFormPage.selectOriginAccount('Origin acc');
-    await transferFormPage.selectDestinationAccount('Destination acc');
+  await transferFormPage.fillAmount('-1');
+  await transferFormPage.submitButton.click();
+  await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
 
-    await transferFormPage.fillAmount('asdf');
-    await transferFormPage.submitButton.click();
-    await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
+  // Zero is accepted, so the form submits and the transfer shows up on the movements page
+  await transferFormPage.fillAmount('0');
+  await transferFormPage.fillDescription(description);
+  await transferFormPage.submitButton.click();
 
-    await transferFormPage.fillAmount('-1');
-    await transferFormPage.submitButton.click();
-    await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
-  });
-
-  test('amount can be zero', async ({
-    createAccount,
-    rootLayoutPage,
-    movementsPage,
-    transferFormPage,
-    page,
-  }) => {
-    test.slow();
-    const description = 'Zero transfer';
-    await createAccount('Origin acc');
-    await createAccount('Destination acc');
-
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.createTransferButton.click();
-
-    await transferFormPage.selectOriginAccount('Origin acc');
-    await transferFormPage.selectDestinationAccount('Destination acc');
-    await transferFormPage.fillAmount('0');
-    await transferFormPage.fillDescription(description);
-    await transferFormPage.submitButton.click();
-
-    await expect(movementsPage.createTransferButton).toBeVisible();
-    await expect(page.getByText('Amount must be a non-negative number')).toBeHidden();
-    await expect(page.getByText(description)).toBeVisible();
-    await expect(page.getByText('Origin acc → Destination acc')).toBeVisible();
-    await expect(page.getByText('$0', { exact: true })).toBeVisible();
-  });
-
-  test('a selected account is not offered in the other selector', async ({
-    createAccount,
-    rootLayoutPage,
-    movementsPage,
-    transferFormPage,
-  }) => {
-    test.slow();
-    const firstName = 'First account';
-    const secondName = 'Second account';
-    await createAccount(firstName);
-    await createAccount(secondName);
-
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.createTransferButton.click();
-
-    // Picking an origin account removes it from the destination options...
-    await transferFormPage.selectOriginAccount(firstName);
-    await transferFormPage.expectOptionToNotExist('Destination account', firstName);
-    await transferFormPage.expectOptionToExist('Destination account', secondName);
-
-    // ...and picking a destination account removes it from the origin options.
-    await transferFormPage.selectDestinationAccount(secondName);
-    await transferFormPage.expectOptionToNotExist('Origin account', secondName);
-    await transferFormPage.expectOptionToExist('Origin account', firstName);
-  });
-
-  test('only active accounts are selectable', async ({
-    createAccount,
-    deleteAccount,
-    rootLayoutPage,
-    movementsPage,
-    transferFormPage,
-  }) => {
-    test.slow();
-    const activeName = 'Active account';
-    const archivedName = 'Archived account';
-    await createAccount(activeName);
-    await createAccount(archivedName);
-    await deleteAccount(archivedName);
-
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.createTransferButton.click();
-
-    await transferFormPage.expectOptionToExist('Origin account', activeName);
-    await transferFormPage.expectOptionToNotExist('Origin account', archivedName);
-    await transferFormPage.expectOptionToNotExist('Destination account', archivedName);
-  });
+  await expect(movementsPage.createTransferButton).toBeVisible();
+  await expect(page.getByText('Amount must be a non-negative number')).toBeHidden();
+  await expect(page.getByText(description)).toBeVisible();
+  await expect(page.getByText(`${originName} → ${destinationName}`)).toBeVisible();
+  await expect(page.getByText('$0', { exact: true })).toBeVisible();
 });
 
 test('can edit a transfer', async ({
