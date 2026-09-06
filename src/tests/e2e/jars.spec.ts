@@ -150,3 +150,68 @@ test('delete button is disabled for jars with non zero balance', async ({
   await jarsPage.clickJar(defaultData.jars[0]);
   await expect(jarFormPage.deleteButton).toBeDisabled();
 });
+
+test('allocations move balance between jars', async ({
+  createDefaultData,
+  createJar,
+  createTransaction,
+  createAllocation,
+  rootLayoutPage,
+  jarsPage,
+}) => {
+  test.slow();
+  const originJarName = defaultData.jars[0];
+  const destinationJarName = 'Savings jar';
+
+  await createDefaultData();
+  await createJar(destinationJarName);
+
+  // Fund the origin jar, then move part of it to the destination jar
+  await createTransaction({
+    amount: '10000',
+    date: '2026-06-30T09:00',
+    description: 'income transaction',
+    type: 'Income',
+    accountName: defaultData.accounts[0],
+    jarName: originJarName,
+    categoryName: defaultData.incomeCategories[0],
+  });
+  await createAllocation({
+    amount: '4000',
+    description: 'jar to jar allocation',
+    originJarName,
+    destinationJarName,
+  });
+
+  await rootLayoutPage.navButton('Jars').click();
+
+  // Expected balances are hardcoded for the hardcoded amounts above (10000 - 4000, 0 + 4000)
+  await expect(jarsPage.getJar(originJarName)).toContainText('$6.000');
+  await expect(jarsPage.getJar(destinationJarName)).toContainText('$4.000');
+});
+
+test('delete button is disabled for a jar whose balance comes from an allocation', async ({
+  createJar,
+  createAllocation,
+  rootLayoutPage,
+  jarsPage,
+  jarFormPage,
+}) => {
+  test.slow();
+  const originJarName = 'Allocation origin jar';
+  const destinationJarName = 'Allocation destination jar';
+
+  await createJar(originJarName);
+  await createJar(destinationJarName);
+  await createAllocation({
+    amount: '4000',
+    description: 'allocation giving a jar a balance',
+    originJarName,
+    destinationJarName,
+  });
+
+  await rootLayoutPage.navButton('Jars').click();
+  await jarsPage.clickJar(destinationJarName);
+
+  await expect(jarFormPage.deleteButton).toBeDisabled();
+});

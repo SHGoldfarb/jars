@@ -1,5 +1,5 @@
 import { createCacheForFunction } from 'src/lib/utils';
-import type { Transaction, Transfer } from 'src/services/finance';
+import type { Allocation, Transaction, Transfer } from 'src/services/finance';
 import { type CurrencyAmount, currency } from 'src/services/shared';
 
 const emptyBalances = () => ({
@@ -32,8 +32,23 @@ const applyTransfer = (balances: Balances, transfer: Transfer) => {
   return balances;
 };
 
-const computeBalancesUncached = (transactions: Transaction[], transfers: Transfer[]) =>
-  transfers.reduce(applyTransfer, transactions.reduce(applyTransaction, emptyBalances()));
+// An allocation moves money between jars, so it leaves account balances untouched.
+const applyAllocation = (balances: Balances, allocation: Allocation) => {
+  addTo(balances.jars, allocation.originJarId, currency.negate(allocation.amount));
+  addTo(balances.jars, allocation.destinationJarId, allocation.amount);
+
+  return balances;
+};
+
+const computeBalancesUncached = (
+  transactions: Transaction[],
+  transfers: Transfer[],
+  allocations: Allocation[]
+) =>
+  allocations.reduce(
+    applyAllocation,
+    transfers.reduce(applyTransfer, transactions.reduce(applyTransaction, emptyBalances()))
+  );
 
 const computeBalancesWithManualCache = createCacheForFunction(computeBalancesUncached, {
   maxSize: 1,
@@ -43,14 +58,16 @@ export const createBalancesGetters = ({
   dataStateId,
   transactions,
   transfers,
+  allocations,
 }: {
   transactions: Transaction[];
   transfers: Transfer[];
+  allocations: Allocation[];
   dataStateId: string;
 }) => {
   const balances = computeBalancesWithManualCache({
     key: dataStateId,
-    params: [transactions, transfers],
+    params: [transactions, transfers, allocations],
   });
 
   return {

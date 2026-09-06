@@ -12,7 +12,7 @@ export const AllocationListItem = ({ allocation }: { allocation: Allocation }) =
   return (
     <>
       <ItemMedia variant="icon">
-        <PiggyBankIcon />
+        <PiggyBankIcon className="text-violet-400" />
       </ItemMedia>
       <ItemContent className="max-w-1/3">
         <ItemTitle>

@@ -12,7 +12,7 @@ export const TransferListItem = ({ transfer }: { transfer: Transfer }) => {
   return (
     <>
       <ItemMedia variant="icon">
-        <ArrowLeftRightIcon />
+        <ArrowLeftRightIcon className="text-sky-400" />
       </ItemMedia>
       <ItemContent className="max-w-1/3">
         <ItemTitle>

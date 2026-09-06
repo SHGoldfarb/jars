@@ -116,6 +116,16 @@ test('allocation form defaults, jar options and validation', async ({
   await expect(allocationLink).toBeVisible();
   await expect(allocationLink.getByText(`${originName} → ${destinationName}`)).toBeVisible();
   await expect(allocationLink.getByText('$0', { exact: true })).toBeVisible();
+
+  // The zero amount left both jar balances at zero, so both jars can still be archived
+  await deleteJar(originName);
+  await deleteJar(destinationName);
+
+  // Editing the allocation still offers the archived jars it references
+  await rootLayoutPage.navButton('Movements').click();
+  await movementsPage.getMovement(description).click();
+  await allocationFormPage.expectOptionToExist('Origin jar', originName);
+  await allocationFormPage.expectOptionToExist('Destination jar', destinationName);
 });
 
 test('can edit an allocation', async ({

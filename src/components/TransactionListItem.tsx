@@ -11,25 +11,26 @@ export const TransactionListItem = ({ transaction }: { transaction: Transaction 
   const jar = useJar(transaction.jarId);
   const category = useCategory(transaction.categoryId);
   const account = useAccount(transaction.accountId);
+  const kindColor = transaction.kind === 'income' ? 'text-emerald-400' : 'text-rose-400';
 
   return (
     <>
       <ItemMedia variant="icon">
-        <CircleDollarSignIcon />
+        <CircleDollarSignIcon className={kindColor} />
       </ItemMedia>
-      <ItemContent className="max-w-1/4">
-        <ItemTitle>{account?.name}</ItemTitle>
-        <ItemDescription>{jar?.name} </ItemDescription>
+      <ItemContent className="max-w-1/3">
+        <ItemTitle>
+          {account?.name} · {jar?.name}
+        </ItemTitle>
+        <ItemDescription>Transaction</ItemDescription>
       </ItemContent>
       <ItemContent>
         <ItemTitle>{transaction.description}</ItemTitle>
-        <ItemDescription>{category?.name} </ItemDescription>
+        <ItemDescription>{category?.name}</ItemDescription>
       </ItemContent>
       <ItemContent className="ml-auto items-end">
-        <ItemTitle className={transaction.kind === 'income' ? 'text-emerald-400' : 'text-rose-400'}>
-          {formatCurrencyAmount(transaction.amount)}
-        </ItemTitle>
-        <ItemDescription>{formatDateISO(transaction.dateISO)} </ItemDescription>
+        <ItemTitle className={kindColor}>{formatCurrencyAmount(transaction.amount)}</ItemTitle>
+        <ItemDescription>{formatDateISO(transaction.dateISO)}</ItemDescription>
       </ItemContent>
     </>
   );

@@ -5,11 +5,13 @@ const createBalanceQueries = (financeQueriesDeps: typeof financeQueries) => {
   const getBalances = async () => {
     const transactions = await financeQueriesDeps.transactions.list();
     const transfers = await financeQueriesDeps.transfers.list();
+    const allocations = await financeQueriesDeps.allocations.list();
     const dataStateId = [
       financeQueriesDeps.transactions.lastOperationId(),
       financeQueriesDeps.transfers.lastOperationId(),
+      financeQueriesDeps.allocations.lastOperationId(),
     ].join(':');
-    return createBalancesGetters({ transactions, transfers, dataStateId });
+    return createBalancesGetters({ transactions, transfers, allocations, dataStateId });
   };
 
   return {
