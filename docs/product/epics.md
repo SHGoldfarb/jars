@@ -116,7 +116,7 @@ Manual transaction entry (amount, date, description, type income/expense, catego
 - [x] Move date field to the start of the form, "enter" key on amount field moves focus to description.
 - [x] Transaction form selectors include current entity, even if it is deleted (account, jar, category)
 
-## Epic 6 — Transfers [IN PROGRESS]
+## Epic 6 — Transfers [DONE]
 
 Move money between accounts.
 
@@ -150,7 +150,7 @@ Move money between accounts.
 - [x] Transfers are included in the accounts balance calculation.
 - [x] Transfer form selectors include archived accounts when editing a transfer that references them (same pattern as transactions)
 
-## Epic 7 — Allocations
+## Epic 7 — Allocations [IN PROGRESS]
 
 Move money between jars.
 
