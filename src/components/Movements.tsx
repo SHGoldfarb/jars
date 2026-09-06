@@ -5,7 +5,6 @@ import { TransactionListItem } from './TransactionListItem';
 import { TransferListItem } from './TransferListItem';
 import { AllocationListItem } from './AllocationListItem';
 
-// Allocations have no edit route until slice 2, so their rows render un-wrapped.
 const movementUrl = (movement: MovementListEntry) => {
   if (movement.movementType === 'transaction') {
     return `/transactions/${movement.id}/edit`;
@@ -13,7 +12,7 @@ const movementUrl = (movement: MovementListEntry) => {
   if (movement.movementType === 'transfer') {
     return `/transfers/${movement.id}/edit`;
   }
-  return undefined;
+  return `/allocations/${movement.id}/edit`;
 };
 
 export const Movements = () => {

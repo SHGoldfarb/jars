@@ -11,7 +11,6 @@ test('can create an allocation', async ({
   rootLayoutPage,
   movementsPage,
   allocationFormPage,
-  page,
 }) => {
   test.slow();
   const originName = 'Holidays';
@@ -38,11 +37,11 @@ test('can create an allocation', async ({
 
   // Check the allocation was created correctly. Expected strings are hardcoded for the
   // hardcoded inputs above (amount '150000' -> CLP, date '2026-05-20T15:20' -> UTC).
-  // Allocation rows are not links until the edit route exists, so they are matched by text.
-  await expect(page.getByText(description)).toBeVisible();
-  await expect(page.getByText(`${originName} → ${destinationName}`)).toBeVisible();
-  await expect(page.getByText('$150.000')).toBeVisible();
-  await expect(page.getByText('5/20/2026, 3:20:00 PM')).toBeVisible();
+  const allocationLink = movementsPage.getMovement(description);
+  await expect(allocationLink).toBeVisible();
+  await expect(allocationLink.getByText(`${originName} → ${destinationName}`)).toBeVisible();
+  await expect(allocationLink.getByText('$150.000')).toBeVisible();
+  await expect(allocationLink.getByText('5/20/2026, 3:20:00 PM')).toBeVisible();
 });
 
 test('allocation form defaults, jar options and validation', async ({
@@ -113,9 +112,75 @@ test('allocation form defaults, jar options and validation', async ({
 
   await expect(movementsPage.createAllocationButton).toBeVisible();
   await expect(page.getByText('Amount must be a non-negative number')).toBeHidden();
-  await expect(page.getByText(description)).toBeVisible();
-  await expect(page.getByText(`${originName} → ${destinationName}`)).toBeVisible();
-  await expect(page.getByText('$0', { exact: true })).toBeVisible();
+  const allocationLink = movementsPage.getMovement(description);
+  await expect(allocationLink).toBeVisible();
+  await expect(allocationLink.getByText(`${originName} → ${destinationName}`)).toBeVisible();
+  await expect(allocationLink.getByText('$0', { exact: true })).toBeVisible();
+});
+
+test('can edit an allocation', async ({
+  createJar,
+  createAllocation,
+  movementsPage,
+  allocationFormPage,
+  page,
+}) => {
+  test.slow();
+  // Initial data
+  const initialOriginName = 'Initial origin jar';
+  const initialDestinationName = 'Initial destination jar';
+  const initialDescription = 'Initial allocation';
+  const initialAmount = '150000';
+  const initialDate = '2026-06-15T10:00';
+
+  // New data (every field will change)
+  const newOriginName = 'New origin jar';
+  const newDestinationName = 'New destination jar';
+  const newDescription = 'Edited allocation';
+  const newAmount = '275000';
+  const newDate = '2026-07-11T08:45';
+
+  await createJar(initialOriginName);
+  await createJar(initialDestinationName);
+  await createJar(newOriginName);
+  await createJar(newDestinationName);
+
+  await createAllocation({
+    amount: initialAmount,
+    date: initialDate,
+    description: initialDescription,
+    originJarName: initialOriginName,
+    destinationJarName: initialDestinationName,
+  });
+
+  // Verify the initial allocation exists, then open its edit form
+  await expect(movementsPage.createAllocationButton).toBeVisible();
+  await movementsPage.getMovement(initialDescription).click();
+
+  // The form is populated with the allocation's current values
+  await expect(allocationFormPage.dateInput).toHaveValue(initialDate);
+  await expect(allocationFormPage.originJarSelect).toContainText(initialOriginName);
+  await expect(allocationFormPage.destinationJarSelect).toContainText(initialDestinationName);
+  await expect(allocationFormPage.amountInput).toHaveValue(initialAmount);
+  await expect(allocationFormPage.descriptionInput).toHaveValue(initialDescription);
+
+  // Change every field of the allocation
+  await allocationFormPage.fillDate(newDate);
+  await allocationFormPage.selectOriginJar(newOriginName);
+  await allocationFormPage.selectDestinationJar(newDestinationName);
+  await allocationFormPage.fillAmount(newAmount);
+  await allocationFormPage.fillDescription(newDescription);
+  await allocationFormPage.submitButton.click();
+
+  // Verify the allocation now shows the new values on the movements page. Expected strings are
+  // hardcoded for the hardcoded inputs above (amount '275000' -> CLP, '2026-07-11T08:45' -> UTC).
+  await expect(movementsPage.createAllocationButton).toBeVisible();
+  const allocationLink = movementsPage.getMovement(newDescription);
+  await expect(allocationLink).toBeVisible();
+  await expect(allocationLink.getByText(`${newOriginName} → ${newDestinationName}`)).toBeVisible();
+  await expect(allocationLink.getByText('$275.000')).toBeVisible();
+  await expect(allocationLink.getByText('7/11/2026, 8:45:00 AM')).toBeVisible();
+  await expect(page.getByText(initialDescription)).toBeHidden();
 });
 
 test('focus flows from one field to the next as a new allocation is filled in', async ({

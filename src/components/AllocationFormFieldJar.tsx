@@ -3,6 +3,7 @@ import { type AllocationFormType } from 'src/hooks/useAllocationForm';
 import { TransactionFormFieldWrapper } from 'src/components/TransactionFormFieldWrapper';
 import { TransactionFormFieldSelect } from './TransactionFormFieldSelect';
 import { useAllocationFormJars } from 'src/hooks/useAllocationFormJars';
+import { useAllocationEditCurrentAllocation } from 'src/hooks/useAllocationEditCurrentAllocation';
 
 export const AllocationFormFieldJar = ({
   form,
@@ -19,8 +20,8 @@ export const AllocationFormFieldJar = ({
   defaultOpen?: boolean;
   onChange?: (value: string) => void;
 }) => {
-  // slice 2 threads the allocation being edited through here
-  const jars = useAllocationFormJars(undefined);
+  const allocationBeingEdited = useAllocationEditCurrentAllocation();
+  const jars = useAllocationFormJars(allocationBeingEdited?.id);
   const otherName = name === 'originJarId' ? 'destinationJarId' : 'originJarId';
   const otherJarId = useStore(form.store, (state) => state.values[otherName]);
 

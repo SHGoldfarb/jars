@@ -1,10 +1,11 @@
 import { allocationForm } from 'src/services/allocation-form';
 import { formUtils } from 'src/lib/formUtils';
 import { useAllocationFormJars } from './useAllocationFormJars';
+import { useAllocationEditCurrentAllocation } from './useAllocationEditCurrentAllocation';
 
 export const useAllocationFormValidate = () => {
-  // slice 2 threads the allocation being edited through here
-  const jars = useAllocationFormJars(undefined);
+  const allocation = useAllocationEditCurrentAllocation();
+  const jars = useAllocationFormJars(allocation?.id);
 
   const jarIds = jars.map((jar) => jar.id);
 
