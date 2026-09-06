@@ -16,6 +16,14 @@ export const AllocationsEdit = () => {
     await financeCommands.allocations.update({ ...allocation, ...value });
     await navigate({ to: '/movements' });
   };
+  const handleDelete = async () => {
+    try {
+      await financeCommands.allocations.archive({ allocationId: allocation.id });
+      await navigate({ to: '/movements' });
+    } catch (error) {
+      console.error('Failed to delete allocation:', error);
+    }
+  };
 
   return (
     <AllocationForm
@@ -24,6 +32,9 @@ export const AllocationsEdit = () => {
       onCancelRoute="/movements"
       defaultErrorMessage="Error editing allocation"
       defaultValues={allocationForm.toFormValues(allocation)}
+      onDelete={() => {
+        void handleDelete();
+      }}
     />
   );
 };

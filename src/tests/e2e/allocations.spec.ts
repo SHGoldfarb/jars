@@ -183,6 +183,38 @@ test('can edit an allocation', async ({
   await expect(page.getByText(initialDescription)).toBeHidden();
 });
 
+test('can delete an allocation', async ({
+  createJar,
+  createAllocation,
+  movementsPage,
+  allocationFormPage,
+}) => {
+  test.slow();
+  const originName = 'Deletable origin jar';
+  const destinationName = 'Deletable destination jar';
+  const description = 'Allocation to delete';
+
+  await createJar(originName);
+  await createJar(destinationName);
+
+  await createAllocation({
+    description,
+    originJarName: originName,
+    destinationJarName: destinationName,
+  });
+
+  // Verify the allocation exists, then open its edit form
+  await expect(movementsPage.createAllocationButton).toBeVisible();
+  await expect(movementsPage.getMovement(description)).toBeVisible();
+  await movementsPage.getMovement(description).click();
+
+  await allocationFormPage.deleteButton.click();
+
+  // Verify the allocation no longer exists on the movements page
+  await expect(movementsPage.createAllocationButton).toBeVisible();
+  await expect(movementsPage.getMovement(description)).toBeHidden();
+});
+
 test('focus flows from one field to the next as a new allocation is filled in', async ({
   createJar,
   rootLayoutPage,

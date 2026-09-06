@@ -42,6 +42,7 @@ const test = base.extend<{
   deleteJar: (jarName: string) => Promise<void>;
   deleteTransaction: (transactionDescription: string) => Promise<void>;
   deleteTransfer: (transferDescription: string) => Promise<void>;
+  deleteAllocation: (allocationDescription: string) => Promise<void>;
 }>({
   createAccount: async ({ accountsPage, accountFormPage, rootLayoutPage }, use) => {
     await use(async (accountName: string) => {
@@ -171,6 +172,13 @@ const test = base.extend<{
       await rootLayoutPage.navButton('Movements').click();
       await movementsPage.getMovement(transferDescription).click();
       await transferFormPage.deleteButton.click();
+    });
+  },
+  deleteAllocation: async ({ rootLayoutPage, movementsPage, allocationFormPage }, use) => {
+    await use(async (allocationDescription) => {
+      await rootLayoutPage.navButton('Movements').click();
+      await movementsPage.getMovement(allocationDescription).click();
+      await allocationFormPage.deleteButton.click();
     });
   },
 });
