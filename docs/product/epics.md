@@ -150,7 +150,7 @@ Move money between accounts.
 - [x] Transfers are included in the accounts balance calculation.
 - [x] Transfer form selectors include archived accounts when editing a transfer that references them (same pattern as transactions)
 
-## Epic 7 — Allocations [IN PROGRESS]
+## Epic 7 — Allocations [DONE]
 
 Move money between jars.
 
@@ -162,15 +162,15 @@ Move money between jars.
 - [x] App validates amount is a non-negative number
 - [x] Date defaults to today but can be changed
 - [x] Origin and destination jars must be different
-- [ ] Only active jars are available for selection when creating or editing an allocation
-- [ ] User can edit any field of an existing allocation
-- [ ] User can delete an allocation
+- [x] Only active jars are available for selection when creating or editing an allocation
+- [x] User can edit any field of an existing allocation
+- [x] User can delete an allocation
 
 **Listing**
 
 - [x] All allocations are listed on the Movements screen, interleaved with transactions, transfers, and sorted by date descending
 - [x] Each allocation displays: amount, date, description, origin jar, and destination jar
-- [ ] Allocations are visually distinguishable from transactions and transfers on the Movements screen
+- [x] Allocations are visually distinguishable from transactions and transfers on the Movements screen
 
 **Validation**
 
@@ -185,8 +185,8 @@ Move money between jars.
 
 **Jar integrity**
 
-- [ ] Allocations are included in the jars balance calculation.
-- [ ] Allocation form selectors include archived jars when editing an allocation that references them (same pattern as transactions)
+- [x] Allocations are included in the jars balance calculation.
+- [x] Allocation form selectors include archived jars when editing an allocation that references them (same pattern as transactions)
 
 ## Epic 8 — Data Management
 
