@@ -257,3 +257,52 @@ test('focus flows from one field to the next as a new allocation is filled in', 
   await allocationFormPage.amountInput.press('Enter');
   await expect(allocationFormPage.descriptionInput).toBeFocused();
 });
+
+test('after editing an allocation, it automatically restores archived jars if their balance is no longer zero', async ({
+  createJar,
+  createAllocation,
+  deleteJar,
+  rootLayoutPage,
+  movementsPage,
+  allocationFormPage,
+  jarsPage,
+}) => {
+  test.slow();
+  const originName = 'Restorable origin jar';
+  const destinationName = 'Restorable destination jar';
+  const description = 'Allocation that revives its jars';
+
+  await createJar(originName);
+  await createJar(destinationName);
+
+  // A zero amount keeps both jar balances at zero, so they can still be archived.
+  await createAllocation({
+    amount: '0',
+    description,
+    originJarName: originName,
+    destinationJarName: destinationName,
+  });
+
+  await expect(movementsPage.createAllocationButton).toBeVisible();
+
+  await deleteJar(originName);
+  await deleteJar(destinationName);
+
+  // Ensure they no longer exist
+  await rootLayoutPage.navButton('Jars').click();
+  await expect(jarsPage.createJarButton).toBeVisible();
+  await jarsPage.expectJarToNotExist(originName);
+  await jarsPage.expectJarToNotExist(destinationName);
+
+  // Giving the allocation a non-zero amount leaves both archived jars holding money
+  await rootLayoutPage.navButton('Movements').click();
+  await movementsPage.getMovement(description).click();
+  await allocationFormPage.fillAmount('5000');
+  await allocationFormPage.submitButton.click();
+
+  // So both jars should exist again
+  await expect(movementsPage.createAllocationButton).toBeVisible();
+  await rootLayoutPage.navButton('Jars').click();
+  await jarsPage.expectJarToExist(originName);
+  await jarsPage.expectJarToExist(destinationName);
+});

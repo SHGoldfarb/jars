@@ -13,7 +13,7 @@ export const TransfersEdit = () => {
   }
 
   const handleSubmit = async (value: TransferUnsaved) => {
-    await financeCommands.transfers.update({ ...transfer, ...value });
+    await transferForm.commands.submitEditTransfer({ ...transfer, ...value });
     await navigate({ to: '/movements' });
   };
   const handleDelete = async () => {

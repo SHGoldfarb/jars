@@ -283,3 +283,52 @@ test('focus flows from one field to the next as a new transfer is filled in', as
   await transferFormPage.amountInput.press('Enter');
   await expect(transferFormPage.descriptionInput).toBeFocused();
 });
+
+test('after editing a transfer, it automatically restores archived accounts if their balance is no longer zero', async ({
+  createAccount,
+  createTransfer,
+  deleteAccount,
+  rootLayoutPage,
+  movementsPage,
+  transferFormPage,
+  accountsPage,
+}) => {
+  test.slow();
+  const originName = 'Restorable origin account';
+  const destinationName = 'Restorable destination account';
+  const description = 'Transfer that revives its accounts';
+
+  await createAccount(originName);
+  await createAccount(destinationName);
+
+  // A zero amount keeps both account balances at zero, so they can still be archived.
+  await createTransfer({
+    amount: '0',
+    description,
+    originAccountName: originName,
+    destinationAccountName: destinationName,
+  });
+
+  await expect(movementsPage.createTransferButton).toBeVisible();
+
+  await deleteAccount(originName);
+  await deleteAccount(destinationName);
+
+  // Ensure they no longer exist
+  await rootLayoutPage.navButton('Accounts').click();
+  await expect(accountsPage.createAccountButton).toBeVisible();
+  await accountsPage.expectAccountToNotExist(originName);
+  await accountsPage.expectAccountToNotExist(destinationName);
+
+  // Giving the transfer a non-zero amount leaves both archived accounts holding money
+  await rootLayoutPage.navButton('Movements').click();
+  await movementsPage.getMovement(description).click();
+  await transferFormPage.fillAmount('5000');
+  await transferFormPage.submitButton.click();
+
+  // So both accounts should exist again
+  await expect(movementsPage.createTransferButton).toBeVisible();
+  await rootLayoutPage.navButton('Accounts').click();
+  await accountsPage.expectAccountToExist(originName);
+  await accountsPage.expectAccountToExist(destinationName);
+});

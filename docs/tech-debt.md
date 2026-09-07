@@ -15,9 +15,3 @@ Example item. Keep when the list empties out, so the next entry follows the same
       `useTransferForm*`/`useAllocationForm*` and `services/transfer-form`/`services/allocation-form`
       differ only in the endpoint entity (account vs jar). A generic two-endpoint movement form
       would remove ~15 files.
-
-- [ ] **Movement edits don't restore the archived entity they give a balance to** — `transaction-form`
-      restores an archived jar or account when an edit gives it a non-zero balance
-      (`transaction-form/domain/commands.ts`); `TransfersEdit`/`AllocationsEdit` call
-      `financeCommands.*.update` directly with no such gate, so editing a zero-amount transfer or
-      allocation between archived endpoints leaves an archived account or jar silently holding money.

@@ -13,7 +13,7 @@ export const AllocationsEdit = () => {
   }
 
   const handleSubmit = async (value: AllocationUnsaved) => {
-    await financeCommands.allocations.update({ ...allocation, ...value });
+    await allocationForm.commands.submitEditAllocation({ ...allocation, ...value });
     await navigate({ to: '/movements' });
   };
   const handleDelete = async () => {
