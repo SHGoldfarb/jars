@@ -19,15 +19,15 @@ export const GenericList = <T extends { id: string; url?: string }>({
 }) => {
   return (
     <ItemGroup className="max-w-lg mx-auto gap-0">
-      {actions.map((action) => (
-        <Link key={action.url} to={action.url}>
-          <Item>
+      <Item className="flex justify-center">
+        {actions.map((action) => (
+          <Link key={action.url} to={action.url}>
             <ItemContent>
               <ItemTitle className="mx-auto font-bold">{action.label}</ItemTitle>
             </ItemContent>
-          </Item>
-        </Link>
-      ))}
+          </Link>
+        ))}
+      </Item>
       {items.map((item) => (
         <Fragment key={item.id}>
           <Separator />
