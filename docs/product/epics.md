@@ -197,14 +197,8 @@ Create backup, restore from backup (JSON). Export data (CSV). Import from Money 
 **Settings screen**
 
 - [ ] A `Settings` entry is available in the main navigation, alongside Movements, Accounts, Jars and Categories
-- [ ] The Settings screen lists its subpages and lets the user navigate to each one
-- [ ] `Backups` is one of those subpages and is reachable from the Settings screen
-- [ ] A `Clear all data` action is available directly on the Settings screen, alongside the list of subpages
-
-**Backups subpage**
-
-- [ ] The Backups subpage offers four actions: `Create backup`, `Load from backup`, `Export to CSV`, and `Import from Money Manager Excel`
-- [ ] Each action states what it does before the user commits to it, and the two replacing actions (`Load from backup`, `Import from Money Manager Excel`) warn that current data is permanently lost
+- [ ] The Settings screen offers all five actions directly, with no subpages: `Create backup`, `Load from backup`, `Export to CSV`, `Import from Money Manager Excel` and `Clear all data`
+- [ ] Each action states what it does before the user commits to it, and the three destructive actions (`Load from backup`, `Import from Money Manager Excel`, `Clear all data`) warn that current data is permanently lost
 
 **Create backup (JSON)**
 
