@@ -1,16 +1,18 @@
 import { useNavigate } from '@tanstack/react-router';
-import { financeCommands, AllocationUnsaved } from 'src/services/finance';
-import { AllocationForm } from './AllocationForm';
+import { financeCommands } from 'src/services/finance';
+import { movementForm, type MovementDraft } from 'src/services/movement-form';
+import { MovementForm } from './MovementForm';
 
 export const AllocationsNew = () => {
   const navigate = useNavigate();
-  const handleSubmit = async (value: AllocationUnsaved) => {
-    await financeCommands.allocations.create(value);
+  const handleSubmit = async (draft: MovementDraft) => {
+    await financeCommands.allocations.create(movementForm.allocations.toUnsaved(draft));
     await navigate({ to: '/movements' });
   };
 
   return (
-    <AllocationForm
+    <MovementForm
+      movementForm={movementForm.allocations}
       title="Create Allocation"
       onSubmit={handleSubmit}
       onCancelRoute="/movements"

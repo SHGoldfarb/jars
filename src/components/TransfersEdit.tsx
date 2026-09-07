@@ -1,19 +1,23 @@
-import { useNavigate } from '@tanstack/react-router';
-import { financeCommands, TransferUnsaved } from 'src/services/finance';
-import { transferForm } from 'src/services/transfer-form';
-import { useTransferEditCurrentTransfer } from 'src/hooks/useTransferEditCurrentTransfer';
-import { TransferForm } from './TransferForm';
+import { useNavigate, useParams } from '@tanstack/react-router';
+import { financeCommands } from 'src/services/finance';
+import { movementForm, type MovementDraft } from 'src/services/movement-form';
+import { useTransfer } from 'src/hooks/useTransfer';
+import { MovementForm } from './MovementForm';
 
 export const TransfersEdit = () => {
-  const transfer = useTransferEditCurrentTransfer();
+  const { transferId } = useParams({ from: '/transfers/$transferId/edit' });
+  const transfer = useTransfer(transferId);
   const navigate = useNavigate();
 
   if (!transfer) {
     return null;
   }
 
-  const handleSubmit = async (value: TransferUnsaved) => {
-    await transferForm.commands.submitEditTransfer({ ...transfer, ...value });
+  const handleSubmit = async (draft: MovementDraft) => {
+    await movementForm.transfers.commands.submitEdit({
+      ...transfer,
+      ...movementForm.transfers.toUnsaved(draft),
+    });
     await navigate({ to: '/movements' });
   };
   const handleDelete = async () => {
@@ -26,12 +30,14 @@ export const TransfersEdit = () => {
   };
 
   return (
-    <TransferForm
+    <MovementForm
+      movementForm={movementForm.transfers}
+      movementId={transfer.id}
       title="Edit Transfer"
       onSubmit={handleSubmit}
       onCancelRoute="/movements"
       defaultErrorMessage="Error editing transfer"
-      defaultValues={transferForm.toFormValues(transfer)}
+      defaultValues={movementForm.transfers.toFormValues(transfer)}
       onDelete={() => {
         void handleDelete();
       }}

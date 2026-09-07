@@ -1,15 +1,15 @@
 import React from 'react';
 import { Input } from 'src/components/ui/input';
-import { type AllocationFormType } from 'src/hooks/useAllocationForm';
+import { type MovementFormType } from 'src/hooks/useMovementForm';
 import { TransactionFormFieldWrapper } from 'src/components/TransactionFormFieldWrapper';
 import { formUtils } from 'src/lib/formUtils';
 
-export const AllocationFormFieldAmount = ({
+export const MovementFormFieldAmount = ({
   form,
   onEnter,
   inputRef,
 }: {
-  form: AllocationFormType;
+  form: MovementFormType;
   onEnter: () => void;
   inputRef: React.RefObject<HTMLInputElement | null>;
 }) => (

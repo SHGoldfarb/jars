@@ -1,19 +1,23 @@
-import { useNavigate } from '@tanstack/react-router';
-import { financeCommands, AllocationUnsaved } from 'src/services/finance';
-import { allocationForm } from 'src/services/allocation-form';
-import { useAllocationEditCurrentAllocation } from 'src/hooks/useAllocationEditCurrentAllocation';
-import { AllocationForm } from './AllocationForm';
+import { useNavigate, useParams } from '@tanstack/react-router';
+import { financeCommands } from 'src/services/finance';
+import { movementForm, type MovementDraft } from 'src/services/movement-form';
+import { useAllocation } from 'src/hooks/useAllocation';
+import { MovementForm } from './MovementForm';
 
 export const AllocationsEdit = () => {
-  const allocation = useAllocationEditCurrentAllocation();
+  const { allocationId } = useParams({ from: '/allocations/$allocationId/edit' });
+  const allocation = useAllocation(allocationId);
   const navigate = useNavigate();
 
   if (!allocation) {
     return null;
   }
 
-  const handleSubmit = async (value: AllocationUnsaved) => {
-    await allocationForm.commands.submitEditAllocation({ ...allocation, ...value });
+  const handleSubmit = async (draft: MovementDraft) => {
+    await movementForm.allocations.commands.submitEdit({
+      ...allocation,
+      ...movementForm.allocations.toUnsaved(draft),
+    });
     await navigate({ to: '/movements' });
   };
   const handleDelete = async () => {
@@ -26,12 +30,14 @@ export const AllocationsEdit = () => {
   };
 
   return (
-    <AllocationForm
+    <MovementForm
+      movementForm={movementForm.allocations}
+      movementId={allocation.id}
       title="Edit Allocation"
       onSubmit={handleSubmit}
       onCancelRoute="/movements"
       defaultErrorMessage="Error editing allocation"
-      defaultValues={allocationForm.toFormValues(allocation)}
+      defaultValues={movementForm.allocations.toFormValues(allocation)}
       onDelete={() => {
         void handleDelete();
       }}

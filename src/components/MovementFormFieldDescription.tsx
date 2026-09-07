@@ -1,14 +1,14 @@
 import React from 'react';
 import { Input } from 'src/components/ui/input';
-import { type TransferFormType } from 'src/hooks/useTransferForm';
+import { type MovementFormType } from 'src/hooks/useMovementForm';
 import { TransactionFormFieldWrapper } from 'src/components/TransactionFormFieldWrapper';
 import { formUtils } from 'src/lib/formUtils';
 
-export const TransferFormFieldDescription = ({
+export const MovementFormFieldDescription = ({
   form,
   inputRef,
 }: {
-  form: TransferFormType;
+  form: MovementFormType;
   inputRef?: React.RefObject<HTMLInputElement | null>;
 }) => (
   <form.Field name="description">

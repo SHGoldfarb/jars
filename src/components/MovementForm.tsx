@@ -9,17 +9,23 @@ import {
   FieldSet,
 } from 'src/components/ui/field';
 import { Button } from 'src/components/ui/button';
-import { AllocationUnsaved } from 'src/services/finance';
 import { formUtils } from 'src/lib/formUtils';
-import { useAllocationForm } from 'src/hooks/useAllocationForm';
-import { type AllocationFormValues } from 'src/services/allocation-form';
-import { AllocationFormFieldDate } from './AllocationFormFieldDate';
-import { AllocationFormFieldJar } from './AllocationFormFieldJar';
-import { AllocationFormFieldAmount } from './AllocationFormFieldAmount';
-import { AllocationFormFieldDescription } from './AllocationFormFieldDescription';
+import { useMovementForm } from 'src/hooks/useMovementForm';
+import { useMovementFormEndpoints } from 'src/hooks/useMovementFormEndpoints';
+import {
+  type MovementDraft,
+  type MovementFormUi,
+  type MovementFormValues,
+} from 'src/services/movement-form';
+import { MovementFormFieldDate } from './MovementFormFieldDate';
+import { MovementFormFieldEndpoint } from './MovementFormFieldEndpoint';
+import { MovementFormFieldAmount } from './MovementFormFieldAmount';
+import { MovementFormFieldDescription } from './MovementFormFieldDescription';
 import { useStore } from '@tanstack/react-form';
 
-export const AllocationForm = ({
+export const MovementForm = ({
+  movementForm,
+  movementId,
   title,
   onSubmit,
   onCancelRoute,
@@ -27,20 +33,30 @@ export const AllocationForm = ({
   defaultErrorMessage,
   defaultValues,
 }: {
+  movementForm: MovementFormUi;
+  movementId?: string;
   title: string;
-  onSubmit: (value: AllocationUnsaved) => Promise<void>;
+  onSubmit: (draft: MovementDraft) => Promise<void>;
   onCancelRoute: string;
   onDelete?: () => void;
   defaultErrorMessage: string;
-  defaultValues?: AllocationFormValues;
+  defaultValues?: MovementFormValues;
 }) => {
   const descriptionInputRef = useRef<HTMLInputElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
-  const form = useAllocationForm({ onSubmit, defaultErrorMessage, defaultValues });
+  const endpoints = useMovementFormEndpoints(movementForm, movementId);
+  const form = useMovementForm({
+    movementForm,
+    activeEndpointIds: endpoints.map(({ id }) => id),
+    onSubmit,
+    defaultErrorMessage,
+    defaultValues,
+  });
   const values = useStore(form.store, (state) => state.values);
+  const endpointNoun = movementForm.endpointNoun.singular;
 
-  const handleDestinationJarChange = (newValue: string) => {
-    // If the destination jar is set and amount is empty, focus the amount field 0.1 seconds later
+  const handleDestinationChange = (newValue: string) => {
+    // If the destination endpoint is set and amount is empty, focus the amount field 0.1 seconds later
     if (newValue) {
       setTimeout(() => {
         if (!values.amount) {
@@ -63,31 +79,33 @@ export const AllocationForm = ({
           <FieldSet>
             <FieldLegend>{title}</FieldLegend>
             <FieldGroup>
-              <AllocationFormFieldDate form={form} />
-              <AllocationFormFieldJar
+              <MovementFormFieldDate form={form} />
+              <MovementFormFieldEndpoint
                 form={form}
-                name="originJarId"
-                label="Origin jar"
-                placeholder="Select origin jar"
-                defaultOpen={!values.originJarId}
+                name="originId"
+                label={`Origin ${endpointNoun}`}
+                placeholder={`Select origin ${endpointNoun}`}
+                endpoints={endpoints}
+                defaultOpen={!values.originId}
               />
-              <AllocationFormFieldJar
+              <MovementFormFieldEndpoint
                 form={form}
-                name="destinationJarId"
-                label="Destination jar"
-                placeholder="Select destination jar"
-                defaultOpen={!!(values.originJarId && !values.destinationJarId)}
-                onChange={handleDestinationJarChange}
-                key={`destinationJar - ${values.originJarId}`}
+                name="destinationId"
+                label={`Destination ${endpointNoun}`}
+                placeholder={`Select destination ${endpointNoun}`}
+                endpoints={endpoints}
+                defaultOpen={!!(values.originId && !values.destinationId)}
+                onChange={handleDestinationChange}
+                key={`destination - ${values.originId}`}
               />
-              <AllocationFormFieldAmount
+              <MovementFormFieldAmount
                 form={form}
                 inputRef={amountInputRef}
                 onEnter={() => {
                   descriptionInputRef.current?.focus();
                 }}
               />
-              <AllocationFormFieldDescription form={form} inputRef={descriptionInputRef} />
+              <MovementFormFieldDescription form={form} inputRef={descriptionInputRef} />
             </FieldGroup>
           </FieldSet>
 
