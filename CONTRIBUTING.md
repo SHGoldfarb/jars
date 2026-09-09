@@ -37,6 +37,10 @@ Use `pnpm test:chromium` when you only want the Chromium Playwright project.
 
 - Prefer small, focused changes.
 - Prefer arrow functions over function declarations and object method shorthand for consistency.
+- One component per file, named after the file. A helper component extracted from another one
+  gets its own file too (`SettingsActionFileTrigger.tsx` beside `SettingsAction.tsx`), so a
+  component is always found by its name. The shadcn primitives in `src/components/ui/` are the
+  exception: they stay as vendored, grouped as upstream ships them.
 - Don't reach for `useMemo`, `useCallback`, or `React.memo` prophylactically. Add them only for a
   measured need — a real referential-identity consumer or a genuinely expensive computation — and
   match how neighbouring components derive their data.

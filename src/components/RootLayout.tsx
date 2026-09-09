@@ -20,6 +20,10 @@ const routes = [
     name: 'Categories',
     href: '/categories',
   },
+  {
+    name: 'Settings',
+    href: '/settings',
+  },
 ];
 
 export const RootLayout = () => (

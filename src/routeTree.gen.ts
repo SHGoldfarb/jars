@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as MovementsRouteImport } from './routes/movements'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as IndexRouteImport } from './routes/index'
@@ -31,6 +32,11 @@ import { Route as CategoriesCategoryIdEditRouteImport } from './routes/categorie
 import { Route as AllocationsAllocationIdEditRouteImport } from './routes/allocations/$allocationId.edit'
 import { Route as AccountsAccountIdEditRouteImport } from './routes/accounts/$accountId.edit'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MovementsRoute = MovementsRouteImport.update({
   id: '/movements',
   path: '/movements',
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/categories': typeof CategoriesRouteWithChildren
   '/movements': typeof MovementsRoute
+  '/settings': typeof SettingsRoute
   '/accounts/new': typeof AccountsNewRoute
   '/allocations/new': typeof AllocationsNewRoute
   '/jars/new': typeof JarsNewRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/movements': typeof MovementsRoute
+  '/settings': typeof SettingsRoute
   '/accounts/new': typeof AccountsNewRoute
   '/allocations/new': typeof AllocationsNewRoute
   '/jars/new': typeof JarsNewRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/categories': typeof CategoriesRouteWithChildren
   '/movements': typeof MovementsRoute
+  '/settings': typeof SettingsRoute
   '/accounts/new': typeof AccountsNewRoute
   '/allocations/new': typeof AllocationsNewRoute
   '/jars/new': typeof JarsNewRoute
@@ -215,6 +224,7 @@ export interface FileRouteTypes {
     | '/'
     | '/categories'
     | '/movements'
+    | '/settings'
     | '/accounts/new'
     | '/allocations/new'
     | '/jars/new'
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/movements'
+    | '/settings'
     | '/accounts/new'
     | '/allocations/new'
     | '/jars/new'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/'
     | '/categories'
     | '/movements'
+    | '/settings'
     | '/accounts/new'
     | '/allocations/new'
     | '/jars/new'
@@ -284,6 +296,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CategoriesRoute: typeof CategoriesRouteWithChildren
   MovementsRoute: typeof MovementsRoute
+  SettingsRoute: typeof SettingsRoute
   AccountsNewRoute: typeof AccountsNewRoute
   AllocationsNewRoute: typeof AllocationsNewRoute
   JarsNewRoute: typeof JarsNewRoute
@@ -300,6 +313,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/movements': {
       id: '/movements'
       path: '/movements'
@@ -476,6 +496,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CategoriesRoute: CategoriesRouteWithChildren,
   MovementsRoute: MovementsRoute,
+  SettingsRoute: SettingsRoute,
   AccountsNewRoute: AccountsNewRoute,
   AllocationsNewRoute: AllocationsNewRoute,
   JarsNewRoute: JarsNewRoute,

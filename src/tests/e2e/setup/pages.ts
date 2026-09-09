@@ -16,6 +16,7 @@ import {
   allocationFormPageConstructor,
   type AllocationFormPage,
 } from '../pages/allocationForm.page';
+import { settingsPageConstructor, type SettingsPage } from '../pages/settings.page';
 
 const test = base.extend<{
   accountsPage: AccountsPage;
@@ -29,6 +30,7 @@ const test = base.extend<{
   transactionFormPage: TransactionFormPage;
   transferFormPage: TransferFormPage;
   allocationFormPage: AllocationFormPage;
+  settingsPage: SettingsPage;
 }>({
   rootLayoutPage: async ({ page }, use) => {
     await page.goto('/');
@@ -64,6 +66,9 @@ const test = base.extend<{
   },
   allocationFormPage: async ({ page }, use) => {
     await use(allocationFormPageConstructor(page));
+  },
+  settingsPage: async ({ page }, use) => {
+    await use(settingsPageConstructor(page));
   },
 });
 
