@@ -226,7 +226,7 @@ Create backup, restore from backup (JSON). Export data (CSV). Import from Money 
 - [ ] Every movement is exported — transactions, transfers and allocations — with its kind, amount, date, description, and the accounts, jars and categories it references named rather than referenced by id
 - [ ] Accounts, jars and categories have no rows of their own in the export: they are inferred from the movements that name them
 - [ ] An account, jar or category that no movement references therefore does not appear in the export, archived ones included
-- [ ] Amounts and dates are written in the same format the app displays them in
+- [ ] Amounts are written as plain decimal numbers alongside a currency column, and dates as `YYYY-MM-DD HH:mm`, so the file is unambiguous in a spreadsheet whatever the reader's locale; no internal representation (ISO timestamps, decimal objects, ids) appears in the file
 - [ ] Values containing separators, quotes or newlines are escaped so the file opens correctly in a spreadsheet
 - [ ] The downloaded file has a recognizable name that includes the export date
 - [ ] Exporting does not modify any data
