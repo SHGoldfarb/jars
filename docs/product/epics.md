@@ -197,8 +197,8 @@ Create backup, restore from backup (JSON). Export data (CSV). Import from Money 
 **Settings screen**
 
 - [ ] A `Settings` entry is available in the main navigation, alongside Movements, Accounts, Jars and Categories
-- [ ] The Settings screen offers all five actions directly, with no subpages: `Create backup`, `Load from backup`, `Export to CSV`, `Import from Money Manager Excel` and `Clear all data`
-- [ ] Each action states what it does before the user commits to it, and the three destructive actions (`Load from backup`, `Import from Money Manager Excel`, `Clear all data`) warn that current data is permanently lost
+- [ ] The Settings screen offers all five actions directly, with no subpages: `Create backup`, `Load from backup`, `Export to CSV`, `Import from Money Manager CSV` and `Clear all data`
+- [ ] Each action states what it does before the user commits to it, and the three destructive actions (`Load from backup`, `Import from Money Manager CSV`, `Clear all data`) warn that current data is permanently lost
 
 **Create backup (JSON)**
 
@@ -232,9 +232,9 @@ Create backup, restore from backup (JSON). Export data (CSV). Import from Money 
 - [ ] Exporting does not modify any data
 - [ ] The CSV export is one-way: it is not accepted by `Load from backup`
 
-**Import from Money Manager Excel**
+**Import from Money Manager CSV**
 
-- [ ] `Import from Money Manager Excel` lets the user pick an `.xlsx` file exported by the Money Manager app
+- [ ] `Import from Money Manager CSV` lets the user pick an `.csv` file exported by the Money Manager app
 - [ ] The user must confirm before the import runs, and the confirmation states that all current data is replaced and cannot be recovered
 - [ ] The file is validated before anything is written: a file that is not a readable spreadsheet, does not carry the columns a Money Manager export has, or contains rows that cannot be mapped is rejected with an explanatory error naming what failed
 - [ ] A rejected file leaves the existing data untouched
