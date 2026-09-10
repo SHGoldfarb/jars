@@ -6,9 +6,10 @@ const notImplemented = () => undefined;
 const notImplementedFile = (_file: File) => undefined;
 
 const replacesAllData = 'Replaces all current data. This cannot be undone.';
+const clearAllDataWarning = 'All current data is permanently lost and cannot be recovered.';
 
 export const Settings = () => {
-  const { status, createBackup, restoreFromBackup } = useDataManagement();
+  const { status, createBackup, restoreFromBackup, clearAllData } = useDataManagement();
 
   const handleCreateBackup = async () => {
     try {
@@ -57,8 +58,11 @@ export const Settings = () => {
         kind="button"
         title="Clear all data"
         description="Removes all accounts, jars, categories, transactions, transfers and allocations."
-        warning="All current data is permanently lost and cannot be recovered."
-        onAction={notImplemented}
+        warning={clearAllDataWarning}
+        confirmation={clearAllDataWarning}
+        onAction={() => {
+          void clearAllData();
+        }}
       />
       <div role="alert" className="text-xs/relaxed">
         {status ? (

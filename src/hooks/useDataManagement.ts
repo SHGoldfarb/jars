@@ -31,5 +31,17 @@ export const useDataManagement = () => {
     }
   };
 
-  return { status, createBackup, restoreFromBackup };
+  const clearAllData = async () => {
+    setStatus(null);
+    try {
+      await dataManagement.commands.clearAllData();
+      setStatus({ kind: 'success', message: 'All data cleared.' });
+    } catch (error) {
+      // The clear is atomic, so a failure here left the previous data in place.
+      console.error('Failed to clear all data:', error);
+      setStatus({ kind: 'error', message: 'The data could not be cleared.' });
+    }
+  };
+
+  return { status, createBackup, restoreFromBackup, clearAllData };
 };

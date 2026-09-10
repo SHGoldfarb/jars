@@ -34,6 +34,8 @@ const createDataManagementCommands = (deps: {
     await deps.financeWrites.database.replaceAll(backup.value);
     return { ok: true };
   },
+
+  clearAllData: (): Promise<void> => deps.financeWrites.database.clear(),
 });
 
 export const dataManagementCommands = createDataManagementCommands({

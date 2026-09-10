@@ -43,6 +43,13 @@ export const settingsPageConstructor = (page: Page) => {
     await confirmButton(name).click();
   };
 
+  // A destructive button action does nothing until it is confirmed, so a caller that clicked
+  // and stopped there would be waiting on something that never happens.
+  const clickActionAndConfirm = async (name: SettingsActionName) => {
+    await actionButton(name).click();
+    await confirmButton(name).click();
+  };
+
   // The download has to be awaited from before the click, so the two belong together.
   const downloadFromAction = async (name: SettingsActionName) => {
     const download = page.waitForEvent('download');
@@ -70,6 +77,7 @@ export const settingsPageConstructor = (page: Page) => {
     cancelButton,
     pickFile,
     pickFileAndConfirm,
+    clickActionAndConfirm,
     downloadFromAction,
     downloadContentsFromAction,
   };

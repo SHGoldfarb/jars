@@ -239,7 +239,6 @@ test.describe('load from backup', () => {
     createTransaction,
     createTransfer,
     createAllocation,
-    deleteTransaction,
     rootLayoutPage,
     settingsPage,
     movementsPage,
@@ -278,7 +277,8 @@ test.describe('load from backup', () => {
     await rootLayoutPage.navButton('Settings').click();
     const backup = await settingsPage.downloadContentsFromAction('Create backup');
 
-    await deleteTransaction('Backed up income');
+    await settingsPage.clickActionAndConfirm('Clear all data');
+    await expect(settingsPage.statusMessage).toHaveText('All data cleared.');
     await rootLayoutPage.navButton('Movements').click();
     await movementsPage.expectMovementToNotExist('Backed up income');
 
@@ -463,5 +463,119 @@ test.describe('load from backup', () => {
       await rootLayoutPage.navButton('Movements').click();
       await movementsPage.expectMovementToExist('Survives the rejected file');
     });
+  });
+});
+
+test.describe('clear all data', () => {
+  test('cancelling the confirmation leaves all data in place', async ({
+    createDefaultData,
+    createTransaction,
+    rootLayoutPage,
+    settingsPage,
+    movementsPage,
+    accountsPage,
+  }) => {
+    test.slow();
+
+    await createDefaultData();
+    await createTransaction({ description: 'Survives the cancelled clear' });
+
+    await rootLayoutPage.navButton('Settings').click();
+    await settingsPage.actionButton('Clear all data').click();
+
+    await expect(settingsPage.confirmDialog('Clear all data')).toContainText(
+      'All current data is permanently lost and cannot be recovered.'
+    );
+    await settingsPage.cancelButton('Clear all data').click();
+    await expect(settingsPage.confirmDialog('Clear all data')).toBeHidden();
+
+    await rootLayoutPage.navButton('Movements').click();
+    await movementsPage.expectMovementToExist('Survives the cancelled clear');
+    await rootLayoutPage.navButton('Accounts').click();
+    await accountsPage.expectAccountToExist(defaultData.accounts[0]);
+  });
+
+  test('confirming the clear empties the database', async ({
+    createDefaultData,
+    createAccount,
+    createJar,
+    createTransaction,
+    createTransfer,
+    createAllocation,
+    rootLayoutPage,
+    settingsPage,
+    movementsPage,
+    accountsPage,
+    jarsPage,
+    categoriesPage,
+  }) => {
+    const secondAccountName = 'Savings';
+    const secondJarName = 'Holidays';
+
+    test.slow();
+
+    await createDefaultData();
+    await createAccount(secondAccountName);
+    await createJar(secondJarName);
+    await createTransaction({ description: 'Cleared transaction' });
+    await createTransfer({
+      description: 'Cleared transfer',
+      originAccountName: defaultData.accounts[0],
+      destinationAccountName: secondAccountName,
+    });
+    await createAllocation({
+      description: 'Cleared allocation',
+      originJarName: defaultData.jars[0],
+      destinationJarName: secondJarName,
+    });
+
+    await rootLayoutPage.navButton('Settings').click();
+    await settingsPage.clickActionAndConfirm('Clear all data');
+    await expect(settingsPage.statusMessage).toHaveText('All data cleared.');
+
+    // No reload: every list has to come back from a database that was emptied under it.
+    await rootLayoutPage.navButton('Movements').click();
+    await movementsPage.expectMovementToNotExist('Cleared transaction');
+    await movementsPage.expectMovementToNotExist('Cleared transfer');
+    await movementsPage.expectMovementToNotExist('Cleared allocation');
+
+    await rootLayoutPage.navButton('Accounts').click();
+    await accountsPage.expectAccountToNotExist(defaultData.accounts[0]);
+    await accountsPage.expectAccountToNotExist(secondAccountName);
+
+    await rootLayoutPage.navButton('Jars').click();
+    await jarsPage.expectJarToNotExist(defaultData.jars[0]);
+    await jarsPage.expectJarToNotExist(secondJarName);
+
+    await rootLayoutPage.navButton('Categories').click();
+    await categoriesPage.incomeTabButton.click();
+    await categoriesPage.expectCategoryToNotExist(defaultData.incomeCategories[0]);
+    await categoriesPage.expensesTabButton.click();
+    await categoriesPage.expectCategoryToNotExist(defaultData.expenseCategories[0]);
+  });
+
+  test('the cleared database stays empty across a reload', async ({
+    createDefaultData,
+    createTransaction,
+    page,
+    rootLayoutPage,
+    settingsPage,
+    movementsPage,
+    accountsPage,
+  }) => {
+    test.slow();
+
+    await createDefaultData();
+    await createTransaction({ description: 'Cleared before the reload' });
+
+    await rootLayoutPage.navButton('Settings').click();
+    await settingsPage.clickActionAndConfirm('Clear all data');
+    await expect(settingsPage.statusMessage).toHaveText('All data cleared.');
+
+    await page.reload();
+    await rootLayoutPage.navButton('Movements').click();
+    await movementsPage.expectMovementToNotExist('Cleared before the reload');
+    await rootLayoutPage.navButton('Accounts').click();
+    await accountsPage.expectAccountToNotExist(defaultData.accounts[0]);
   });
 });

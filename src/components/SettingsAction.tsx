@@ -1,5 +1,5 @@
-import { Button } from 'components/ui/button';
 import { Card, CardContent, CardHeader } from 'components/ui/card';
+import { SettingsActionButtonTrigger } from './SettingsActionButtonTrigger';
 import { SettingsActionFileTrigger } from './SettingsActionFileTrigger';
 
 interface SettingsActionCopy {
@@ -10,7 +10,7 @@ interface SettingsActionCopy {
 
 export type SettingsActionProps = SettingsActionCopy &
   (
-    | { kind: 'button'; onAction: () => void }
+    | { kind: 'button'; confirmation?: string; onAction: () => void }
     | { kind: 'file'; accept: string; confirmation?: string; onFile: (file: File) => void }
   );
 
@@ -32,9 +32,12 @@ export const SettingsAction = (props: SettingsActionProps) => {
             onFile={props.onFile}
           />
         ) : (
-          <Button variant={warning ? 'destructive' : 'default'} onClick={props.onAction}>
-            {title}
-          </Button>
+          <SettingsActionButtonTrigger
+            title={title}
+            variant={warning ? 'destructive' : 'default'}
+            confirmation={props.confirmation}
+            onAction={props.onAction}
+          />
         )}
       </CardContent>
     </Card>
