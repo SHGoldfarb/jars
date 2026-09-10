@@ -5,3 +5,4 @@ export * from './category';
 export * from './transaction';
 export * from './transfer';
 export * from './allocation';
+export * from './snapshot';

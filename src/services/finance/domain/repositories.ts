@@ -4,6 +4,7 @@ import type {
   Category,
   CategoryExpense,
   CategoryIncome,
+  FinanceSnapshot,
   Jar,
   Transaction,
   Transfer,
@@ -57,6 +58,11 @@ export interface AllocationRepository {
   getLastOperationId: () => number;
 }
 
+// Whole-database reads and writes belong to no single entity, so they get their own port.
+export interface FinanceDatabaseRepository {
+  snapshot(): Promise<FinanceSnapshot>;
+}
+
 export interface FinanceRepositories {
   accounts: AccountRepository;
   jars: JarRepository;
@@ -64,4 +70,5 @@ export interface FinanceRepositories {
   transactions: TransactionRepository;
   transfers: TransferRepository;
   allocations: AllocationRepository;
+  database: FinanceDatabaseRepository;
 }

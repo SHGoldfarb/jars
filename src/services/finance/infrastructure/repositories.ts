@@ -5,6 +5,7 @@ import {
   Category,
   CategoryExpense,
   CategoryIncome,
+  FinanceSnapshot,
   Jar,
   Transaction,
   Transfer,
@@ -13,6 +14,7 @@ import type {
   AccountRepository,
   AllocationRepository,
   CategoryRepository,
+  FinanceDatabaseRepository,
   JarRepository,
   TransactionRepository,
   TransferRepository,
@@ -70,6 +72,10 @@ const allocationRepository: AllocationRepository = createDBTableRepository(
   'allocations'
 );
 
+const databaseRepository: FinanceDatabaseRepository = {
+  snapshot: async () => FinanceSnapshot.parse(await DB.snapshot()),
+};
+
 export const repositories = {
   accounts: accountRepository,
   jars: jarRepository,
@@ -77,4 +83,5 @@ export const repositories = {
   transactions: transactionRepository,
   transfers: transferRepository,
   allocations: allocationRepository,
+  database: databaseRepository,
 };

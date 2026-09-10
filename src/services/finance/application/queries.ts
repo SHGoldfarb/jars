@@ -46,6 +46,9 @@ export const createFinanceQueries = (deps: FinanceRepositories) => ({
     getById: (allocationId: string) => deps.allocations.getById(allocationId),
     lastOperationId: () => deps.allocations.getLastOperationId(),
   },
+  database: {
+    snapshot: () => deps.database.snapshot(),
+  },
   movements: {
     list: async (params?: {
       includeArchived?: boolean;

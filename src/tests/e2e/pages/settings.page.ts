@@ -18,6 +18,13 @@ export const settingsPageConstructor = (page: Page) => {
   const actionWarning = (name: SettingsActionName) => action(name).getByRole('paragraph').nth(1);
   const statusMessage = page.getByRole('alert');
 
+  // The download has to be awaited from before the click, so the two belong together.
+  const downloadFromAction = async (name: SettingsActionName) => {
+    const download = page.waitForEvent('download');
+    await actionButton(name).click();
+    return await download;
+  };
+
   return {
     action,
     actionTrigger,
@@ -26,6 +33,7 @@ export const settingsPageConstructor = (page: Page) => {
     actionDescription,
     actionWarning,
     statusMessage,
+    downloadFromAction,
   };
 };
 

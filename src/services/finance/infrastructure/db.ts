@@ -2,6 +2,10 @@ import { Dexie, type Table } from 'dexie';
 import { makeVersionedMemoize } from 'src/lib/utils';
 import z from 'zod';
 
+// The version the database is currently on. A backup carries it so a restore can tell
+// whether it understands the file.
+export const DB_SCHEMA_VERSION = 3;
+
 const db = new Dexie('JarsMainDatabase');
 
 db.version(2).stores({
@@ -13,7 +17,7 @@ db.version(2).stores({
   transfers: '&id, originAccountId, destinationAccountId',
 });
 
-db.version(3).upgrade((tx) => {
+db.version(DB_SCHEMA_VERSION).upgrade((tx) => {
   return tx
     .table('transactions')
     .toCollection()
@@ -39,9 +43,10 @@ db.version(3).upgrade((tx) => {
 });
 
 const memoizedTable = <T extends { id: string }, U, V>(table: Table<T, U, V>) => {
-  const { versionedMemoize, versionInvalidator, getCurrentVersion } = makeVersionedMemoize({
-    maxSize: 3,
-  });
+  const { versionedMemoize, versionInvalidator, upVersion, getCurrentVersion } =
+    makeVersionedMemoize({
+      maxSize: 3,
+    });
 
   const getMap = versionedMemoize(async () => {
     const items = await table.toArray();
@@ -53,10 +58,12 @@ const memoizedTable = <T extends { id: string }, U, V>(table: Table<T, U, V>) =>
 
   const upsert = versionInvalidator((item: V) => table.put(item));
 
-  return { getMap, upsert, getStateVersion: getCurrentVersion };
+  // `upVersion` is exposed so a whole-database write can invalidate a table it wrote
+  // through some path other than `upsert`.
+  return { getMap, upsert, upVersion, getStateVersion: getCurrentVersion };
 };
 
-export const DB = {
+const tables = {
   accounts: memoizedTable(db.table('accounts')),
   jars: memoizedTable(db.table('jars')),
   categories: memoizedTable(db.table('categories')),
@@ -64,3 +71,28 @@ export const DB = {
   allocations: memoizedTable(db.table('allocations')),
   transfers: memoizedTable(db.table('transfers')),
 };
+
+export type FinanceTableName = keyof typeof tables;
+
+// Rows leave persistence unvalidated: the repository parses them into `FinanceSnapshot`.
+const snapshot = async (): Promise<Record<FinanceTableName, unknown[]>> => {
+  const [accounts, jars, categories, transactions, allocations, transfers] = await Promise.all([
+    tables.accounts.getMap(),
+    tables.jars.getMap(),
+    tables.categories.getMap(),
+    tables.transactions.getMap(),
+    tables.allocations.getMap(),
+    tables.transfers.getMap(),
+  ]);
+
+  return {
+    accounts: Object.values(accounts),
+    jars: Object.values(jars),
+    categories: Object.values(categories),
+    transactions: Object.values(transactions),
+    allocations: Object.values(allocations),
+    transfers: Object.values(transfers),
+  };
+};
+
+export const DB = { ...tables, snapshot };

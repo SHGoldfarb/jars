@@ -1,3 +1,4 @@
+import { useDataManagement } from 'src/hooks/useDataManagement';
 import { SettingsAction } from './SettingsAction';
 
 // Every action gets its behaviour in its own step of the epic; until then the triggers are inert.
@@ -7,13 +8,25 @@ const notImplementedFile = (_file: File) => undefined;
 const replacesAllData = 'Replaces all current data. This cannot be undone.';
 
 export const Settings = () => {
+  const { createBackup } = useDataManagement();
+
+  const handleCreateBackup = async () => {
+    try {
+      await createBackup();
+    } catch (error) {
+      console.error('Failed to create backup:', error);
+    }
+  };
+
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-4 p-6">
       <SettingsAction
         kind="button"
         title="Create backup"
         description="Downloads a JSON file with all your accounts, jars, categories and movements."
-        onAction={notImplemented}
+        onAction={() => {
+          void handleCreateBackup();
+        }}
       />
       <SettingsAction
         kind="file"
