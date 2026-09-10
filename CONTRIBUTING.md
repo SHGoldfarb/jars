@@ -75,8 +75,9 @@ The main application code lives under `src/` and is grouped by responsibility:
 - `src/routes/` - TanStack Router route files
 - `src/presentation/` - view-layer presentation logic
   - `formatters/` - currency and date formatting
-- `src/lib/` - framework-agnostic technical utilities with no domain or business knowledge (`cn`, `generateId`, memoization,
-  `Decimal` arithmetic, generic form helpers, `datetime-local` input conversion)
+- `src/lib/` - framework-agnostic technical utilities with no domain or business knowledge - for example
+  `cn`, `generateId`, memoization, `Decimal` arithmetic, generic form helpers, `datetime-local` input
+  conversion and file downloads
 - `src/services/` - bounded contexts
   - `finance/` - the core finance context
     - `application/` - command/query orchestration (`commands/`)
@@ -86,6 +87,8 @@ The main application code lives under `src/` and is grouped by responsibility:
   - `balances/` - account and jar balances derived from finance (`application/`, `domain/`)
   - `transaction-form/` - transaction form orchestration (`application/`, `domain/`)
   - `movement-form/` - transfer and allocation form orchestration (`application/`, `domain/`)
+  - `data-management/` - backup, restore, CSV export and Money Manager import file formats
+    (`application/`, `domain/`)
   - `shared/` - shared kernel: value objects used by more than one context (`CurrencyAmount`)
     and the boundary parsing that produces them (`currencyInput`)
 - `src/tests/unit/` - unit tests
@@ -104,7 +107,7 @@ components / hooks / routes    UI
         ↓
 presentation                   formatting and view mapping
         ↓
-services/{finance,balances,*-form}   bounded contexts
+services/*                     bounded contexts
         ↓
 services/shared                shared kernel - domain value objects
         ↓
