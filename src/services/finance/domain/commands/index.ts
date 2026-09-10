@@ -1,6 +1,7 @@
 import { accounts } from './account';
 import { allocations } from './allocation';
 import { categories } from './category';
+import { database } from './database';
 import { jars } from './jar';
 import { transactions } from './transaction';
 import { transfers } from './transfer';
@@ -16,4 +17,5 @@ export const financeDomainCommands = {
   transactions,
   transfers,
   allocations,
+  database,
 };

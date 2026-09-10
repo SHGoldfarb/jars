@@ -11,12 +11,17 @@ export const movementsPageConstructor = (page: Page) => {
     await expect(getMovement(description)).toBeVisible();
   };
 
+  const expectMovementToNotExist = async (description: string) => {
+    await expect(getMovement(description)).not.toBeVisible();
+  };
+
   return {
     createTransactionButton,
     createTransferButton,
     createAllocationButton,
     getMovement,
     expectMovementToExist,
+    expectMovementToNotExist,
   };
 };
 

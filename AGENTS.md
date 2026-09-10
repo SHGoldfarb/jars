@@ -52,3 +52,31 @@ When resolving type errors, agents should:
 4. Verify with project typecheck (`pnpm exec tsc -b`) and relevant tests.
 
 If a fully type-safe fix is impossible, agents must clearly explain the tradeoff and propose the safest available alternative.
+
+## A Failing Test Is Not Automatically A Broken Test
+
+The Playwright timeouts are deliberately tight: the suite normally finishes just under them.
+That is intentional and is not to be "fixed". A consequence is that a test can exceed its
+timeout purely because the machine was busy — running the full suite, several projects at once,
+or anything else competing for CPU — with nothing actually wrong.
+
+So before reporting a test as broken, or changing code to make it pass:
+
+1. Re-run that test on its own (`pnpm exec playwright test -g '<test title>'`), and re-run it a
+   few times if the first result is ambiguous.
+2. If it passes in isolation, it was load, not a regression. Say so, and leave it alone.
+3. Only treat it as a real failure once it fails in isolation too.
+
+Forbidden as a response to a timeout:
+
+1. Adding `test.slow()` to a test that already exists. Its budget is the one it was written
+   with, and widening it hides whatever actually changed.
+2. Raising `timeout`, `expect.timeout` or any other timeout in the Playwright config.
+3. Lowering `workers` or otherwise reducing parallelism to buy time.
+
+A **new** test may declare `test.slow()` when the work it does warrants it — it creates several
+entities, walks through many screens, and so on. That is a judgement made when writing the test,
+about what the test does; it is never a reaction to seeing it time out.
+
+If a test genuinely cannot fit in the configured budget, report that and propose making the test
+do less work — not making the budget bigger.

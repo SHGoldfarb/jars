@@ -1,5 +1,6 @@
 import { Dexie, type Table } from 'dexie';
 import { makeVersionedMemoize } from 'src/lib/utils';
+import type { FinanceSnapshot } from '../model';
 import z from 'zod';
 
 // The version the database is currently on. A backup carries it so a restore can tell
@@ -42,7 +43,11 @@ db.version(DB_SCHEMA_VERSION).upgrade((tx) => {
     });
 });
 
-const memoizedTable = <T extends { id: string }, U, V>(table: Table<T, U, V>) => {
+interface Identified {
+  id: string;
+}
+
+const memoizedTable = <T extends Identified, U, V>(table: Table<T, U, V>) => {
   const { versionedMemoize, versionInvalidator, upVersion, getCurrentVersion } =
     makeVersionedMemoize({
       maxSize: 3,
@@ -63,6 +68,17 @@ const memoizedTable = <T extends { id: string }, U, V>(table: Table<T, U, V>) =>
   return { getMap, upsert, upVersion, getStateVersion: getCurrentVersion };
 };
 
+const TABLE_NAMES = [
+  'accounts',
+  'jars',
+  'categories',
+  'transactions',
+  'allocations',
+  'transfers',
+] as const;
+
+export type FinanceTableName = (typeof TABLE_NAMES)[number];
+
 const tables = {
   accounts: memoizedTable(db.table('accounts')),
   jars: memoizedTable(db.table('jars')),
@@ -71,8 +87,6 @@ const tables = {
   allocations: memoizedTable(db.table('allocations')),
   transfers: memoizedTable(db.table('transfers')),
 };
-
-export type FinanceTableName = keyof typeof tables;
 
 // Rows leave persistence unvalidated: the repository parses them into `FinanceSnapshot`.
 const snapshot = async (): Promise<Record<FinanceTableName, unknown[]>> => {
@@ -95,4 +109,38 @@ const snapshot = async (): Promise<Record<FinanceTableName, unknown[]>> => {
   };
 };
 
-export const DB = { ...tables, snapshot };
+// A whole-database write goes around `upsert`, so the memoized maps have to be dropped by hand.
+// Bumping after the commit is the safe order: an over-eager bump costs a recompute, a missed one
+// serves stale data forever.
+const upAllVersions = () => {
+  TABLE_NAMES.forEach((name) => {
+    tables[name].upVersion();
+  });
+};
+
+// The raw Dexie tables, used only by the whole-database writes: everything else goes through
+// the memoized wrappers above.
+const dexieTable = (name: FinanceTableName) => db.table<Identified>(name);
+
+const dexieTables = TABLE_NAMES.map(dexieTable);
+
+const clearEveryTable = () => Promise.all(dexieTables.map((table) => table.clear()));
+
+// Dexie rolls the whole transaction back on any failure, so the database is never left
+// half-written.
+const writeAllTables = (write: () => Promise<unknown>) => db.transaction('rw', dexieTables, write);
+
+const replaceAll = async (snapshotToWrite: FinanceSnapshot) => {
+  await writeAllTables(async () => {
+    await clearEveryTable();
+    await Promise.all(TABLE_NAMES.map((name) => dexieTable(name).bulkPut(snapshotToWrite[name])));
+  });
+  upAllVersions();
+};
+
+const clear = async () => {
+  await writeAllTables(clearEveryTable);
+  upAllVersions();
+};
+
+export const DB = { ...tables, snapshot, replaceAll, clear };

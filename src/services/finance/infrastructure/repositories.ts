@@ -74,6 +74,8 @@ const allocationRepository: AllocationRepository = createDBTableRepository(
 
 const databaseRepository: FinanceDatabaseRepository = {
   snapshot: async () => FinanceSnapshot.parse(await DB.snapshot()),
+  replaceAll: (snapshot: FinanceSnapshot) => DB.replaceAll(FinanceSnapshot.parse(snapshot)),
+  clear: () => DB.clear(),
 };
 
 export const repositories = {

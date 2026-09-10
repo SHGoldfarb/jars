@@ -59,8 +59,11 @@ export interface AllocationRepository {
 }
 
 // Whole-database reads and writes belong to no single entity, so they get their own port.
+// `replaceAll` and `clear` are atomic: a failure part way through leaves the previous state.
 export interface FinanceDatabaseRepository {
   snapshot(): Promise<FinanceSnapshot>;
+  replaceAll(snapshot: FinanceSnapshot): Promise<void>;
+  clear(): Promise<void>;
 }
 
 export interface FinanceRepositories {

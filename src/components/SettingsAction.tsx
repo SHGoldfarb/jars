@@ -11,7 +11,7 @@ interface SettingsActionCopy {
 export type SettingsActionProps = SettingsActionCopy &
   (
     | { kind: 'button'; onAction: () => void }
-    | { kind: 'file'; accept: string; onFile: (file: File) => void }
+    | { kind: 'file'; accept: string; confirmation?: string; onFile: (file: File) => void }
   );
 
 export const SettingsAction = (props: SettingsActionProps) => {
@@ -25,7 +25,12 @@ export const SettingsAction = (props: SettingsActionProps) => {
       </CardHeader>
       <CardContent>
         {props.kind === 'file' ? (
-          <SettingsActionFileTrigger title={title} accept={props.accept} onFile={props.onFile} />
+          <SettingsActionFileTrigger
+            title={title}
+            accept={props.accept}
+            confirmation={props.confirmation}
+            onFile={props.onFile}
+          />
         ) : (
           <Button variant={warning ? 'destructive' : 'default'} onClick={props.onAction}>
             {title}

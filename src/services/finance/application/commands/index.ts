@@ -6,6 +6,7 @@ import { createCategoryCommands } from './category';
 import { createTransactionCommands } from './transaction';
 import { createTransferCommands } from './transfer';
 import { createAllocationCommands } from './allocation';
+import { createDatabaseCommands } from './database';
 
 const createFinanceCommands = (deps: FinanceRepositories) => ({
   accounts: createAccountCommands(deps),
@@ -14,6 +15,7 @@ const createFinanceCommands = (deps: FinanceRepositories) => ({
   transactions: createTransactionCommands(deps),
   transfers: createTransferCommands(deps),
   allocations: createAllocationCommands(deps),
+  database: createDatabaseCommands(deps),
 });
 
 export const financeCommands = createFinanceCommands(repositories);

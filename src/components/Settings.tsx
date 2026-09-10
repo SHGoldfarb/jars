@@ -8,7 +8,7 @@ const notImplementedFile = (_file: File) => undefined;
 const replacesAllData = 'Replaces all current data. This cannot be undone.';
 
 export const Settings = () => {
-  const { createBackup } = useDataManagement();
+  const { status, createBackup, restoreFromBackup } = useDataManagement();
 
   const handleCreateBackup = async () => {
     try {
@@ -34,7 +34,10 @@ export const Settings = () => {
         description="Restores a JSON backup created by this app."
         warning={replacesAllData}
         accept="application/json,.json"
-        onFile={notImplementedFile}
+        confirmation="This replaces all current data and it cannot be recovered."
+        onFile={(file) => {
+          void restoreFromBackup(file);
+        }}
       />
       <SettingsAction
         kind="button"
@@ -57,7 +60,13 @@ export const Settings = () => {
         warning="All current data is permanently lost and cannot be recovered."
         onAction={notImplemented}
       />
-      <div role="alert" className="text-xs/relaxed" />
+      <div role="alert" className="text-xs/relaxed">
+        {status ? (
+          <p className={status.kind === 'error' ? 'text-destructive' : 'text-muted-foreground'}>
+            {status.message}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 };
