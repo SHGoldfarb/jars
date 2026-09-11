@@ -74,6 +74,30 @@ const decimalToNumber = (value: Decimal) => {
   return Number(value.value) / 10 ** value.decimalPlaces;
 };
 
+const isZeroDigits = (digits: string) => /^0*$/.test(digits);
+
+const stripLeadingZeros = (digits: string) => digits.replace(/^0+(?=\d)/, '');
+
+// The plain decimal form of a Decimal, placed by moving the point through the digit string
+// rather than by dividing: unlike `toNumber` it is exact, which is what a file someone reads
+// with a spreadsheet needs.
+const decimalToDecimalString = (value: Decimal) => {
+  const negative = value.value.startsWith('-');
+  const digits = negative ? value.value.slice(1) : value.value;
+  // "-0", "-000", ... are zero, and zero is not written with a sign.
+  const sign = negative && !isZeroDigits(digits) ? '-' : '';
+
+  if (value.decimalPlaces <= 0) {
+    return `${sign}${stripLeadingZeros(digits + '0'.repeat(-value.decimalPlaces))}`;
+  }
+
+  // A value shorter than its own decimal places is a fraction with leading zeros: "5" at 2
+  // places is 0.05.
+  const padded = digits.padStart(value.decimalPlaces + 1, '0');
+  const point = padded.length - value.decimalPlaces;
+  return `${sign}${stripLeadingZeros(padded.slice(0, point))}.${padded.slice(point)}`;
+};
+
 const numberRegex = /^-?\d+(\.\d+)?$/;
 
 const parseString = (value: string): Decimal => {
@@ -95,5 +119,6 @@ export const decimal = {
   sum: sumDecimals,
   negate: negateDecimal,
   toNumber: decimalToNumber,
+  toDecimalString: decimalToDecimalString,
   parseString,
 };

@@ -1,5 +1,6 @@
 import * as z from 'zod';
 import { DB_SCHEMA_VERSION, FinanceSnapshot } from 'src/services/finance';
+import { dateStamp } from './fileName';
 import type { ParseResult } from './result';
 
 // A backup is the snapshot plus the two things a restore needs to judge the file:
@@ -12,10 +13,7 @@ export const Backup = z.object({
 
 export type Backup = z.infer<typeof Backup>;
 
-const twoDigits = (value: number) => value.toString().padStart(2, '0');
-
-export const backupFileName = (date: Date) =>
-  `jars-backup-${date.getFullYear().toString()}-${twoDigits(date.getMonth() + 1)}-${twoDigits(date.getDate())}.json`;
+export const backupFileName = (date: Date) => `jars-backup-${dateStamp(date)}.json`;
 
 const describeIssue = (issue: z.core.$ZodIssue) => {
   const path = issue.path.join('.');

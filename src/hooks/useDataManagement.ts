@@ -15,6 +15,11 @@ export const useDataManagement = () => {
     downloadTextFile({ fileName, contents, mimeType: 'application/json' });
   };
 
+  const exportMovementsCsv = async () => {
+    const { fileName, contents } = await dataManagement.commands.exportMovementsCsv();
+    downloadTextFile({ fileName, contents, mimeType: 'text/csv' });
+  };
+
   const restoreFromBackup = async (file: File) => {
     setStatus(null);
     try {
@@ -43,5 +48,5 @@ export const useDataManagement = () => {
     }
   };
 
-  return { status, createBackup, restoreFromBackup, clearAllData };
+  return { status, createBackup, exportMovementsCsv, restoreFromBackup, clearAllData };
 };

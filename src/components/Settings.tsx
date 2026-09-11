@@ -2,20 +2,22 @@ import { useDataManagement } from 'src/hooks/useDataManagement';
 import { SettingsAction } from './SettingsAction';
 
 // Every action gets its behaviour in its own step of the epic; until then the triggers are inert.
-const notImplemented = () => undefined;
 const notImplementedFile = (_file: File) => undefined;
 
 const replacesAllData = 'Replaces all current data. This cannot be undone.';
 const clearAllDataWarning = 'All current data is permanently lost and cannot be recovered.';
 
 export const Settings = () => {
-  const { status, createBackup, restoreFromBackup, clearAllData } = useDataManagement();
+  const { status, createBackup, exportMovementsCsv, restoreFromBackup, clearAllData } =
+    useDataManagement();
 
-  const handleCreateBackup = async () => {
+  // A download either happens or it doesn't; there is nothing of the user's to lose either way,
+  // so a failure is logged rather than reported next to the destructive actions' messages.
+  const handleDownload = async (download: () => Promise<void>, failureMessage: string) => {
     try {
-      await createBackup();
+      await download();
     } catch (error) {
-      console.error('Failed to create backup:', error);
+      console.error(failureMessage, error);
     }
   };
 
@@ -26,7 +28,7 @@ export const Settings = () => {
         title="Create backup"
         description="Downloads a JSON file with all your accounts, jars, categories and movements."
         onAction={() => {
-          void handleCreateBackup();
+          void handleDownload(createBackup, 'Failed to create backup:');
         }}
       />
       <SettingsAction
@@ -44,7 +46,9 @@ export const Settings = () => {
         kind="button"
         title="Export to CSV"
         description="Downloads your movements as a spreadsheet file."
-        onAction={notImplemented}
+        onAction={() => {
+          void handleDownload(exportMovementsCsv, 'Failed to export to CSV:');
+        }}
       />
       <SettingsAction
         kind="file"
