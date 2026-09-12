@@ -56,10 +56,14 @@ export const MovementForm = ({
   const endpointNoun = movementForm.endpointNoun.singular;
 
   const handleDestinationChange = (newValue: string) => {
-    // If the destination endpoint is set and amount is empty, focus the amount field 0.1 seconds later
+    // If the destination endpoint is set and amount is still empty, focus the amount field 0.1
+    // seconds later. The emptiness is read off the input itself rather than the `values` of this
+    // render, which are the ones from before the change and always show an empty amount: by the
+    // time the timer fires the amount may have been typed, and stealing focus then lands the
+    // next keystrokes in the wrong field.
     if (newValue) {
       setTimeout(() => {
-        if (!values.amount) {
+        if (!amountInputRef.current?.value) {
           amountInputRef.current?.focus();
         }
       }, 100);
