@@ -36,7 +36,7 @@ src/services/data-management/
     moneyManager.ts             the column contract, row schema, rows -> FinanceSnapshot mapping
     result.ts                   ParseResult<T> discriminated union
   application/
-    commands.ts                 createBackup, restoreFromBackup, importMoneyManagerCsv, clearAllData
+    commands.ts                 createBackup, restoreFromBackup, importMoneyManagerExcel, clearAllData
 ```
 
 ### 2. Finance grows one new port: the database snapshot
@@ -189,6 +189,42 @@ in `db.version(DB_SCHEMA_VERSION)`, and have the backup envelope carry it. Resto
 version 4 arrives, the literal becomes a union and the restore gains an upgrade path; the constant is
 the seam that makes that a local change.
 
+### 9. Reading `.xlsx` takes a dependency, and only `src/lib/xlsx.ts` may name it
+
+Decision 5 refused a CSV library because serializing and splitting quoted fields is ~55 lines. An
+`.xlsx` is not that: it is a ZIP archive of XML parts where the sheet holds numeric references into a
+shared string table and dates are serial numbers counted from a workbook epoch. Hand-rolling that is
+a project, not a helper, so this one step does add a dependency.
+
+**`read-excel-file`.** Read-only, browser-first (`readXlsxFile(blob)`), ships its own TypeScript
+types, and hands back cells already decoded as `string | number | boolean | Date | null` — the shared
+string table and the date serials, the two things a hand-rolled reader gets quietly wrong, are
+resolved before any mapping code runs.
+
+- Not `xlsx` (SheetJS): the copy on npm is an old release, and current versions are published from
+  the vendor's own registry — a second registry in `.npmrc` for one feature. Its cell model is also
+  untyped enough to fight `AGENTS.md`'s rules.
+- Not `exceljs`: a writer as well as a reader, and much bigger, for a feature that only ever reads.
+
+**Containment.** The library is named in exactly one file:
+
+```ts
+// src/lib/xlsx.ts
+export type XlsxCell = string | number | boolean | Date | null;
+export const xlsx = {
+  readRows: async (file: Blob): Promise<XlsxCell[][]> => {
+    const { default: readXlsxFile } = await import('read-excel-file');
+    // …first sheet, rows as cells
+  },
+};
+```
+
+Two properties fall out of that shape. The `await import(...)` keeps the reader out of the initial
+bundle — a PWA should not ship a ZIP/XML parser to every user for a button most never press — and
+because `readRows` returns plain rows, everything downstream of it is pure data that tests can write
+by hand (step 6's test split rests on this). `lib/` is the right tier: reading a workbook into rows
+has no more domain knowledge than `csv.parse`.
+
 ---
 
 # Step 1 — The Settings screen, with five inert actions
@@ -208,13 +244,13 @@ each "replace one no-op handler".
   the rest of the app uses, plus a `role="alert"` status region (empty until step 3) that later steps
   write errors and confirmations into. Copy text:
 
-  | Action                          | Description                                                                      | Warning                                                       |
-  | ------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-  | `Create backup`                 | Downloads a JSON file with all your accounts, jars, categories and movements.    | —                                                             |
-  | `Load from backup`              | Restores a JSON backup created by this app.                                      | Replaces all current data. This cannot be undone.             |
-  | `Export to CSV`                 | Downloads your movements as a spreadsheet file.                                  | —                                                             |
-  | `Import from Money Manager CSV` | Imports a CSV exported by the Money Manager app.                                 | Replaces all current data. This cannot be undone.             |
-  | `Clear all data`                | Removes all accounts, jars, categories, transactions, transfers and allocations. | All current data is permanently lost and cannot be recovered. |
+  | Action                            | Description                                                                      | Warning                                                       |
+  | --------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+  | `Create backup`                   | Downloads a JSON file with all your accounts, jars, categories and movements.    | —                                                             |
+  | `Load from backup`                | Restores a JSON backup created by this app.                                      | Replaces all current data. This cannot be undone.             |
+  | `Export to CSV`                   | Downloads your movements as a spreadsheet file.                                  | —                                                             |
+  | `Import from Money Manager Excel` | Imports an Excel file exported by the Money Manager app.                         | Replaces all current data. This cannot be undone.             |
+  | `Clear all data`                  | Removes all accounts, jars, categories, transactions, transfers and allocations. | All current data is permanently lost and cannot be recovered. |
 
 - **Edit `src/components/RootLayout.tsx`** — a fifth entry `{ name: 'Settings', href: '/settings' }`
   after Categories (AC `199`).
@@ -465,21 +501,43 @@ understands, and the file is one-way.
 
 ---
 
-# Step 6 — Import from Money Manager CSV
+# Step 6 — Import from Money Manager Excel
 
 **ACs:** `237`–`250`.
 
 > **Blocking input: a real Money Manager export.** The parser's whole job is to recognise one
 > specific file, and its column names, date format, amount format and how a transfer is represented
 > cannot be guessed safely. Before this step starts, drop a real (small, anonymised) export at
-> `src/tests/e2e/fixtures/money-manager-sample.csv` and pin the contract against it. Everything below
-> is written against the **assumed** shape and must be re-checked, not trusted.
+> `src/tests/e2e/fixtures/money-manager-sample.xlsx` and pin the contract against it. Everything below
+> is written against the **assumed** shape and must be re-checked, not trusted. A workbook hides more
+> than a text file did, so check these five specifically:
+>
+> 1. **Is it really `.xlsx`?** Money Manager may hand out `.xls` (a different, older binary format) or
+>    a CSV named like a spreadsheet. `read-excel-file` reads `.xlsx` only; anything else changes
+>    decision 9.
+> 2. **Which sheet, and is row 1 the header?** The plan assumes the first sheet with the header on the
+>    first row. Exports often carry a title row or a summary block above the table.
+> 3. **Are `Date` cells real dates or text?** A formatted date cell arrives as a `Date`; a text date
+>    arrives as a string and needs parsing with a known format.
+> 4. **Is `Amount` a number cell or text?** A number cell arrives as a `number`; text may carry a
+>    currency symbol and thousands separators.
+> 5. **How is a transfer written?** One row, or a `Transfer-Out` / `Transfer-In` pair.
 
-**Assumed contract** — a header row containing at least `Date`, `Account`, `Category`, `Note`,
-`Amount`, `Income/Expense`, plus a counterpart-account column for transfer rows; `Income/Expense`
-holding `Income`, `Expense`, `Transfer-Out` and `Transfer-In`.
+**Assumed contract** — the first sheet, a header row containing at least `Date`, `Account`,
+`Category`, `Note`, `Amount`, `Income/Expense`, plus a counterpart-account column for transfer rows;
+`Income/Expense` holding `Income`, `Expense`, `Transfer-Out` and `Transfer-In`.
+
+### Reading (`src/lib/xlsx.ts`, decision 9)
+
+`xlsx.readRows(file)` → `XlsxCell[][]`, first sheet, library loaded on demand. It knows nothing about
+Money Manager: a workbook that is not a readable `.xlsx` throws here, and the command turns that into
+the "not a readable spreadsheet" rejection (AC `239`). **Everything after this line is plain rows**,
+which is what keeps the mapping pure and testable.
 
 ### Mapping rules (`domain/moneyManager.ts`)
+
+`toFinanceSnapshot(rows: XlsxCell[][]): ParseResult<FinanceSnapshot>` — no `File`, no library, no
+`await`. A row is read by looking its columns up through the header index built from row 1.
 
 - **Header check first.** A missing required column is the "does not carry the columns a Money Manager
   export has" rejection, named explicitly: `'Missing column: Income/Expense.'` (AC `239`).
@@ -497,41 +555,75 @@ holding `Income`, `Expense`, `Transfer-Out` and `Transfer-In`.
   becomes an allocation and `Transfer-In` rows are dropped — otherwise every transfer doubles. Confirm
   against the sample; this is the single likeliest source of a wrong import.
 - **No transfers** are ever produced (AC `247`) — there is only one account.
-- **Amounts** go through `currencyInput.parser` after stripping thousands separators and any sign: the
-  model stores a non-negative amount and carries direction in `kind` (AC `248`). A row whose amount
-  will not parse is a named rejection.
-- **Dates** are normalised to `z.iso.datetime()`; an unparseable date is a named rejection quoting the
-  row number and the offending value (ACs `239`, `248`).
-- The result is a `ParseResult<FinanceSnapshot>` with ids from `generateId()`, so it feeds the exact
-  same `replaceAll` path step 3 built — atomicity and "rejected leaves data untouched" come free
-  (ACs `240`, `241`).
+- **Amounts.** A `number` cell is turned into a decimal string with `String(Math.abs(value))` and fed
+  to `currencyInput.parser`; a `string` cell has thousands separators and any sign stripped first.
+  The model stores a non-negative amount and carries direction in `kind` (AC `248`). Anything the
+  parser rejects — text, a blank, or a number that `String()` renders in exponent notation — is a
+  named rejection quoting the row number, never a silent `0`. A number cell is an IEEE double, so the
+  exact decimal the sheet holds is whatever `String()` round-trips; that is the value the spreadsheet
+  itself displays, and it is the closest the file gets to an authoritative amount.
+- **Dates.** A `Date` cell is taken as-is (`read-excel-file` resolves the serial against the workbook
+  epoch); a `string` cell is parsed with the sample's format. Either way the result is normalised to
+  `z.iso.datetime()`; a cell that is neither is a named rejection quoting the row number and the
+  offending value (ACs `239`, `248`).
+- The result carries ids from `generateId()`, so it feeds the exact same `replaceAll` path step 3
+  built — atomicity and "rejected leaves data untouched" come free (ACs `240`, `241`).
 
 ### Wiring
 
-- **Edit `application/commands.ts`** — `importMoneyManagerCsv(text)`.
-- **Edit `Settings.tsx` / `useDataManagement.ts`** — the second file action, `accept=".csv,text/csv"`,
-  same confirm dialog copy as the restore (AC `238`).
+- **Edit `application/commands.ts`** — `importMoneyManagerExcel(file: Blob)`: `xlsx.readRows` inside a
+  `try`, the throw mapped to `{ ok: false, error: 'The file could not be read as a spreadsheet.' }`,
+  then `toFinanceSnapshot`, then `replaceAll`.
+- **Edit `useDataManagement.ts`** — the file goes to the command as a `Blob`; unlike the restore there
+  is no `await file.text()`, because a binary read of an `.xlsx` through `text()` would corrupt it.
+  Status messages mirror the restore's.
+- **Edit `Settings.tsx`** — step 1 shipped this action worded for a CSV, so the rename lands here.
+  Title: `Import from Money Manager Excel`. Description: `Imports an Excel file exported by the Money Manager app.`
+  Then `accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"`, the
+  `confirmation` prop with the same copy as the restore (AC `238`), and `notImplementedFile` replaced
+  by the real handler.
+- **Rename ripples:** `settings.page.ts`'s action-name union and the three copy lists at the top of
+  `settings.spec.ts` carry the old title and description strings.
+- **Edit `package.json`** — `read-excel-file` (decision 9).
 
-### Tests — new `src/tests/e2e/moneyManagerImport.spec.ts` (this suite is big enough to leave `settings.spec.ts` focused)
+### Tests
+
+The e2e/unit split is different here, and deliberately. Every rejection case needs its own **binary**
+fixture, which cannot be written in the test file the way a bad CSV string could — authoring six
+workbooks by hand to assert six sentences is not a better test than asserting them against rows. So:
+the real file is proven end to end, and the per-row rules are proven over rows.
+
+**New `src/tests/e2e/moneyManagerImport.spec.ts`** (this suite is big enough to leave `settings.spec.ts` focused).
+`setInputFiles` takes the fixture path directly, so no fixture has to be built at runtime.
 
 - _imports a Money Manager export_ — the sample fixture; assert the `Cash` account exists, the jars
   match the file's accounts, the categories match with their kinds, and the movements appear on
   Movements with the file's amounts and dates, all hardcoded from the fixture (ACs `242`–`246`, `248`).
-- _a repeated account or category is created once_ — a fixture with the same account and category on
-  several rows (ACs `242`, `244`).
+  This is the test that proves the workbook reader, the date serials included.
 - _transfer rows become allocations and no transfers_ — assert the allocation row is on Movements and
   that no transfer row is (ACs `246`, `247`).
 - _balances are consistent after an import_ — assert the `Cash` account balance and each jar balance,
   hardcoded (AC `250`).
 - _the import replaces existing data_ — pre-existing movement is gone afterwards (AC `241`).
 - _the import is confirmed first_, and cancelling changes nothing (AC `238`).
-- _rejections_, one test each, all asserting the message and that nothing changed (ACs `239`, `240`):
-  a file that is not a CSV at all, a CSV missing a required column, and a CSV with an unparseable
-  amount or date.
+- _a file that is not a spreadsheet is rejected_ — feed it the JSON backup fixture, assert the message
+  and that nothing changed (ACs `239`, `240`). One e2e rejection is enough to prove the error reaches
+  the `role="alert"` region and the data survived.
 - _imported data appears without a manual refresh and survives a reload_ (AC `249`).
 
-**Done when:** a real Money Manager export lands in the app as jars, categories, transactions and
-allocations under a single `Cash` account.
+**New unit tests in `src/tests/unit/`** over `toFinanceSnapshot`, with rows written as literal
+`XlsxCell[][]` — the carve-out in `CONTRIBUTING.md` for logic that is critical and awkward to reach
+through the UI:
+
+- a repeated account or category is created once, and a category name used as both income and expense
+  yields two categories (ACs `242`, `244`);
+- a `Date` cell and a text date both normalise to the same ISO value, and a number cell and a text
+  amount both reach the same `CurrencyAmount` (AC `248`);
+- the named rejections, one assertion each: a missing required column, an unparseable amount, an
+  unparseable date (AC `239`).
+
+**Done when:** a real Money Manager `.xlsx` export lands in the app as jars, categories, transactions
+and allocations under a single `Cash` account.
 
 ---
 
@@ -546,7 +638,7 @@ stale gets reported, not fixed.
    and 7 were run.
 2. **`CONTRIBUTING.md` → "Folder Structure"** — one addition and one amendment, in the existing wording:
    - under `src/services/`: ``- `data-management/` - backup, restore, CSV export and Money Manager import (`application/`, `domain/`)``
-   - `src/lib/`'s parenthetical gains `CSV serialization` and `file download`.
+   - `src/lib/`'s parenthetical gains `CSV serialization`, `xlsx reading` and `file download`.
      `src/presentation/` is untouched (decision 5).
 
 No `docs/tech-debt.md` entry: the epic adds no deferred work. The one thing worth writing down —
@@ -559,7 +651,7 @@ epic introduces, and decision 4 records the condition that would change it.
 
 ## File summary
 
-**New (18):**
+**New (21):**
 
 ```
 src/services/finance/model/entities/snapshot.ts
@@ -572,6 +664,7 @@ src/services/data-management/domain/moneyManager.ts              (step 6)
 src/services/data-management/application/commands.ts
 src/lib/fileDownload.ts
 src/lib/csv.ts                                                   (step 5)
+src/lib/xlsx.ts                                                  (step 6)
 src/services/data-management/domain/movementsCsv.ts              (step 5)
 src/hooks/useDataManagement.ts
 src/components/Settings.tsx
@@ -581,7 +674,7 @@ src/routes/settings.tsx
 src/tests/e2e/pages/settings.page.ts
 src/tests/e2e/settings.spec.ts
 src/tests/e2e/moneyManagerImport.spec.ts                         (step 6)
-src/tests/e2e/fixtures/money-manager-sample.csv                  (step 6, supplied by the user)
+src/tests/e2e/fixtures/money-manager-sample.xlsx                 (step 6, supplied by the user)
 ```
 
 **Edited:**
@@ -599,15 +692,17 @@ src/components/RootLayout.tsx                      Settings nav entry
 src/tests/e2e/pages/rootLayout.page.ts             'Settings' in the nav union
 src/tests/e2e/setup/pages.ts                       settingsPage fixture
 src/lib/decimal.ts                                 toDecimalString                     (step 5)
-src/tests/unit/unit.spec.ts                        csv + decimal string tests          (step 5)
+src/tests/unit/unit.spec.ts                        csv + decimal strings (step 5), Money Manager rows (step 6)
+package.json                                       read-excel-file                     (step 6)
 src/routeTree.gen.ts                               regenerated
 
 docs/product/epics.md                              ACs ticked                          (step 7)
 CONTRIBUTING.md                                    folder list                         (step 7)
 ```
 
-**Unchanged, deliberately:** `package.json` — no CSV or file-saver dependency (decision 5); the only
-addition is a shadcn component generated into `src/components/ui/`.
+**Dependencies:** one, `read-excel-file`, and only for step 6 (decision 9). No CSV and no file-saver
+dependency (decision 5); the other addition is a shadcn component generated into
+`src/components/ui/`.
 
 ## Checks
 
