@@ -1,15 +1,19 @@
 import { useDataManagement } from 'src/hooks/useDataManagement';
 import { SettingsAction } from './SettingsAction';
 
-// Every action gets its behaviour in its own step of the epic; until then the triggers are inert.
-const notImplementedFile = (_file: File) => undefined;
-
 const replacesAllData = 'Replaces all current data. This cannot be undone.';
 const clearAllDataWarning = 'All current data is permanently lost and cannot be recovered.';
+const replacesAllDataConfirmation = 'This replaces all current data and it cannot be recovered.';
 
 export const Settings = () => {
-  const { status, createBackup, exportMovementsCsv, restoreFromBackup, clearAllData } =
-    useDataManagement();
+  const {
+    status,
+    createBackup,
+    exportMovementsCsv,
+    restoreFromBackup,
+    importMoneyManagerExcel,
+    clearAllData,
+  } = useDataManagement();
 
   // A download either happens or it doesn't; there is nothing of the user's to lose either way,
   // so a failure is logged rather than reported next to the destructive actions' messages.
@@ -37,7 +41,7 @@ export const Settings = () => {
         description="Restores a JSON backup created by this app."
         warning={replacesAllData}
         accept="application/json,.json"
-        confirmation="This replaces all current data and it cannot be recovered."
+        confirmation={replacesAllDataConfirmation}
         onFile={(file) => {
           void restoreFromBackup(file);
         }}
@@ -52,11 +56,14 @@ export const Settings = () => {
       />
       <SettingsAction
         kind="file"
-        title="Import from Money Manager CSV"
-        description="Imports a CSV exported by the Money Manager app."
+        title="Import from Money Manager Excel"
+        description="Imports an Excel file exported by the Money Manager app."
         warning={replacesAllData}
-        accept="text/csv,.csv"
-        onFile={notImplementedFile}
+        accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        confirmation={replacesAllDataConfirmation}
+        onFile={(file) => {
+          void importMoneyManagerExcel(file);
+        }}
       />
       <SettingsAction
         kind="button"

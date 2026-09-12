@@ -1,13 +1,26 @@
 import { csv } from 'src/lib/csv';
+import { xlsx, type XlsxCell } from 'src/lib/xlsx';
 import { financeCommands, financeQueries, DB_SCHEMA_VERSION } from 'src/services/finance';
 import { Backup, backupFileName, parseBackupFile } from '../domain/backup';
+import { moneyManager } from '../domain/moneyManager';
 import { movementsCsvFileName, toMovementsCsvRows } from '../domain/movementsCsv';
-import type { CommandResult } from '../domain/result';
+import type { CommandResult, ParseResult } from '../domain/result';
 
 export interface DataFile {
   fileName: string;
   contents: string;
 }
+
+// A workbook that cannot be opened is a rejected file like any other, so the reader's throw is
+// turned into the same explained failure the mapping rules produce.
+const readWorkbook = async (file: Blob): Promise<ParseResult<XlsxCell[][]>> => {
+  try {
+    return { ok: true, value: await xlsx.readRows(file) };
+  } catch (error) {
+    console.error('Failed to read the spreadsheet:', error);
+    return { ok: false, error: 'The file could not be read as a spreadsheet.' };
+  }
+};
 
 const createDataManagementCommands = (deps: {
   finance: typeof financeQueries;
@@ -57,6 +70,23 @@ const createDataManagementCommands = (deps: {
     }
 
     await deps.financeWrites.database.replaceAll(backup.value);
+    return { ok: true };
+  },
+
+  // Nothing is written until the whole workbook has been mapped, so a file rejected for its
+  // fifth row leaves the existing data exactly as untouched as one rejected for its header.
+  importMoneyManagerExcel: async (file: Blob): Promise<CommandResult> => {
+    const rows = await readWorkbook(file);
+    if (!rows.ok) {
+      return rows;
+    }
+
+    const snapshot = moneyManager.toFinanceSnapshot(rows.value);
+    if (!snapshot.ok) {
+      return snapshot;
+    }
+
+    await deps.financeWrites.database.replaceAll(snapshot.value);
     return { ok: true };
   },
 

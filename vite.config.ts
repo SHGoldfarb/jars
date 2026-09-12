@@ -54,6 +54,12 @@ export default defineConfig({
       },
     }),
   ],
+  optimizeDeps: {
+    // `src/lib/xlsx.ts` loads this one on demand, so Vite does not find it while crawling the
+    // entry graph. Without it listed here the first import triggers a dependency re-bundle and
+    // a full page reload in the middle of the action that asked for it.
+    include: ['read-excel-file/browser'],
+  },
   resolve: {
     alias: {
       src: path.resolve(__dirname, './src'),

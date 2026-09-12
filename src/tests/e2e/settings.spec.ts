@@ -8,7 +8,7 @@ const actionNames: SettingsActionName[] = [
   'Create backup',
   'Load from backup',
   'Export to CSV',
-  'Import from Money Manager CSV',
+  'Import from Money Manager Excel',
   'Clear all data',
 ];
 
@@ -19,7 +19,7 @@ const descriptions: [SettingsActionName, string][] = [
   ],
   ['Load from backup', 'Restores a JSON backup created by this app.'],
   ['Export to CSV', 'Downloads your movements as a spreadsheet file.'],
-  ['Import from Money Manager CSV', 'Imports a CSV exported by the Money Manager app.'],
+  ['Import from Money Manager Excel', 'Imports an Excel file exported by the Money Manager app.'],
   [
     'Clear all data',
     'Removes all accounts, jars, categories, transactions, transfers and allocations.',
@@ -28,7 +28,7 @@ const descriptions: [SettingsActionName, string][] = [
 
 const warnings: [SettingsActionName, string][] = [
   ['Load from backup', 'Replaces all current data. This cannot be undone.'],
-  ['Import from Money Manager CSV', 'Replaces all current data. This cannot be undone.'],
+  ['Import from Money Manager Excel', 'Replaces all current data. This cannot be undone.'],
   ['Clear all data', 'All current data is permanently lost and cannot be recovered.'],
 ];
 

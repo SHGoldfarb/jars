@@ -6,6 +6,10 @@ export const movementsPageConstructor = (page: Page) => {
   const createAllocationButton = page.getByRole('link', { name: 'Add allocation' });
   const getMovement = (description: string) =>
     page.getByRole('link', { name: new RegExp(description, 'i') });
+  // Every row says which kind of movement it is, so a kind that should not be in the list can
+  // be asserted absent without knowing which row would have carried it.
+  const movementKind = (kind: 'Transaction' | 'Transfer' | 'Allocation') =>
+    page.getByText(kind, { exact: true });
 
   const expectMovementToExist = async (description: string) => {
     await expect(getMovement(description)).toBeVisible();
@@ -20,6 +24,7 @@ export const movementsPageConstructor = (page: Page) => {
     createTransferButton,
     createAllocationButton,
     getMovement,
+    movementKind,
     expectMovementToExist,
     expectMovementToNotExist,
   };

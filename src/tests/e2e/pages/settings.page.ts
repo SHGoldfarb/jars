@@ -5,7 +5,7 @@ export type SettingsActionName =
   | 'Create backup'
   | 'Load from backup'
   | 'Export to CSV'
-  | 'Import from Money Manager CSV'
+  | 'Import from Money Manager Excel'
   | 'Clear all data';
 
 export interface SettingsFile {

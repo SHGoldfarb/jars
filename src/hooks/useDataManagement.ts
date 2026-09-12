@@ -36,6 +36,24 @@ export const useDataManagement = () => {
     }
   };
 
+  // The file goes to the command as it came from the picker: reading an `.xlsx` as text would
+  // corrupt it, so the binary is handed over untouched.
+  const importMoneyManagerExcel = async (file: File) => {
+    setStatus(null);
+    try {
+      const result = await dataManagement.commands.importMoneyManagerExcel(file);
+      setStatus(
+        result.ok
+          ? { kind: 'success', message: 'Money Manager file imported.' }
+          : { kind: 'error', message: result.error }
+      );
+    } catch (error) {
+      // The import is atomic, so a failure here left the previous data in place.
+      console.error('Failed to import from Money Manager:', error);
+      setStatus({ kind: 'error', message: 'The file could not be imported.' });
+    }
+  };
+
   const clearAllData = async () => {
     setStatus(null);
     try {
@@ -48,5 +66,12 @@ export const useDataManagement = () => {
     }
   };
 
-  return { status, createBackup, exportMovementsCsv, restoreFromBackup, clearAllData };
+  return {
+    status,
+    createBackup,
+    exportMovementsCsv,
+    restoreFromBackup,
+    importMoneyManagerExcel,
+    clearAllData,
+  };
 };
