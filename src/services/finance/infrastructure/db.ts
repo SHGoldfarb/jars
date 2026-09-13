@@ -58,10 +58,11 @@ const memoizedTable = <T extends Identified, U, V>(table: Table<T, U, V>) => {
 
   const getMap = versionedMemoize(async () => {
     const items = await table.toArray();
-    const emptyMap: Record<string, T> = {};
-    return items.reduce((acc, item) => {
-      return { ...acc, [item.id]: item };
-    }, emptyMap);
+    const map: Record<string, T> = {};
+    for (const item of items) {
+      map[item.id] = item;
+    }
+    return map;
   });
 
   const upsert = versionInvalidator((item: V) => table.put(item));

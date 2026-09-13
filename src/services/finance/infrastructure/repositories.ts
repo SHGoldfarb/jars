@@ -28,11 +28,14 @@ const createDBTableRepository = <T extends z.ZodObject>(
   getById: async (id: string) => {
     return Model.parse((await DB[table].getMap())[id]);
   },
+  // A row that does not parse is dropped rather than failing the whole list, so one bad record
+  // cannot take a screen down.
   list: async () => {
     const items = await DB[table].getMap();
     return Object.values(items)
-      .filter((item) => Model.safeParse(item).success)
-      .map((item) => Model.parse(item));
+      .map((item) => Model.safeParse(item))
+      .filter((result) => result.success)
+      .map((result) => result.data);
   },
   save: (item: z.infer<T>) => {
     return DB[table].upsert(Model.parse(item));
