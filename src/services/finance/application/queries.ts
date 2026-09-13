@@ -1,5 +1,12 @@
 import { repositories } from '../infrastructure/repositories';
 import { financeDomainQueries, type FinanceRepositories } from '../domain';
+import type { YearMonthKey } from 'src/lib/yearMonth';
+
+const listMovementsByKind = async (deps: FinanceRepositories) => ({
+  transactions: await deps.transactions.list(),
+  transfers: await deps.transfers.list(),
+  allocations: await deps.allocations.list(),
+});
 
 export const createFinanceQueries = (deps: FinanceRepositories) => ({
   accounts: {
@@ -53,15 +60,10 @@ export const createFinanceQueries = (deps: FinanceRepositories) => ({
     list: async (params?: {
       includeArchived?: boolean;
       orderBy?: { dateISO?: 'asc' | 'desc' }[];
-    }) =>
-      financeDomainQueries.movements.list(
-        {
-          transactions: await deps.transactions.list(),
-          transfers: await deps.transfers.list(),
-          allocations: await deps.allocations.list(),
-        },
-        params ?? {}
-      ),
+      month?: YearMonthKey;
+    }) => financeDomainQueries.movements.list(await listMovementsByKind(deps), params ?? {}),
+    months: async (params?: { includeArchived?: boolean }) =>
+      financeDomainQueries.movements.months(await listMovementsByKind(deps), params ?? {}),
   },
 });
 

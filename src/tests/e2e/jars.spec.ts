@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { defaultData, test } from './setup';
+import { DEFAULT_MOVEMENT_DATE, defaultData, test } from './setup';
 import { runInOrder } from 'src/lib/utils';
 import { formatCurrencyAmount } from 'src/presentation/formatters/currencyFormatter';
 import { currency } from 'src/services/shared';
@@ -79,7 +79,7 @@ test('jars show balance', async ({
   const expenseCategoryName = defaultData.expenseCategories[0];
   const incomeCategoryName = defaultData.incomeCategories[0];
   const accountName = defaultData.accounts[0];
-  const date = '2026-06-30T09:00';
+  const date = DEFAULT_MOVEMENT_DATE;
   const secondJarName = 'Savings Jar';
   const incomeTransactionAmount = 10000;
   const expenseTransactionAmount = 3000;

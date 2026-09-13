@@ -10,6 +10,7 @@ import {
 } from 'src/components/ui/field';
 import { Button } from 'src/components/ui/button';
 import { formUtils } from 'src/lib/formUtils';
+import type { YearMonthKey } from 'src/lib/yearMonth';
 import { useMovementForm } from 'src/hooks/useMovementForm';
 import { useMovementFormEndpoints } from 'src/hooks/useMovementFormEndpoints';
 import {
@@ -28,7 +29,7 @@ export const MovementForm = ({
   movementId,
   title,
   onSubmit,
-  onCancelRoute,
+  cancelMonth,
   onDelete,
   defaultErrorMessage,
   defaultValues,
@@ -37,7 +38,8 @@ export const MovementForm = ({
   movementId?: string;
   title: string;
   onSubmit: (draft: MovementDraft) => Promise<void>;
-  onCancelRoute: string;
+  // Cancelling always goes back to Movements; this is the month it should land on.
+  cancelMonth?: YearMonthKey;
   onDelete?: () => void;
   defaultErrorMessage: string;
   defaultValues?: MovementFormValues;
@@ -119,7 +121,7 @@ export const MovementForm = ({
 
           <Field orientation="horizontal">
             <Button type="submit">Submit</Button>
-            <Link to={onCancelRoute}>
+            <Link to="/movements" search={{ month: cancelMonth }}>
               <Button variant="outline" type="button">
                 Cancel
               </Button>

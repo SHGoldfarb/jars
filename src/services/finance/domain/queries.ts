@@ -1,4 +1,5 @@
 import { Account, Allocation, Category, Jar, Movement, Transaction, Transfer } from '../model';
+import { yearMonth, type YearMonthKey } from 'src/lib/yearMonth';
 import type { MovementOrderItem } from './repositories';
 
 const listJars = (jars: Jar[], params: { includeArchived?: boolean }) => {
@@ -42,14 +43,24 @@ const compareByOrderBy = (a: Movement, b: Movement, orderBy: MovementOrderItem[]
 interface MovementListParams {
   includeArchived?: boolean;
   orderBy?: MovementOrderItem[];
+  month?: YearMonthKey;
 }
 
-// Every movement kind is listed the same way: drop the archived ones unless asked for, then
-// order by the shared Movement fields. The kind only decides the element type.
+// ISO instants all come from toISOString(): same length, same offset, so the month bounds can be
+// compared as strings - the property compareByOrderBy already relies on.
+const isInRange = (movement: Movement, range: { fromISO: string; untilISO: string } | undefined) =>
+  !range || (movement.dateISO >= range.fromISO && movement.dateISO < range.untilISO);
+
+// Every movement kind is listed the same way: drop the archived ones unless asked for, keep the
+// selected month if there is one, then order by the shared Movement fields. The kind only decides
+// the element type.
 const listMovementsOfType = <T extends Movement>(items: T[], params: MovementListParams): T[] => {
-  const { includeArchived = false, orderBy = [{ dateISO: 'desc' }] } = params;
+  const { includeArchived = false, orderBy = [{ dateISO: 'desc' }], month } = params;
+  const monthRange = month ? yearMonth.toRangeISO(month) : undefined;
+
   return items
     .filter((item) => includeArchived || !item.archivedAtISO)
+    .filter((item) => isInRange(item, monthRange))
     .sort((a, b) => compareByOrderBy(a, b, orderBy));
 };
 
@@ -67,12 +78,14 @@ export type MovementListEntry =
   | ({ movementType: 'transfer' } & Transfer)
   | ({ movementType: 'allocation' } & Allocation);
 
+interface MovementsByKind {
+  transactions: Transaction[];
+  transfers: Transfer[];
+  allocations: Allocation[];
+}
+
 const listMovements = (
-  {
-    transactions,
-    transfers,
-    allocations,
-  }: { transactions: Transaction[]; transfers: Transfer[]; allocations: Allocation[] },
+  { transactions, transfers, allocations }: MovementsByKind,
   params: MovementListParams
 ): MovementListEntry[] => {
   const { orderBy = [{ dateISO: 'desc' }] } = params;
@@ -93,6 +106,19 @@ const listMovements = (
   ];
 
   return entries.sort((a, b) => compareByOrderBy(a, b, orderBy));
+};
+
+// The months a movement actually falls in, newest first. What a month selector can offer without
+// inventing a range: every other month is reachable by stepping to it.
+const listMovementMonths = (
+  movements: MovementsByKind,
+  params: { includeArchived?: boolean }
+): YearMonthKey[] => {
+  const months = new Set(
+    listMovements(movements, params).map((movement) => yearMonth.fromISO(movement.dateISO))
+  );
+
+  return [...months].sort(yearMonth.compareDescending);
 };
 
 export const financeDomainQueries = {
@@ -116,5 +142,6 @@ export const financeDomainQueries = {
   },
   movements: {
     list: listMovements,
+    months: listMovementMonths,
   },
 };

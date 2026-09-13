@@ -10,6 +10,7 @@ import {
 } from 'src/components/ui/field';
 import { Button } from 'src/components/ui/button';
 import { TransactionUnsaved } from 'src/services/finance';
+import type { YearMonthKey } from 'src/lib/yearMonth';
 import { formUtils } from 'src/lib/formUtils';
 import { useTransactionForm } from 'src/hooks/useTransactionForm';
 import { TransactionFormFieldAmount } from './TransactionFormFieldAmount';
@@ -25,14 +26,15 @@ import { useStore } from '@tanstack/react-form';
 export const TransactionForm = ({
   title,
   onSubmit,
-  onCancelRoute,
+  cancelMonth,
   onDelete,
   defaultErrorMessage,
   defaultValues,
 }: {
   title: string;
   onSubmit: (value: TransactionUnsaved) => Promise<void>;
-  onCancelRoute: string;
+  // Cancelling always goes back to Movements; this is the month it should land on.
+  cancelMonth?: YearMonthKey;
   onDelete?: () => void;
   defaultErrorMessage: string;
   defaultValues?: TransactionFormValues;
@@ -105,7 +107,7 @@ export const TransactionForm = ({
 
           <Field orientation="horizontal">
             <Button type="submit">Submit</Button>
-            <Link to={onCancelRoute}>
+            <Link to="/movements" search={{ month: cancelMonth }}>
               <Button variant="outline" type="button">
                 Cancel
               </Button>

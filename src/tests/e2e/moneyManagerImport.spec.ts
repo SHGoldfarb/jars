@@ -11,6 +11,9 @@ const ACTION = 'Import from Money Manager Excel';
 
 // Every expected value below is hardcoded from the rows in `fixtures/moneyManagerSample.ts`.
 const CASH_ACCOUNT = 'Cash';
+// The sample's rows are all dated in this month, while movements created here take the current
+// one, so a test that looks at both says which month it is looking at.
+const SAMPLE_MONTH = 'February 2026';
 
 const notASpreadsheet = {
   name: 'jars-backup.json',
@@ -64,6 +67,7 @@ test('a Money Manager export becomes jars, categories and movements under one Ca
   // Hardcoded from the rows above: the note as the description, dates as the file writes them,
   // the Money Manager account as the jar, and `Cash` as the account.
   await rootLayoutPage.navButton('Movements').click();
+  await movementsPage.selectMonth(SAMPLE_MONTH);
   const income = movementsPage.getMovement('Monthly salary');
   await expect(income).toContainText(`${CASH_ACCOUNT} · Wallet`);
   await expect(income).toContainText('Salary');
@@ -90,6 +94,7 @@ test('transfer rows become a single allocation and no transfers', async ({
   await importSample(settingsPage);
 
   await rootLayoutPage.navButton('Movements').click();
+  await movementsPage.selectMonth(SAMPLE_MONTH);
 
   // The file writes the transfer once, from the paying side, naming the jar it paid into in the
   // column every other row uses for its category.
@@ -144,6 +149,7 @@ test('the import replaces the current data rather than merging into it', async (
 
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.expectMovementToNotExist('Created before the import');
+  await movementsPage.selectMonth(SAMPLE_MONTH);
   await movementsPage.expectMovementToExist('Monthly salary');
 
   await rootLayoutPage.navButton('Accounts').click();
@@ -173,7 +179,9 @@ test('the import is confirmed before anything is written', async ({
 
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.expectMovementToExist('Survives the cancelled import');
-  await movementsPage.expectMovementToNotExist('Monthly salary');
+  // Nothing was imported, so the sample's month holds no movements at all: the selector does
+  // not offer it.
+  await movementsPage.expectMonthOptionToNotExist(SAMPLE_MONTH);
 });
 
 test('a file that is not a spreadsheet is rejected and changes nothing', async ({
@@ -216,11 +224,13 @@ test('imported data appears without a manual refresh and survives a reload', asy
 
   // No reload: the movements list has to come back from a database that was replaced under it.
   await rootLayoutPage.navButton('Movements').click();
-  await movementsPage.expectMovementToExist('Monthly salary');
   await movementsPage.expectMovementToNotExist('Replaced by the import');
+  await movementsPage.selectMonth(SAMPLE_MONTH);
+  await movementsPage.expectMovementToExist('Monthly salary');
 
   await page.reload();
   await rootLayoutPage.navButton('Movements').click();
-  await movementsPage.expectMovementToExist('Monthly salary');
   await movementsPage.expectMovementToNotExist('Replaced by the import');
+  await movementsPage.selectMonth(SAMPLE_MONTH);
+  await movementsPage.expectMovementToExist('Monthly salary');
 });

@@ -1,8 +1,16 @@
 import { testUtils } from 'src/tests/utils.ts';
 import { test as base } from './pages.ts';
 
-// A fixed, valid datetime-local value for movements whose date the caller doesn't care about.
-const DEFAULT_MOVEMENT_DATE = '2026-02-10T09:00';
+// A valid datetime-local value for movements whose date the caller doesn't care about. Movements
+// lists one month at a time and opens on the current one, so it is dated inside that month -
+// a hardcoded month would only be on screen during that month of the year. Day and time are
+// fixed, so the value is stable for the whole run.
+const now = new Date();
+export const DEFAULT_MOVEMENT_DATE = new Date(
+  Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 10, 9, 0)
+)
+  .toISOString()
+  .slice(0, 16);
 
 export interface CreateTransactionParams {
   amount?: string;

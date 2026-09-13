@@ -11,6 +11,27 @@ export const movementsPageConstructor = (page: Page) => {
   const movementKind = (kind: 'Transaction' | 'Transfer' | 'Allocation') =>
     page.getByText(kind, { exact: true });
 
+  const monthSelect = page.getByRole('combobox', { name: 'Month' });
+  const previousMonthButton = page.getByRole('button', { name: 'Previous month' });
+  const nextMonthButton = page.getByRole('button', { name: 'Next month' });
+
+  const selectMonth = async (month: string) => {
+    await monthSelect.click();
+    await page.getByRole('option', { name: month, exact: true }).click();
+  };
+
+  const expectMonthOptionToExist = async (month: string) => {
+    await monthSelect.click();
+    await expect(page.getByRole('option', { name: month, exact: true })).toBeVisible();
+    await page.keyboard.press('Escape');
+  };
+
+  const expectMonthOptionToNotExist = async (month: string) => {
+    await monthSelect.click();
+    await expect(page.getByRole('option', { name: month, exact: true })).toHaveCount(0);
+    await page.keyboard.press('Escape');
+  };
+
   const expectMovementToExist = async (description: string) => {
     await expect(getMovement(description)).toBeVisible();
   };
@@ -20,6 +41,12 @@ export const movementsPageConstructor = (page: Page) => {
   };
 
   return {
+    monthSelect,
+    previousMonthButton,
+    nextMonthButton,
+    selectMonth,
+    expectMonthOptionToExist,
+    expectMonthOptionToNotExist,
     createTransactionButton,
     createTransferButton,
     createAllocationButton,

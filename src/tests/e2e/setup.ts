@@ -1,6 +1,8 @@
 import { test as base } from './setup/actions';
 import { runInOrder } from 'src/lib/utils';
 
+export { DEFAULT_MOVEMENT_DATE } from './setup/actions';
+
 export const defaultData = {
   incomeCategories: ['Salary'],
   expenseCategories: ['Groceries'],

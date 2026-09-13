@@ -13,6 +13,15 @@ export const transactionFormPageConstructor = (page: Page) => {
     locator: () => submitButtonLocator,
   };
   const deleteButton = page.getByRole('button', { name: 'Delete' });
+  // Like Submit: the form opens a selector on mount, so the dropdown is dismissed first.
+  const cancelButtonLocator = page.getByRole('button', { name: 'Cancel' });
+  const cancelButton = {
+    click: async () => {
+      await closeDropdowns();
+      await cancelButtonLocator.click();
+    },
+    locator: () => cancelButtonLocator,
+  };
   const amountInput = page.getByLabel('Amount');
   const dateInput = page.getByLabel('Date');
   const descriptionInput = page.getByLabel('Description');
@@ -123,6 +132,7 @@ export const transactionFormPageConstructor = (page: Page) => {
     fillDescription,
     fillDate,
     deleteButton,
+    cancelButton,
   };
 };
 

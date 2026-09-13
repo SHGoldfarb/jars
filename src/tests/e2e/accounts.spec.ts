@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { defaultData, test } from './setup';
+import { DEFAULT_MOVEMENT_DATE, defaultData, test } from './setup';
 import { runInOrder } from 'src/lib/utils';
 
 test('can create account', async ({ rootLayoutPage, accountsPage, accountFormPage }) => {
@@ -81,7 +81,7 @@ test('accounts show balance', async ({
   const expenseCategoryName = defaultData.expenseCategories[0];
   const incomeCategoryName = defaultData.incomeCategories[0];
   const accountName = defaultData.accounts[0];
-  const date = '2026-06-30T09:00';
+  const date = DEFAULT_MOVEMENT_DATE;
   const secondAccountName = 'Checking Account';
   const incomeTransactionAmount = 10000;
   const expenseTransactionAmount = 3000;

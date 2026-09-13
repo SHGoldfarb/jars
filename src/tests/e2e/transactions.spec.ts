@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { defaultData, test } from './setup';
+import { DEFAULT_MOVEMENT_DATE, defaultData, test } from './setup';
 import { runInOrder } from 'src/lib/utils';
 import { formatCurrencyAmount } from 'src/presentation/formatters/currencyFormatter';
 import { decimal } from 'src/lib/decimal';
@@ -356,7 +356,7 @@ test.describe('transaction form', () => {
     const expenseCategoryName = 'Groceries';
     const description = 'Invoice for work done';
     const amount = '350000';
-    const date = '2026-06-01T09:00';
+    const date = DEFAULT_MOVEMENT_DATE;
 
     await createAccount(accountName);
     await createJar(jarName);
