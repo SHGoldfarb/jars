@@ -48,18 +48,21 @@ test('a Money Manager export becomes jars, categories and movements under one Ca
   await jarsPage.expectJarToExist('Wallet');
   await jarsPage.expectJarToExist('Holidays');
 
-  // Categories carry the kind of the rows that used them, and the transfer rows contribute none.
+  // A category and its subcategory are one category here, and a row with no subcategory keeps
+  // the category on its own. Categories carry the kind of the rows that used them, and the
+  // transfer row contributes none - its `Category` column is the jar it paid into.
   await rootLayoutPage.navButton('Categories').click();
   await categoriesPage.incomeTabButton.click();
   await categoriesPage.expectCategoryToExist('Salary');
-  await categoriesPage.expectCategoryToNotExist('Groceries');
+  await categoriesPage.expectCategoryToNotExist('Needs / Groceries');
   await categoriesPage.expensesTabButton.click();
-  await categoriesPage.expectCategoryToExist('Groceries');
+  await categoriesPage.expectCategoryToExist('Needs / Groceries');
+  await categoriesPage.expectCategoryToExist('Wants / Snacks');
   await categoriesPage.expectCategoryToNotExist('Salary');
-  await categoriesPage.expectCategoryToNotExist('Transfer');
+  await categoriesPage.expectCategoryToNotExist('Holidays');
 
-  // Hardcoded from the rows above: amounts and dates as the file writes them, the Money Manager
-  // account as the jar, and `Cash` as the account.
+  // Hardcoded from the rows above: the note as the description, dates as the file writes them,
+  // the Money Manager account as the jar, and `Cash` as the account.
   await rootLayoutPage.navButton('Movements').click();
   const income = movementsPage.getMovement('Monthly salary');
   await expect(income).toContainText(`${CASH_ACCOUNT} · Wallet`);
@@ -67,9 +70,11 @@ test('a Money Manager export becomes jars, categories and movements under one Ca
   await expect(income).toContainText('$10.000');
   await expect(income).toContainText('2/10/2026, 9:00:00 AM');
 
+  // The snacks cost 0.53 USD and the file converts that to 500 CLP: the converted amount is the
+  // one that is imported.
   const expense = movementsPage.getMovement('Snacks');
   await expect(expense).toContainText(`${CASH_ACCOUNT} · Holidays`);
-  await expect(expense).toContainText('Groceries');
+  await expect(expense).toContainText('Wants / Snacks');
   await expect(expense).toContainText('$500');
   await expect(expense).toContainText('2/13/2026, 8:15:00 AM');
 });
@@ -86,7 +91,8 @@ test('transfer rows become a single allocation and no transfers', async ({
 
   await rootLayoutPage.navButton('Movements').click();
 
-  // The file writes the transfer twice, once from each side; only one allocation comes out of it.
+  // The file writes the transfer once, from the paying side, naming the jar it paid into in the
+  // column every other row uses for its category.
   const allocation = movementsPage.getMovement('Holiday saving');
   await expect(allocation).toHaveCount(1);
   await expect(allocation).toContainText('Wallet → Holidays');

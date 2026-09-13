@@ -144,20 +144,22 @@ test('unit tests', async () => {
     });
   });
 });
-
 // The Money Manager mapping is exercised over rows rather than over workbooks: every rejection
-// case would otherwise need its own binary fixture, and six hand-authored `.xlsx` files assert
-// nothing that six literal rows do not. The real file is proven end to end in
+// case would otherwise need its own binary fixture, and hand-authored `.xlsx` files assert
+// nothing that literal rows do not. The real file is proven end to end in
 // `moneyManagerImport.spec.ts`; the per-row rules are proven here.
 test('Money Manager rows to a finance snapshot', async () => {
+  // The columns the mapping reads, in the order a real export writes them. The export writes
+  // four more (`Description`, `Amount`, `Currency` and a second `Account`) that it never reads;
+  // those are covered by the workbook the e2e fixture writes.
   const HEADER: XlsxCell[] = [
     'Date',
     'Account',
     'Category',
+    'Subcategory',
     'Note',
-    'Amount',
+    'CLP',
     'Income/Expense',
-    'Transfer account',
   ];
 
   const snapshotOf = (...rows: XlsxCell[][]) => {
@@ -175,20 +177,36 @@ test('Money Manager rows to a finance snapshot', async () => {
 
   await test.step('a repeated account or category is created once', () => {
     const snapshot = snapshotOf(
-      ['2026-02-10 09:00', 'Wallet', 'Groceries', 'Weekly shop', 2500, 'Expense', null],
-      ['2026-02-11 10:30', 'Wallet', 'Groceries', 'Snacks', 500, 'Expense', null]
+      ['2026-02-10 09:00', 'Wallet', 'Needs', 'Groceries', 'Weekly shop', 2500, 'Expense'],
+      ['2026-02-11 10:30', 'Wallet', 'Needs', 'Groceries', 'Snacks', 500, 'Expense']
     );
 
     expect(snapshot.jars.map(({ name }) => name)).toEqual(['Wallet']);
-    expect(snapshot.categories.map(({ name }) => name)).toEqual(['Groceries']);
+    expect(snapshot.categories.map(({ name }) => name)).toEqual(['Needs / Groceries']);
     expect(snapshot.accounts.map(({ name }) => name)).toEqual(['Cash']);
     expect(snapshot.transactions).toHaveLength(2);
   });
 
+  await test.step('a category and its subcategory are one category', () => {
+    const snapshot = snapshotOf(
+      ['2026-02-10 09:00', 'Wallet', 'Needs', 'Groceries', 'Weekly shop', 2500, 'Expense'],
+      ['2026-02-11 10:30', 'Wallet', 'Needs', 'Health', 'Dentist', 3000, 'Expense'],
+      // No subcategory: the category stands on its own, and is not the same category as any of
+      // the ones it heads.
+      ['2026-02-12 11:00', 'Wallet', 'Needs', '', 'Uncategorised', 400, 'Expense']
+    );
+
+    expect(snapshot.categories.map(({ name }) => name)).toEqual([
+      'Needs / Groceries',
+      'Needs / Health',
+      'Needs',
+    ]);
+  });
+
   await test.step('a category name used by both kinds yields one category per kind', () => {
     const snapshot = snapshotOf(
-      ['2026-02-10 09:00', 'Wallet', 'Gifts', 'Received', 1000, 'Income', null],
-      ['2026-02-11 10:30', 'Wallet', 'Gifts', 'Given', 800, 'Expense', null]
+      ['2026-02-10 09:00', 'Wallet', 'Gifts', '', 'Received', 1000, 'Income'],
+      ['2026-02-11 10:30', 'Wallet', 'Gifts', '', 'Given', 800, 'Expense']
     );
 
     expect(snapshot.categories.map(({ name, kind }) => `${name} (${kind})`)).toEqual([
@@ -200,19 +218,43 @@ test('Money Manager rows to a finance snapshot', async () => {
     expect(income.categoryId).not.toBe(expense.categoryId);
   });
 
+  await test.step('a transfer moves between the jar it is written in and the one it names', () => {
+    const snapshot = snapshotOf([
+      '2026-02-12 11:45',
+      'Wallet',
+      // A transfer row has no category: the column holds the account the money went to.
+      'Holidays',
+      '',
+      'Holiday saving',
+      3000,
+      'Transfer-Out',
+    ]);
+
+    expect(snapshot.allocations).toHaveLength(1);
+    expect(snapshot.transactions).toHaveLength(0);
+    expect(snapshot.transfers).toHaveLength(0);
+    expect(snapshot.categories).toEqual([]);
+
+    const [allocation] = snapshot.allocations;
+    const jarNamed = (name: string) => snapshot.jars.find((jar) => jar.name === name)?.id;
+    expect(allocation.originJarId).toBe(jarNamed('Wallet'));
+    expect(allocation.destinationJarId).toBe(jarNamed('Holidays'));
+    expect(allocation.description).toBe('Holiday saving');
+  });
+
   await test.step('a date cell and a text date reach the same stored value', () => {
     const snapshot = snapshotOf(
       [
         new Date(Date.UTC(2026, 1, 10, 9, 0)),
         'Wallet',
+        'Needs',
         'Groceries',
         'From a date cell',
         1,
         'Expense',
-        null,
       ],
-      ['2026-02-10 09:00', 'Wallet', 'Groceries', 'From text', 1, 'Expense', null],
-      ['2026-02-10', 'Wallet', 'Groceries', 'From a date without a time', 1, 'Expense', null]
+      ['2026-02-10 09:00', 'Wallet', 'Needs', 'Groceries', 'From text', 1, 'Expense'],
+      ['2026-02-10', 'Wallet', 'Needs', 'Groceries', 'From a date without a time', 1, 'Expense']
     );
 
     const [fromCell, fromText, dateOnly] = snapshot.transactions;
@@ -227,11 +269,11 @@ test('Money Manager rows to a finance snapshot', async () => {
     const snapshot = snapshotOf([
       new Date(Date.UTC(2026, 1, 12, 11, 44, 59, 999)),
       'Wallet',
+      'Needs',
       'Groceries',
       'Just short of the minute',
       1,
       'Expense',
-      null,
     ]);
 
     expect(snapshot.transactions[0].dateISO).toBe('2026-02-12T11:45:00.000Z');
@@ -239,25 +281,33 @@ test('Money Manager rows to a finance snapshot', async () => {
 
   await test.step('amounts are read from number and text cells, without their sign', () => {
     const snapshot = snapshotOf(
-      ['2026-02-10 09:00', 'Wallet', 'Groceries', 'A number cell', 10000, 'Expense', null],
+      ['2026-02-10 09:00', 'Wallet', 'Needs', 'Groceries', 'A number cell', 10000, 'Expense'],
       [
         '2026-02-10 09:00',
         'Wallet',
+        'Needs',
         'Groceries',
         'A grouped text cell',
         '2,500.5',
         'Expense',
-        null,
       ],
-      ['2026-02-10 09:00', 'Wallet', 'Groceries', 'A negative number cell', -750, 'Expense', null],
       [
         '2026-02-10 09:00',
         'Wallet',
+        'Needs',
+        'Groceries',
+        'A negative number cell',
+        -750,
+        'Expense',
+      ],
+      [
+        '2026-02-10 09:00',
+        'Wallet',
+        'Needs',
         'Groceries',
         'A signed text cell',
         '-1,234.00',
         'Expense',
-        null,
       ]
     );
 
@@ -271,39 +321,66 @@ test('Money Manager rows to a finance snapshot', async () => {
     ]);
   });
 
+  await test.step('the `Account` column the export repeats at the end is not the account', () => {
+    // A real export ends with the `CLP` amount under a second `Account` heading, so a title has
+    // to be found by its first column or a jar would be named after an amount.
+    const exportHeader: XlsxCell[] = [...HEADER, 'Description', 'Amount', 'Currency', 'Account'];
+    const result = dataManagement.moneyManager.toFinanceSnapshot([
+      exportHeader,
+      [
+        '2026-02-10 09:00',
+        'Wallet',
+        'Needs',
+        'Groceries',
+        'Weekly shop',
+        2500,
+        'Expense',
+        null,
+        '2.5',
+        'USD',
+        2500,
+      ],
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.jars.map(({ name }) => name)).toEqual(['Wallet']);
+    }
+  });
+
   await test.step('a missing column is named', () => {
-    const withoutKind: XlsxCell[] = [
+    const withoutSubcategory: XlsxCell[] = [
       'Date',
       'Account',
       'Category',
       'Note',
-      'Amount',
-      'Transfer account',
+      'CLP',
+      'Income/Expense',
     ];
 
     expect(
       rejectionOf([
-        withoutKind,
-        ['2026-02-10 09:00', 'Wallet', 'Groceries', 'Weekly shop', 2500, null],
+        withoutSubcategory,
+        ['2026-02-10 09:00', 'Wallet', 'Groceries', 'Weekly shop', 2500, 'Expense'],
       ])
-    ).toBe('Missing column: Income/Expense.');
+    ).toBe('Missing column: Subcategory.');
   });
 
   await test.step('an amount that cannot be read names its row', () => {
     expect(
       rejectionOf([
         HEADER,
-        ['2026-02-10 09:00', 'Wallet', 'Groceries', 'Weekly shop', 'about ten', 'Expense', null],
+        ['2026-02-10 09:00', 'Wallet', 'Needs', 'Groceries', 'Weekly shop', 'about ten', 'Expense'],
       ])
-    ).toBe('Row 2: Amount is not an amount ("about ten").');
+    ).toBe('Row 2: CLP is not an amount ("about ten").');
   });
 
   await test.step('a date that cannot be read names its row', () => {
     expect(
       rejectionOf([
         HEADER,
-        ['2026-02-10 09:00', 'Wallet', 'Groceries', 'Weekly shop', 2500, 'Expense', null],
-        ['10/02/2026', 'Wallet', 'Groceries', 'Snacks', 500, 'Expense', null],
+        ['2026-02-10 09:00', 'Wallet', 'Needs', 'Groceries', 'Weekly shop', 2500, 'Expense'],
+        ['10/02/2026', 'Wallet', 'Needs', 'Groceries', 'Snacks', 500, 'Expense'],
       ])
     ).toBe('Row 3: Date is not a date ("10/02/2026").');
   });
@@ -312,10 +389,18 @@ test('Money Manager rows to a finance snapshot', async () => {
     expect(
       rejectionOf([
         HEADER,
-        ['2026-02-10 09:00', 'Wallet', 'Groceries', 'Weekly shop', 2500, 'Refund', null],
+        ['2026-02-10 09:00', 'Wallet', 'Needs', 'Groceries', 'Weekly shop', 2500, 'Refund'],
       ])
-    ).toBe(
-      'Row 2: Income/Expense is not one of Income, Expense, Transfer-Out, Transfer-In ("Refund").'
-    );
+    ).toBe('Row 2: Income/Expense is not one of Income, Expense, Transfer-Out ("Refund").');
+
+    // The export writes a transfer once, from the paying side. A `Transfer-In` row would be a
+    // file this mapping has never seen, and reporting it is what keeps the money it carries from
+    // being silently dropped.
+    expect(
+      rejectionOf([
+        HEADER,
+        ['2026-02-10 09:00', 'Holidays', 'Wallet', '', 'Holiday saving', 3000, 'Transfer-In'],
+      ])
+    ).toBe('Row 2: Income/Expense is not one of Income, Expense, Transfer-Out ("Transfer-In").');
   });
 });

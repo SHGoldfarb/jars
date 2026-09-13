@@ -12,33 +12,53 @@ import type {
 import { currencyInput } from 'src/services/shared';
 import type { ParseResult } from './result';
 
-// The shape of a Money Manager export, as this app assumes it.
+// The shape of a Money Manager export, read off a real one.
 //
-// ASSUMED, NOT VERIFIED: no real export was available when this was written, so the column
-// names, the date and amount formats and the way a transfer is written are all guesses. They
-// are all in this module, and `xlsx.readRows` upstream of it knows nothing about them, so
-// correcting them against a real file is a change to the constants and the row rules below and
-// to nothing else.
+// A row is `Date | Account | Category | Subcategory | Note | CLP | Income/Expense | Description |
+// Amount | Currency | CLP`, and this mapping reads the first seven:
+//
+//   - `Account` is a Money Manager account, which is a jar here: Money Manager has no accounts
+//     in this app's sense, so every movement lands in the one invented `Cash` account.
+//   - `Category` and `Subcategory` are one category here, joined by `CATEGORY_SEPARATOR`. A row
+//     with no subcategory keeps the category on its own.
+//   - `Note` is what this app calls a description. The column the export heads `Description` is
+//     written empty on every row, so it is not read at all.
+//   - The amount is the main-currency column. `Amount` and `Currency` hold what was originally
+//     spent (`96.01`, `USD`) and so are not comparable across rows; the main-currency column is
+//     the same money converted, and is the only amount worth importing.
+//
+// Two things the export does are worth knowing before changing any of this. It heads the
+// main-currency column with the currency's own code, so `MAIN_CURRENCY_TITLE` is the title in an
+// export whose main currency is CLP and would be `USD` in one where it is dollars. And it then
+// repeats that column as a last column, which it heads `Account` - so a title is looked up by
+// its first column, which is the real one.
 const COLUMN_TITLES = {
   date: 'Date',
   account: 'Account',
   category: 'Category',
+  subcategory: 'Subcategory',
   note: 'Note',
-  amount: 'Amount',
+  amount: 'CLP',
   rowKind: 'Income/Expense',
-  transferAccount: 'Transfer account',
 } as const;
 
 type ColumnKey = keyof typeof COLUMN_TITLES;
 
 type HeaderIndex = Record<ColumnKey, number>;
 
-const ROW_KINDS = ['Income', 'Expense', 'Transfer-Out', 'Transfer-In'] as const;
+// The kinds the export writes. It writes a transfer once, from the paying side only, so there is
+// no `Transfer-In` to pair up - and a kind this mapping has never seen is reported rather than
+// skipped, because skipping it would drop money out of an import that otherwise looked fine.
+const ROW_KINDS = ['Income', 'Expense', 'Transfer-Out'] as const;
 
 type RowKind = (typeof ROW_KINDS)[number];
 
 // Money Manager has no accounts in this app's sense, so everything it exports lands in one.
 const CASH_ACCOUNT_NAME = 'Cash';
+
+// What joins a category to its subcategory: `Needs` and `Groceries` become `Needs / Groceries`,
+// one category of that name in this app.
+const CATEGORY_SEPARATOR = ' / ';
 
 const NOT_FOUND = -1;
 
@@ -96,10 +116,10 @@ const toHeaderIndex = (header: XlsxCell[]): ParseResult<HeaderIndex> => {
       date: columnIndex(header, COLUMN_TITLES.date),
       account: columnIndex(header, COLUMN_TITLES.account),
       category: columnIndex(header, COLUMN_TITLES.category),
+      subcategory: columnIndex(header, COLUMN_TITLES.subcategory),
       note: columnIndex(header, COLUMN_TITLES.note),
       amount: columnIndex(header, COLUMN_TITLES.amount),
       rowKind: columnIndex(header, COLUMN_TITLES.rowKind),
-      transferAccount: columnIndex(header, COLUMN_TITLES.transferAccount),
     },
   };
 };
@@ -230,12 +250,6 @@ const toFinanceSnapshot = (rows: XlsxCell[][]): ParseResult<FinanceSnapshot> => 
       );
     }
 
-    // An export that writes a transfer as a pair writes it once from each side; only the
-    // outgoing row becomes an allocation, or every transfer would be imported twice.
-    if (rowKind === 'Transfer-In') {
-      continue;
-    }
-
     const dateCell = cellAt(row, columns.date);
     const dateISO = toDateISO(dateCell);
     if (dateISO === null) {
@@ -259,6 +273,11 @@ const toFinanceSnapshot = (rows: XlsxCell[][]): ParseResult<FinanceSnapshot> => 
       return emptyColumn(rowNumber, COLUMN_TITLES.account);
     }
 
+    const categoryName = textAt(row, columns.category);
+    if (categoryName === '') {
+      return emptyColumn(rowNumber, COLUMN_TITLES.category);
+    }
+
     const movement = {
       id: generateId(),
       amount: amount.data,
@@ -266,31 +285,29 @@ const toFinanceSnapshot = (rows: XlsxCell[][]): ParseResult<FinanceSnapshot> => 
       description: textAt(row, columns.note),
     };
 
+    // A transfer has no category to carry: the export writes the account the money went to in
+    // the `Category` column, and both sides of it are jars here.
     if (rowKind === 'Transfer-Out') {
-      const destinationName = textAt(row, columns.transferAccount);
-      if (destinationName === '') {
-        return emptyColumn(rowNumber, COLUMN_TITLES.transferAccount);
-      }
-
       allocations.push({
         ...movement,
         originJarId: jarFor(accountName).id,
-        destinationJarId: jarFor(destinationName).id,
+        destinationJarId: jarFor(categoryName).id,
       });
       continue;
     }
 
-    const categoryName = textAt(row, columns.category);
-    if (categoryName === '') {
-      return emptyColumn(rowNumber, COLUMN_TITLES.category);
-    }
-
+    const subcategoryName = textAt(row, columns.subcategory);
     const kind = rowKind === 'Income' ? 'income' : 'expense';
+    const fullCategoryName =
+      subcategoryName === ''
+        ? categoryName
+        : `${categoryName}${CATEGORY_SEPARATOR}${subcategoryName}`;
+
     transactions.push({
       ...movement,
       kind,
       accountId: cashAccount.id,
-      categoryId: categoryFor(categoryName, kind).id,
+      categoryId: categoryFor(fullCategoryName, kind).id,
       jarId: jarFor(accountName).id,
     });
   }
