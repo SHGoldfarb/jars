@@ -267,7 +267,11 @@ View incomes/expenses breakdown, evolution, etc.
 
 WIP
 
-## Backlog
+## Small features backlog
+
+- [ ] Better UI on month selector: arrows currently change position depending of the length of the month name, makes it difficult to move multiple times.
+
+## Epics Backlog
 
 - Configure automatic backup to cloud (Google Drive?)
 - Desktop support

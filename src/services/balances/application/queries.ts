@@ -12,11 +12,11 @@ const createBalanceQueries = (financeQueriesDeps: typeof financeQueries) => {
     ].join(':');
 
   const getBalances = async () => {
-    // TODO: lock in balances compute, so that if it's called multiple times at the same time,
+    // TODO: have a lock in balances compute, so that if it's called multiple times at the same time,
     // it's only computed once and they all hit that cache.
     const dataStateId = currentDataStateId();
-    // TODO: abstract this pattern: provide a getParams() function to the cache manager, and only
-    // get them if the cache is a miss.
+    // TODO: this should be a cached function that includes the movements fetching inside the function, so that
+    // manually checking for cached value is not necessary.
     const cached = cachedBalancesGetters(dataStateId);
     if (cached) {
       return cached;
