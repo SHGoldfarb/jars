@@ -13,7 +13,7 @@ export const waitFor = (milliseconds: number) => {
 
 const emptyPromise = () => {
   let resolve = () => {
-    // Blank un purpose
+    // Blank on purpose
   };
 
   const promise = new Promise<void>((resolve_) => {
