@@ -5,6 +5,7 @@ user-facing.
 
 - Audit slow tests.
 - Abstract transactions and movements forms into a single one.
+- Audit cache misses.
 
 <!--
 Example item. Keep when the list empties out, so the next entry follows the same shape:
