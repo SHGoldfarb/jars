@@ -50,9 +50,33 @@ const computeBalancesUncached = (
     transfers.reduce(applyTransfer, transactions.reduce(applyTransaction, emptyBalances()))
   );
 
-const computeBalancesWithManualCache = createCacheForFunction(computeBalancesUncached, {
+const balancesCache = createCacheForFunction(computeBalancesUncached, {
   maxSize: 1,
 });
+
+const createGetters = (balances: Balances) => ({
+  jars: (jarId: string) => {
+    if (jarId in balances.jars) {
+      return balances.jars[jarId];
+    }
+    return currency.new(0, 'CLP');
+  },
+  accounts: (accountId: string) => {
+    if (accountId in balances.accounts) {
+      return balances.accounts[accountId];
+    }
+    return currency.new(0, 'CLP');
+  },
+});
+
+export type BalancesGetters = ReturnType<typeof createGetters>;
+
+// Balances for a data state that was already computed, without needing the movements that
+// produced it. It lets a caller check the cache first and only read the movements on a miss.
+export const cachedBalancesGetters = (dataStateId: string): BalancesGetters | undefined => {
+  const cached = balancesCache.getCached(dataStateId);
+  return cached.success ? createGetters(cached.value) : undefined;
+};
 
 export const createBalancesGetters = ({
   dataStateId,
@@ -64,24 +88,10 @@ export const createBalancesGetters = ({
   transfers: Transfer[];
   allocations: Allocation[];
   dataStateId: string;
-}) => {
-  const balances = computeBalancesWithManualCache({
-    key: dataStateId,
-    params: [transactions, transfers, allocations],
-  });
-
-  return {
-    jars: (jarId: string) => {
-      if (jarId in balances.jars) {
-        return balances.jars[jarId];
-      }
-      return currency.new(0, 'CLP');
-    },
-    accounts: (accountId: string) => {
-      if (accountId in balances.accounts) {
-        return balances.accounts[accountId];
-      }
-      return currency.new(0, 'CLP');
-    },
-  };
-};
+}): BalancesGetters =>
+  createGetters(
+    balancesCache.computeWithCache({
+      key: dataStateId,
+      params: [transactions, transfers, allocations],
+    })
+  );

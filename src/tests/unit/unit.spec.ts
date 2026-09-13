@@ -9,7 +9,7 @@ test('unit tests', async () => {
       const fn = (a: number, b: number) => a + b;
       const cached = createCacheForFunction(fn);
 
-      const result = cached({ key: 'key1', params: [1, 2] });
+      const result = cached.computeWithCache({ key: 'key1', params: [1, 2] });
       expect(result).toBe(3);
     });
 
@@ -21,9 +21,9 @@ test('unit tests', async () => {
       };
       const cached = createCacheForFunction(fn);
 
-      cached({ key: 'key1', params: [5] });
-      cached({ key: 'key1', params: [5] });
-      cached({ key: 'key1', params: [5] });
+      cached.computeWithCache({ key: 'key1', params: [5] });
+      cached.computeWithCache({ key: 'key1', params: [5] });
+      cached.computeWithCache({ key: 'key1', params: [5] });
 
       expect(callCount).toBe(1);
     });
@@ -32,8 +32,8 @@ test('unit tests', async () => {
       const fn = (a: number) => a * 10;
       const cached = createCacheForFunction(fn);
 
-      expect(cached({ key: 'a', params: [1] })).toBe(10);
-      expect(cached({ key: 'b', params: [2] })).toBe(20);
+      expect(cached.computeWithCache({ key: 'a', params: [1] })).toBe(10);
+      expect(cached.computeWithCache({ key: 'b', params: [2] })).toBe(20);
     });
 
     await test.step('without maxSize the cache grows without limit', () => {
@@ -46,11 +46,11 @@ test('unit tests', async () => {
       const cached2 = createCacheForFunction(countingFn, { maxSize: null });
 
       for (let i = 0; i < 500; i++) {
-        cached2({ key: String(i), params: [i] });
+        cached2.computeWithCache({ key: String(i), params: [i] });
       }
       // First 500 insertions
       for (let i = 0; i < 500; i++) {
-        cached2({ key: String(i), params: [i] });
+        cached2.computeWithCache({ key: String(i), params: [i] });
       }
       // All 500 should be cache hits
       expect(callCount).toBe(500);
@@ -64,15 +64,15 @@ test('unit tests', async () => {
       };
       const cachedCounting = createCacheForFunction(countingFn, { maxSize: 2 });
 
-      cachedCounting({ key: 'x', params: [1] });
-      cachedCounting({ key: 'y', params: [2] });
+      cachedCounting.computeWithCache({ key: 'x', params: [1] });
+      cachedCounting.computeWithCache({ key: 'y', params: [2] });
       // Cache: [x, y]
-      cachedCounting({ key: 'z', params: [3] });
+      cachedCounting.computeWithCache({ key: 'z', params: [3] });
       // Should evict 'x', cache: [y, z]
 
       expect(callCount).toBe(3);
 
-      cachedCounting({ key: 'x', params: [1] });
+      cachedCounting.computeWithCache({ key: 'x', params: [1] });
       // 'x' was evicted, should re-compute
       expect(callCount).toBe(4);
     });
@@ -85,27 +85,27 @@ test('unit tests', async () => {
       };
       const cachedCounting = createCacheForFunction(countingFn, { maxSize: 3 });
 
-      cachedCounting({ key: 'a', params: [1] });
-      cachedCounting({ key: 'b', params: [2] });
-      cachedCounting({ key: 'c', params: [3] });
+      cachedCounting.computeWithCache({ key: 'a', params: [1] });
+      cachedCounting.computeWithCache({ key: 'b', params: [2] });
+      cachedCounting.computeWithCache({ key: 'c', params: [3] });
       // Cache: [a, b, c]
 
       // Re-access 'a'
-      cachedCounting({ key: 'a', params: [1] });
+      cachedCounting.computeWithCache({ key: 'a', params: [1] });
       // Cache order: [b, c, a]
 
       // Insert 'd' -> evicts 'b'. Cache: [c, a, d]
-      cachedCounting({ key: 'd', params: [4] });
+      cachedCounting.computeWithCache({ key: 'd', params: [4] });
       // Insert 'e' -> evicts 'c'. Cache: [a, d, e]
-      cachedCounting({ key: 'e', params: [5] });
+      cachedCounting.computeWithCache({ key: 'e', params: [5] });
 
       // callCount == 5 for 5 unique inserts (a, b, c, d, e)
       expect(callCount).toBe(5);
 
       // 'b' and 'c' should have been evicted
-      cachedCounting({ key: 'b', params: [2] });
+      cachedCounting.computeWithCache({ key: 'b', params: [2] });
       expect(callCount).toBe(6);
-      cachedCounting({ key: 'c', params: [3] });
+      cachedCounting.computeWithCache({ key: 'c', params: [3] });
       expect(callCount).toBe(7);
     });
 
@@ -117,16 +117,60 @@ test('unit tests', async () => {
       };
       const cached = createCacheForFunction(fn, { maxSize: 1 });
 
-      cached({ key: 'a', params: [1] });
+      cached.computeWithCache({ key: 'a', params: [1] });
       expect(callCount).toBe(1);
 
-      cached({ key: 'b', params: [2] });
+      cached.computeWithCache({ key: 'b', params: [2] });
       expect(callCount).toBe(2);
       // 'a' was evicted
 
-      cached({ key: 'a', params: [1] });
+      cached.computeWithCache({ key: 'a', params: [1] });
       expect(callCount).toBe(3);
       // 'b' was evicted, 'a' re-computed
+    });
+
+    await test.step('getCached reports a miss without computing, and returns a hit', () => {
+      let callCount = 0;
+      const fn = (a: number) => {
+        callCount++;
+        return a * 2;
+      };
+      const cached = createCacheForFunction(fn);
+
+      expect(cached.getCached('a').success).toBe(false);
+      expect(callCount).toBe(0);
+
+      cached.computeWithCache({ key: 'a', params: [21] });
+      const hit = cached.getCached('a');
+
+      expect(hit).toEqual({ success: true, value: 42 });
+      expect(callCount).toBe(1);
+    });
+
+    await test.step('getCached counts as a use for the LRU order', () => {
+      let callCount = 0;
+      const fn = (a: number) => {
+        callCount++;
+        return a;
+      };
+      const cached = createCacheForFunction(fn, { maxSize: 2 });
+
+      cached.computeWithCache({ key: 'a', params: [1] });
+      cached.computeWithCache({ key: 'b', params: [2] });
+      // Cache: [a, b]
+
+      cached.getCached('a');
+      // Cache order: [b, a]
+
+      // Insert 'c' -> evicts 'b'. Cache: [a, c]
+      cached.computeWithCache({ key: 'c', params: [3] });
+      expect(callCount).toBe(3);
+
+      // 'a' survived, 'b' did not
+      cached.computeWithCache({ key: 'a', params: [1] });
+      expect(callCount).toBe(3);
+      cached.computeWithCache({ key: 'b', params: [2] });
+      expect(callCount).toBe(4);
     });
 
     await test.step('maxSize of 0 never caches', () => {
@@ -137,9 +181,9 @@ test('unit tests', async () => {
       };
       const cached = createCacheForFunction(fn, { maxSize: 0 });
 
-      cached({ key: 'a', params: [1] });
-      cached({ key: 'a', params: [1] });
-      cached({ key: 'a', params: [1] });
+      cached.computeWithCache({ key: 'a', params: [1] });
+      cached.computeWithCache({ key: 'a', params: [1] });
+      cached.computeWithCache({ key: 'a', params: [1] });
       expect(callCount).toBe(3);
     });
   });

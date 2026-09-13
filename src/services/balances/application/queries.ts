@@ -1,16 +1,29 @@
 import { financeQueries } from 'src/services/finance';
-import { createBalancesGetters } from '../domain/queries';
+import { cachedBalancesGetters, createBalancesGetters } from '../domain/queries';
 
 const createBalanceQueries = (financeQueriesDeps: typeof financeQueries) => {
-  const getBalances = async () => {
-    const transactions = await financeQueriesDeps.transactions.list();
-    const transfers = await financeQueriesDeps.transfers.list();
-    const allocations = await financeQueriesDeps.allocations.list();
-    const dataStateId = [
+  // The operation ids identify the data the balances are computed from, so they are read first:
+  // when they already name a computed state, the movements themselves are never read.
+  const currentDataStateId = () =>
+    [
       financeQueriesDeps.transactions.lastOperationId(),
       financeQueriesDeps.transfers.lastOperationId(),
       financeQueriesDeps.allocations.lastOperationId(),
     ].join(':');
+
+  const getBalances = async () => {
+    // TODO: lock in balances compute, so that if it's called multiple times at the same time,
+    // it's only computed once and they all hit that cache.
+    const dataStateId = currentDataStateId();
+    // TODO: abstract this pattern: provide a getParams() function to the cache manager, and only
+    // get them if the cache is a miss.
+    const cached = cachedBalancesGetters(dataStateId);
+    if (cached) {
+      return cached;
+    }
+    const transactions = await financeQueriesDeps.transactions.list();
+    const transfers = await financeQueriesDeps.transfers.list();
+    const allocations = await financeQueriesDeps.allocations.list();
     return createBalancesGetters({ transactions, transfers, allocations, dataStateId });
   };
 

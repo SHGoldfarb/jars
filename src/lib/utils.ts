@@ -37,13 +37,22 @@ export const createCacheForFunction = <T extends unknown[], U>(
 
   const { cache, typedGet } = typedCache();
 
-  const computeWithCache = ({ key, params }: { key: string; params: T }) => {
-    const { success, value } = typedGet(key);
-    if (success) {
+  // Looking a key up is a read: it answers whether the value is already there, so a caller can
+  // skip producing the params at all, and it counts as a use for the LRU order.
+  const getCached = (key: string) => {
+    const cached = typedGet(key);
+    if (cached.success) {
       // Move to the end to mark as most recently used
       cache.delete(key);
-      cache.set(key, value);
-      return value;
+      cache.set(key, cached.value);
+    }
+    return cached;
+  };
+
+  const computeWithCache = ({ key, params }: { key: string; params: T }) => {
+    const cached = getCached(key);
+    if (cached.success) {
+      return cached.value;
     }
     const result = f(...params);
     cache.set(key, result);
@@ -57,7 +66,7 @@ export const createCacheForFunction = <T extends unknown[], U>(
     return result;
   };
 
-  return computeWithCache;
+  return { computeWithCache, getCached };
 };
 
 export const memoize = <T extends unknown[], U>(
@@ -67,7 +76,7 @@ export const memoize = <T extends unknown[], U>(
   } = {}
 ) => {
   const { maxSize } = { maxSize: 256, ...options };
-  const computeWithCache = createCacheForFunction(f, { maxSize });
+  const { computeWithCache } = createCacheForFunction(f, { maxSize });
 
   const memoizedFunction = (...params: T) => {
     const key = JSON.stringify(params);
