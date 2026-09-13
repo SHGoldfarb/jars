@@ -115,7 +115,10 @@ const listMovementMonths = (
   params: { includeArchived?: boolean }
 ): YearMonthKey[] => {
   const months = new Set(
-    listMovements(movements, params).map((movement) => yearMonth.fromISO(movement.dateISO))
+    // orderBy: [] is intentional to avoid needless sorting
+    listMovements(movements, { ...params, orderBy: [] }).map((movement) =>
+      yearMonth.fromISO(movement.dateISO)
+    )
   );
 
   return [...months].sort(yearMonth.compareDescending);
