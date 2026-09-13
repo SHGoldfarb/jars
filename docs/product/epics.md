@@ -269,7 +269,7 @@ WIP
 
 ## Small features backlog
 
-- [ ] Better UI on month selector: arrows currently change position depending of the length of the month name, makes it difficult to move multiple times.
+- [x] Better UI on month selector: arrows currently change position depending of the length of the month name, makes it difficult to move multiple times.
 
 ## Epics Backlog
 

@@ -42,7 +42,7 @@ export const MonthSelector = ({
           onSelectMonth(YearMonthKey.parse(value));
         }}
       >
-        <SelectTrigger aria-label="Month">
+        <SelectTrigger aria-label="Month" className="w-36">
           <SelectValue />
         </SelectTrigger>
         <SelectOptions options={options} />
