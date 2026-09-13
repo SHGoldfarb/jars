@@ -188,7 +188,7 @@ Move money between jars.
 - [x] Allocations are included in the jars balance calculation.
 - [x] Allocation form selectors include archived jars when editing an allocation that references them (same pattern as transactions)
 
-## Epic 8 — Data Management
+## Epic 8 — Data Management [DONE]
 
 Create backup, restore from backup (JSON). Export data (CSV). Import from Money Manager. Clear all data.
 
@@ -196,68 +196,68 @@ Create backup, restore from backup (JSON). Export data (CSV). Import from Money 
 
 **Settings screen**
 
-- [ ] A `Settings` entry is available in the main navigation, alongside Movements, Accounts, Jars and Categories
-- [ ] The Settings screen offers all five actions directly, with no subpages: `Create backup`, `Load from backup`, `Export to CSV`, `Import from Money Manager Excel` and `Clear all data`
-- [ ] Each action states what it does before the user commits to it, and the three destructive actions (`Load from backup`, `Import from Money Manager Excel`, `Clear all data`) warn that current data is permanently lost
+- [x] A `Settings` entry is available in the main navigation, alongside Movements, Accounts, Jars and Categories
+- [x] The Settings screen offers all five actions directly, with no subpages: `Create backup`, `Load from backup`, `Export to CSV`, `Import from Money Manager Excel` and `Clear all data`
+- [x] Each action states what it does before the user commits to it, and the three destructive actions (`Load from backup`, `Import from Money Manager Excel`, `Clear all data`) warn that current data is permanently lost
 
 **Create backup (JSON)**
 
-- [ ] `Create backup` downloads a JSON file containing the full database state: accounts, jars, categories, transactions, transfers and allocations
-- [ ] The backup preserves every persisted field of every record, including internal ids, archived markers and amounts, so a restore reproduces the database exactly
-- [ ] The backup carries the schema version it was taken from, so a restore can tell whether it understands the file
-- [ ] The downloaded file has a recognizable name that includes the date it was taken
-- [ ] Creating a backup does not modify any data
+- [x] `Create backup` downloads a JSON file containing the full database state: accounts, jars, categories, transactions, transfers and allocations
+- [x] The backup preserves every persisted field of every record, including internal ids, archived markers and amounts, so a restore reproduces the database exactly
+- [x] The backup carries the schema version it was taken from, so a restore can tell whether it understands the file
+- [x] The downloaded file has a recognizable name that includes the date it was taken
+- [x] Creating a backup does not modify any data
 
 **Load from backup (JSON)**
 
-- [ ] `Load from backup` lets the user pick a JSON file previously produced by `Create backup`
-- [ ] The user must confirm before the restore runs, and the confirmation states that all current data is replaced and cannot be recovered
-- [ ] The file is validated against the domain schemas before anything is written; a file that is not valid JSON, is missing entities, has records that fail validation, or carries an unsupported schema version is rejected with an explanatory error
-- [ ] A rejected file leaves the existing data untouched
-- [ ] A valid file replaces the entire database: every record from the backup is present afterwards and no record that was there before the restore survives
-- [ ] The restore is atomic — a failure part way through leaves the database in its pre-restore state, not a partial mix
-- [ ] After a successful restore the app reflects the restored data without a manual page refresh
-- [ ] Restored data persists across page refreshes
-- [ ] A backup created from the app and then restored into it produces the same balances, movements and listings as before
+- [x] `Load from backup` lets the user pick a JSON file previously produced by `Create backup`
+- [x] The user must confirm before the restore runs, and the confirmation states that all current data is replaced and cannot be recovered
+- [x] The file is validated against the domain schemas before anything is written; a file that is not valid JSON, is missing entities, has records that fail validation, or carries an unsupported schema version is rejected with an explanatory error
+- [x] A rejected file leaves the existing data untouched
+- [x] A valid file replaces the entire database: every record from the backup is present afterwards and no record that was there before the restore survives
+- [x] The restore is atomic — a failure part way through leaves the database in its pre-restore state, not a partial mix
+- [x] After a successful restore the app reflects the restored data without a manual page refresh
+- [x] Restored data persists across page refreshes
+- [x] A backup created from the app and then restored into it produces the same balances, movements and listings as before
 
 **Export to CSV**
 
-- [ ] `Export to CSV` downloads a CSV file containing the movements only, with no internal ids
-- [ ] Every movement is exported — transactions, transfers and allocations — with its kind, amount, date, description, and the accounts, jars and categories it references named rather than referenced by id
-- [ ] Accounts, jars and categories have no rows of their own in the export: they are inferred from the movements that name them
-- [ ] An account, jar or category that no movement references therefore does not appear in the export, archived ones included
-- [ ] Amounts are written as plain decimal numbers alongside a currency column, and dates as `YYYY-MM-DD HH:mm`, so the file is unambiguous in a spreadsheet whatever the reader's locale; no internal representation (ISO timestamps, decimal objects, ids) appears in the file
-- [ ] Values containing separators, quotes or newlines are escaped so the file opens correctly in a spreadsheet
-- [ ] The downloaded file has a recognizable name that includes the export date
-- [ ] Exporting does not modify any data
-- [ ] The CSV export is one-way: it is not accepted by `Load from backup`
+- [x] `Export to CSV` downloads a CSV file containing the movements only, with no internal ids
+- [x] Every movement is exported — transactions, transfers and allocations — with its kind, amount, date, description, and the accounts, jars and categories it references named rather than referenced by id
+- [x] Accounts, jars and categories have no rows of their own in the export: they are inferred from the movements that name them
+- [x] An account, jar or category that no movement references therefore does not appear in the export, archived ones included
+- [x] Amounts are written as plain decimal numbers alongside a currency column, and dates as `YYYY-MM-DD HH:mm`, so the file is unambiguous in a spreadsheet whatever the reader's locale; no internal representation (ISO timestamps, decimal objects, ids) appears in the file
+- [x] Values containing separators, quotes or newlines are escaped so the file opens correctly in a spreadsheet
+- [x] The downloaded file has a recognizable name that includes the export date
+- [x] Exporting does not modify any data
+- [x] The CSV export is one-way: it is not accepted by `Load from backup`
 
 **Import from Money Manager Excel**
 
-- [ ] `Import from Money Manager Excel` lets the user pick an `.xlsx` file exported by the Money Manager app
-- [ ] The user must confirm before the import runs, and the confirmation states that all current data is replaced and cannot be recovered
-- [ ] The file is validated before anything is written: a file that is not a readable `.xlsx` workbook, does not carry the columns a Money Manager export has, or contains rows that cannot be mapped is rejected with an explanatory error naming what failed
-- [ ] A rejected file leaves the existing data untouched
-- [ ] A valid file replaces the entire database, and the import is atomic — a failure part way through leaves the pre-import state
-- [ ] Money Manager accounts become jars, and each jar is created once regardless of how many rows mention the account
-- [ ] Money Manager has no accounts in the Jars sense, so the import creates a single default account named `Cash` and assigns every imported movement to it
-- [ ] Money Manager categories become categories with the kind (`income` or `expense`) implied by the rows that use them, and each category is created once
-- [ ] Money Manager income and expense rows become transactions with their amount, date, description, kind and category, the jar mapped from their Money Manager account, and the default `Cash` account
-- [ ] Money Manager transfer rows become allocations with their amount, date and description, with origin and destination jars mapped from their origin and destination Money Manager accounts
-- [ ] No transfers are created by the import, since every movement lives in the single default account
-- [ ] Imported amounts and dates match the values in the source file
-- [ ] After a successful import the app reflects the imported data without a manual page refresh, and it persists across page refreshes
-- [ ] The default `Cash` account and the imported jars show balances consistent with the imported movements
+- [x] `Import from Money Manager Excel` lets the user pick an `.xlsx` file exported by the Money Manager app
+- [x] The user must confirm before the import runs, and the confirmation states that all current data is replaced and cannot be recovered
+- [x] The file is validated before anything is written: a file that is not a readable `.xlsx` workbook, does not carry the columns a Money Manager export has, or contains rows that cannot be mapped is rejected with an explanatory error naming what failed
+- [x] A rejected file leaves the existing data untouched
+- [x] A valid file replaces the entire database, and the import is atomic — a failure part way through leaves the pre-import state
+- [x] Money Manager accounts become jars, and each jar is created once regardless of how many rows mention the account
+- [x] Money Manager has no accounts in the Jars sense, so the import creates a single default account named `Cash` and assigns every imported movement to it
+- [x] Money Manager categories become categories with the kind (`income` or `expense`) implied by the rows that use them, and each category is created once
+- [x] Money Manager income and expense rows become transactions with their amount, date, description, kind and category, the jar mapped from their Money Manager account, and the default `Cash` account
+- [x] Money Manager transfer rows become allocations with their amount, date and description, with origin and destination jars mapped from their origin and destination Money Manager accounts
+- [x] No transfers are created by the import, since every movement lives in the single default account
+- [x] Imported amounts and dates match the values in the source file
+- [x] After a successful import the app reflects the imported data without a manual page refresh, and it persists across page refreshes
+- [x] The default `Cash` account and the imported jars show balances consistent with the imported movements
 
 **Clear all data**
 
-- [ ] `Clear all data` states what it removes before the user commits to it: accounts, jars, categories, transactions, transfers and allocations
-- [ ] The user must confirm before the clear runs, and the confirmation states that all current data is permanently lost and cannot be recovered
-- [ ] Cancelling the confirmation leaves all data untouched
-- [ ] Confirming empties the database: no accounts, jars, categories, transactions, transfers or allocations remain afterwards
-- [ ] The clear is atomic — a failure part way through leaves the database in its pre-clear state, not a partial mix
-- [ ] After a successful clear the app reflects the empty database without a manual page refresh
-- [ ] The database stays empty across page refreshes
+- [x] `Clear all data` states what it removes before the user commits to it: accounts, jars, categories, transactions, transfers and allocations
+- [x] The user must confirm before the clear runs, and the confirmation states that all current data is permanently lost and cannot be recovered
+- [x] Cancelling the confirmation leaves all data untouched
+- [x] Confirming empties the database: no accounts, jars, categories, transactions, transfers or allocations remain afterwards
+- [x] The clear is atomic — a failure part way through leaves the database in its pre-clear state, not a partial mix
+- [x] After a successful clear the app reflects the empty database without a manual page refresh
+- [x] The database stays empty across page refreshes
 
 ## Epic 9 — Statistics
 
