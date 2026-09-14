@@ -1,4 +1,4 @@
-// RFC 4180 serializing and parsing. A row is a list of fields and nothing else: what the
+// RFC 4180 serializing. A row is a list of fields and nothing else: what the
 // columns mean, and how a value becomes a string, belong to whoever builds the rows.
 
 const RECORD_SEPARATOR = '\r\n';
@@ -7,7 +7,6 @@ const QUOTE = '"';
 
 // A field only has to be quoted when leaving it bare would change where the reader thinks the
 // field or the record ends.
-// TODO: verify this is catches all possible values that would break the csv
 const needsQuoting = /[",\r\n]/;
 
 const serializeField = (field: string) =>
