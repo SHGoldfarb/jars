@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { createLock } from './asyncUtils';
+import { withLock } from './asyncUtils';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -52,25 +52,22 @@ export const createCacheForFunction = <T extends unknown[], U>(
 
   // Every cached function is protected by a lock by default: memoizing is useless
   // if we allow multiple concurrent calls since they won't hit the cache that one of them creates.
-  const lock = createLock();
-
-  const computeWithCache = ({ key, params }: { key: string; params: T }) =>
-    lock.around(() => {
-      const cached = getCached(key);
-      if (cached.success) {
-        return cached.value;
+  const computeWithCache = withLock(({ key, params }: { key: string; params: T }) => {
+    const cached = getCached(key);
+    if (cached.success) {
+      return cached.value;
+    }
+    const result = f(...params);
+    cache.set(key, result);
+    if (maxSize !== null && cache.size > maxSize) {
+      // Delete the first (least recently used) entry
+      const firstKey = cache.keys().next().value;
+      if (firstKey !== undefined) {
+        cache.delete(firstKey);
       }
-      const result = f(...params);
-      cache.set(key, result);
-      if (maxSize !== null && cache.size > maxSize) {
-        // Delete the first (least recently used) entry
-        const firstKey = cache.keys().next().value;
-        if (firstKey !== undefined) {
-          cache.delete(firstKey);
-        }
-      }
-      return result;
-    });
+    }
+    return result;
+  });
 
   return { computeWithCache, getCached };
 };

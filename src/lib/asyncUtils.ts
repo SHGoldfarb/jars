@@ -6,7 +6,7 @@
  * @returns A promise that resolves once the given number of milliseconds has ellapsed.
  */
 export const waitFor = (milliseconds: number) => {
-  return new Promise((resolve) => {
+  return new Promise<void>((resolve) => {
     setTimeout(resolve, milliseconds);
   });
 };
@@ -23,12 +23,30 @@ const emptyPromise = () => {
   return { promise, resolve };
 };
 
-/**
- * Used by doWithLock() to keep track of locks for a given lock name.
- */
-const locksByName: Record<string, Promise<unknown>> = {};
+const createLocksStore = () => {
+  // This keeps track of existing locks
+  const locksByName: Record<string, Promise<void>> = {};
 
-const createLockIdsStore = () => {
+  const get = (name: string) => {
+    // If there are no previous locks for this lock name, just use a promise that will resolve immediately
+    // as the previous lock.
+    if (!(name in locksByName)) {
+      locksByName[name] = waitFor(0);
+    }
+
+    return locksByName[name];
+  };
+
+  const set = (name: string, lock: Promise<void>) => {
+    locksByName[name] = lock;
+  };
+
+  return { get, set };
+};
+
+const locks = createLocksStore();
+
+const createLockIdsTracker = () => {
   let lockId = 0;
   return () => {
     lockId += 1;
@@ -36,36 +54,28 @@ const createLockIdsStore = () => {
   };
 };
 
-const newLockId = createLockIdsStore();
+const newLockId = createLockIdsTracker();
 
 export const createLock = (name?: string) => {
   const lockName = name ?? newLockId();
 
-  // Create the lock, which is simply a promise. Obtain the promise's resolve method which
-  // we can use to "unlock" the lock, which signals to the next task in line that it can start.
-  const { resolve: unlock, promise: newLock } = emptyPromise();
-
   const acquire = async () => {
-    // If there are no previous locks for this lock name, just use a promise that will resolve immediately
-    // as the previous lock.
-    if (!(lockName in locksByName)) {
-      locksByName[lockName] = waitFor(0);
-    }
+    // Create the lock, which is simply a promise. Obtain the promise's resolve method which
+    // we can use to "unlock" the lock, which signals to the next task in line that it can start.
+    const { resolve: unlock, promise: newLock } = emptyPromise();
 
     // Replace the previous lock with our own in the store.
-    const prevLock = locksByName[lockName];
-    locksByName[lockName] = newLock;
+    const prevLock = locks.get(lockName);
+    locks.set(lockName, newLock);
 
     // Wait for our turn
     await prevLock;
-  };
 
-  const release = () => {
-    unlock();
+    return unlock;
   };
 
   const around = async <T>(task: () => T): Promise<T> => {
-    await acquire();
+    const release = await acquire();
 
     // Now that it's our turn, execute the task. We use a finally block here to ensure that we unlock
     // the lock so the next task can start, even if our task throws an error.
@@ -76,7 +86,7 @@ export const createLock = (name?: string) => {
     }
   };
 
-  return { acquire, release, around };
+  return { acquire, around };
 };
 
 /**
@@ -105,4 +115,5 @@ export const withNamedLock = <T extends unknown[], U>(lockName: string, f: (...p
   };
 };
 
-export const withLock = (f: Parameters<typeof withNamedLock>[1]) => withNamedLock(newLockId(), f);
+export const withLock = <T extends unknown[], U>(f: (...params: T) => U) =>
+  withNamedLock(newLockId(), f);
