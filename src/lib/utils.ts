@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { createLock } from './asyncUtils';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -90,9 +91,13 @@ export const makeVersionedMemoize = (options: { maxSize?: number | null } = {}) 
   const { maxSize } = { maxSize: 256, ...options };
   let version = 0;
 
+  // Every memoized function is protected by a lock by default: memoizing is useless
+  // if we allow multiple concurrent calls since they won't hit the cache that one of them creates.
+  const lock = createLock();
+
   const versionedMemoize = <T extends unknown[], U>(f: (...args: T) => U) => {
     const memoized = memoize((_version: number, ...args: T) => f(...args), { maxSize });
-    return (...args: T) => memoized(version, ...args);
+    return (...args: T) => lock.around(() => memoized(version, ...args));
   };
 
   const upVersion = () => {

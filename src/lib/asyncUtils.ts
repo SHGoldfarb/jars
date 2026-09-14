@@ -24,9 +24,60 @@ const emptyPromise = () => {
 };
 
 /**
- * Used by doWithLock() to keep track of each "stack" of locks for a given lock name.
+ * Used by doWithLock() to keep track of locks for a given lock name.
  */
 const locksByName: Record<string, Promise<unknown>> = {};
+
+const createLockIdsStore = () => {
+  let lockId = 0;
+  return () => {
+    lockId += 1;
+    return `__LOCK_ID_${lockId.toString()}`;
+  };
+};
+
+const newLockId = createLockIdsStore();
+
+export const createLock = (name?: string) => {
+  const lockName = name ?? newLockId();
+
+  // Create the lock, which is simply a promise. Obtain the promise's resolve method which
+  // we can use to "unlock" the lock, which signals to the next task in line that it can start.
+  const { resolve: unlock, promise: newLock } = emptyPromise();
+
+  const acquire = async () => {
+    // If there are no previous locks for this lock name, just use a promise that will resolve immediately
+    // as the previous lock.
+    if (!(lockName in locksByName)) {
+      locksByName[lockName] = waitFor(0);
+    }
+
+    // Replace the previous lock with our own in the store.
+    const prevLock = locksByName[lockName];
+    locksByName[lockName] = newLock;
+
+    // Wait for our turn
+    await prevLock;
+  };
+
+  const release = () => {
+    unlock();
+  };
+
+  const around = async <T>(task: () => T): Promise<T> => {
+    await acquire();
+
+    // Now that it's our turn, execute the task. We use a finally block here to ensure that we unlock
+    // the lock so the next task can start, even if our task throws an error.
+    try {
+      return await task();
+    } finally {
+      release();
+    }
+  };
+
+  return { acquire, release, around };
+};
 
 /**
  * Used to ensure that only a single task for the given lock name can be executed at once.
@@ -41,29 +92,7 @@ const locksByName: Record<string, Promise<unknown>> = {};
  * @returns The value returned by the task.
  */
 export const doWithLock = async <T>(lockName: string, task: () => Promise<T>): Promise<T> => {
-  // Create the lock, which is simply a promise. Obtain the promise's resolve method which
-  // we can use to "unlock" the lock, which signals to the next task in line that it can start.
-  const { resolve: unlock, promise: newLock } = emptyPromise();
+  const lock = createLock(lockName);
 
-  // If there are no previous locks for this lock name, just use a promise that will resolve immediately
-  // as the previous lock.
-  if (!(lockName in locksByName)) {
-    locksByName[lockName] = waitFor(0);
-  }
-
-  // Replace the previous lock with our own in the store.
-  const prevLock = locksByName[lockName];
-  locksByName[lockName] = newLock;
-
-  // Wait for our turn
-  await prevLock;
-
-  // Now that it's our turn, execute the task. We use a finally block here to ensure that we unlock
-  // the lock so the next task can start, even if our task throws an error.
-  try {
-    return await task();
-  } finally {
-    // Invoke unlock to signal to the next waiting task to start.
-    unlock();
-  }
+  return await lock.around(task);
 };

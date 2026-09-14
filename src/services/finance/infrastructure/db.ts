@@ -53,9 +53,6 @@ const memoizedTable = <T extends Identified, U, V>(table: Table<T, U, V>) => {
       maxSize: 3,
     });
 
-  // TODO: consider a lock on table's getMap, so that if it's called multiple times at the same time,
-  // it's only computed once and they all hit that cache.
-
   const getMap = versionedMemoize(async () => {
     const items = await table.toArray();
     const map: Record<string, T> = {};
