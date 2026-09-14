@@ -50,22 +50,27 @@ export const createCacheForFunction = <T extends unknown[], U>(
     return cached;
   };
 
-  const computeWithCache = ({ key, params }: { key: string; params: T }) => {
-    const cached = getCached(key);
-    if (cached.success) {
-      return cached.value;
-    }
-    const result = f(...params);
-    cache.set(key, result);
-    if (maxSize !== null && cache.size > maxSize) {
-      // Delete the first (least recently used) entry
-      const firstKey = cache.keys().next().value;
-      if (firstKey !== undefined) {
-        cache.delete(firstKey);
+  // Every cached function is protected by a lock by default: memoizing is useless
+  // if we allow multiple concurrent calls since they won't hit the cache that one of them creates.
+  const lock = createLock();
+
+  const computeWithCache = ({ key, params }: { key: string; params: T }) =>
+    lock.around(() => {
+      const cached = getCached(key);
+      if (cached.success) {
+        return cached.value;
       }
-    }
-    return result;
-  };
+      const result = f(...params);
+      cache.set(key, result);
+      if (maxSize !== null && cache.size > maxSize) {
+        // Delete the first (least recently used) entry
+        const firstKey = cache.keys().next().value;
+        if (firstKey !== undefined) {
+          cache.delete(firstKey);
+        }
+      }
+      return result;
+    });
 
   return { computeWithCache, getCached };
 };
@@ -91,13 +96,9 @@ export const makeVersionedMemoize = (options: { maxSize?: number | null } = {}) 
   const { maxSize } = { maxSize: 256, ...options };
   let version = 0;
 
-  // Every memoized function is protected by a lock by default: memoizing is useless
-  // if we allow multiple concurrent calls since they won't hit the cache that one of them creates.
-  const lock = createLock();
-
   const versionedMemoize = <T extends unknown[], U>(f: (...args: T) => U) => {
     const memoized = memoize((_version: number, ...args: T) => f(...args), { maxSize });
-    return (...args: T) => lock.around(() => memoized(version, ...args));
+    return (...args: T) => memoized(version, ...args);
   };
 
   const upVersion = () => {

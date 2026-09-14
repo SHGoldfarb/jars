@@ -25,7 +25,7 @@ const createBalanceQueries = (financeQueriesDeps: typeof financeQueries) => {
       const transactions = await financeQueriesDeps.transactions.list();
       const transfers = await financeQueriesDeps.transfers.list();
       const allocations = await financeQueriesDeps.allocations.list();
-      return createBalancesGetters({ transactions, transfers, allocations, dataStateId });
+      return await createBalancesGetters({ transactions, transfers, allocations, dataStateId });
     });
 
   return {

@@ -78,7 +78,7 @@ export const cachedBalancesGetters = (dataStateId: string): BalancesGetters | un
   return cached.success ? createGetters(cached.value) : undefined;
 };
 
-export const createBalancesGetters = ({
+export const createBalancesGetters = async ({
   dataStateId,
   transactions,
   transfers,
@@ -88,9 +88,9 @@ export const createBalancesGetters = ({
   transfers: Transfer[];
   allocations: Allocation[];
   dataStateId: string;
-}): BalancesGetters =>
+}): Promise<BalancesGetters> =>
   createGetters(
-    balancesCache.computeWithCache({
+    await balancesCache.computeWithCache({
       key: dataStateId,
       params: [transactions, transfers, allocations],
     })
