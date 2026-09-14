@@ -96,3 +96,13 @@ export const doWithLock = async <T>(lockName: string, task: () => Promise<T>): P
 
   return await lock.around(task);
 };
+
+export const withNamedLock = <T extends unknown[], U>(lockName: string, f: (...params: T) => U) => {
+  const lock = createLock(lockName);
+
+  return async (...params: T) => {
+    return await lock.around(() => f(...params));
+  };
+};
+
+export const withLock = (f: Parameters<typeof withNamedLock>[1]) => withNamedLock(newLockId(), f);

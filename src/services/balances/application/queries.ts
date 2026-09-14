@@ -1,6 +1,6 @@
 import { financeQueries } from 'src/services/finance';
 import { cachedBalancesGetters, createBalancesGetters } from '../domain/queries';
-import { doWithLock } from 'src/lib/asyncUtils';
+import { withNamedLock } from 'src/lib/asyncUtils';
 
 const createBalanceQueries = (financeQueriesDeps: typeof financeQueries) => {
   // The operation ids identify the data the balances are computed from, so they are read first:
@@ -12,21 +12,20 @@ const createBalanceQueries = (financeQueriesDeps: typeof financeQueries) => {
       financeQueriesDeps.allocations.lastOperationId(),
     ].join(':');
 
-  const getBalances = () =>
-    // Balances are computed with a lock to prevent multiple concurrent computations.
-    doWithLock('balances', async () => {
-      const dataStateId = currentDataStateId();
-      // TODO: this should be a cached function that includes the movements fetching inside the function, so that
-      // manually checking for cached value is not necessary.
-      const cached = cachedBalancesGetters(dataStateId);
-      if (cached) {
-        return cached;
-      }
-      const transactions = await financeQueriesDeps.transactions.list();
-      const transfers = await financeQueriesDeps.transfers.list();
-      const allocations = await financeQueriesDeps.allocations.list();
-      return await createBalancesGetters({ transactions, transfers, allocations, dataStateId });
-    });
+  // Balances are computed with a lock to prevent multiple concurrent computations.
+  const getBalances = withNamedLock('balances', async () => {
+    const dataStateId = currentDataStateId();
+    // TODO: this should be a cached function that includes the movements fetching inside the function, so that
+    // manually checking for cached value is not necessary.
+    const cached = cachedBalancesGetters(dataStateId);
+    if (cached) {
+      return cached;
+    }
+    const transactions = await financeQueriesDeps.transactions.list();
+    const transfers = await financeQueriesDeps.transfers.list();
+    const allocations = await financeQueriesDeps.allocations.list();
+    return await createBalancesGetters({ transactions, transfers, allocations, dataStateId });
+  });
 
   return {
     accounts: async (accountId: string) => {
