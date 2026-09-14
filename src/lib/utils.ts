@@ -38,8 +38,7 @@ export const createCacheForFunction = <T extends unknown[], U>(
 
   const { cache, typedGet } = typedCache();
 
-  // Looking a key up is a read: it answers whether the value is already there, so a caller can
-  // skip producing the params at all, and it counts as a use for the LRU order.
+  // Looking a key up is a read, and a read counts as a use for the LRU order.
   const getCached = (key: string) => {
     const cached = typedGet(key);
     if (cached.success) {
@@ -59,6 +58,11 @@ export const createCacheForFunction = <T extends unknown[], U>(
     }
     const result = f(...params);
     cache.set(key, result);
+    // A computation that failed is not a result: an async function's rejection is dropped from
+    // the cache, so the next caller for that key retries instead of replaying the same failure.
+    if (result instanceof Promise) {
+      void result.catch(() => cache.delete(key));
+    }
     if (maxSize !== null && cache.size > maxSize) {
       // Delete the first (least recently used) entry
       const firstKey = cache.keys().next().value;
@@ -69,7 +73,7 @@ export const createCacheForFunction = <T extends unknown[], U>(
     return result;
   });
 
-  return { computeWithCache, getCached };
+  return { computeWithCache };
 };
 
 export const memoize = <T extends unknown[], U>(

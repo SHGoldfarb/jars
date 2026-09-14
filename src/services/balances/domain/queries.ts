@@ -2,6 +2,12 @@ import { createCacheForFunction } from 'src/lib/utils';
 import type { Allocation, Transaction, Transfer } from 'src/services/finance';
 import { type CurrencyAmount, currency } from 'src/services/shared';
 
+export interface Movements {
+  transactions: Transaction[];
+  transfers: Transfer[];
+  allocations: Allocation[];
+}
+
 const emptyBalances = () => ({
   jars: {} as Record<string, CurrencyAmount>,
   accounts: {} as Record<string, CurrencyAmount>,
@@ -40,19 +46,18 @@ const applyAllocation = (balances: Balances, allocation: Allocation) => {
   return balances;
 };
 
-const computeBalancesUncached = (
-  transactions: Transaction[],
-  transfers: Transfer[],
-  allocations: Allocation[]
-) =>
+const computeBalances = ({ transactions, transfers, allocations }: Movements) =>
   allocations.reduce(
     applyAllocation,
     transfers.reduce(applyTransfer, transactions.reduce(applyTransaction, emptyBalances()))
   );
 
-const balancesCache = createCacheForFunction(computeBalancesUncached, {
-  maxSize: 1,
-});
+// Reading the movements is part of what is cached: the key already names the data state they
+// belong to, so a state that was computed before is answered without ever reading them.
+const balancesCache = createCacheForFunction(
+  async (readMovements: () => Promise<Movements>) => computeBalances(await readMovements()),
+  { maxSize: 1 }
+);
 
 const createGetters = (balances: Balances) => ({
   jars: (jarId: string) => {
@@ -71,27 +76,13 @@ const createGetters = (balances: Balances) => ({
 
 export type BalancesGetters = ReturnType<typeof createGetters>;
 
-// Balances for a data state that was already computed, without needing the movements that
-// produced it. It lets a caller check the cache first and only read the movements on a miss.
-export const cachedBalancesGetters = (dataStateId: string): BalancesGetters | undefined => {
-  const cached = balancesCache.getCached(dataStateId);
-  return cached.success ? createGetters(cached.value) : undefined;
-};
-
-export const createBalancesGetters = async ({
+export const balancesGetters = async ({
   dataStateId,
-  transactions,
-  transfers,
-  allocations,
+  readMovements,
 }: {
-  transactions: Transaction[];
-  transfers: Transfer[];
-  allocations: Allocation[];
   dataStateId: string;
+  readMovements: () => Promise<Movements>;
 }): Promise<BalancesGetters> =>
   createGetters(
-    await balancesCache.computeWithCache({
-      key: dataStateId,
-      params: [transactions, transfers, allocations],
-    })
+    await balancesCache.computeWithCache({ key: dataStateId, params: [readMovements] })
   );

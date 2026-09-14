@@ -129,48 +129,24 @@ test('unit tests', async () => {
       // 'b' was evicted, 'a' re-computed
     });
 
-    await test.step('getCached reports a miss without computing, and returns a hit', async () => {
+    await test.step('a rejected async result is not cached', async () => {
       let callCount = 0;
-      const fn = (a: number) => {
+      const fn = (shouldFail: boolean) => {
         callCount++;
-        return a * 2;
+        return shouldFail ? Promise.reject(new Error('boom')) : Promise.resolve('value');
       };
       const cached = createCacheForFunction(fn);
 
-      expect(cached.getCached('a').success).toBe(false);
-      expect(callCount).toBe(0);
-
-      await cached.computeWithCache({ key: 'a', params: [21] });
-      const hit = cached.getCached('a');
-
-      expect(hit).toEqual({ success: true, value: 42 });
+      await expect(cached.computeWithCache({ key: 'a', params: [true] })).rejects.toThrow('boom');
       expect(callCount).toBe(1);
-    });
 
-    await test.step('getCached counts as a use for the LRU order', async () => {
-      let callCount = 0;
-      const fn = (a: number) => {
-        callCount++;
-        return a;
-      };
-      const cached = createCacheForFunction(fn, { maxSize: 2 });
+      // The failed attempt left nothing behind, so the same key is computed again.
+      expect(await cached.computeWithCache({ key: 'a', params: [false] })).toBe('value');
+      expect(callCount).toBe(2);
 
-      await cached.computeWithCache({ key: 'a', params: [1] });
-      await cached.computeWithCache({ key: 'b', params: [2] });
-      // Cache: [a, b]
-
-      cached.getCached('a');
-      // Cache order: [b, a]
-
-      // Insert 'c' -> evicts 'b'. Cache: [a, c]
-      await cached.computeWithCache({ key: 'c', params: [3] });
-      expect(callCount).toBe(3);
-
-      // 'a' survived, 'b' did not
-      await cached.computeWithCache({ key: 'a', params: [1] });
-      expect(callCount).toBe(3);
-      await cached.computeWithCache({ key: 'b', params: [2] });
-      expect(callCount).toBe(4);
+      // The successful result is cached as usual.
+      expect(await cached.computeWithCache({ key: 'a', params: [false] })).toBe('value');
+      expect(callCount).toBe(2);
     });
 
     await test.step('maxSize of 0 never caches', async () => {

@@ -75,9 +75,8 @@ The main application code lives under `src/` and is grouped by responsibility:
 - `src/routes/` - TanStack Router route files
 - `src/presentation/` - view-layer presentation logic
   - `formatters/` - currency and date formatting
-- `src/lib/` - framework-agnostic technical utilities with no domain or business knowledge - for example
-  `cn`, `generateId`, memoization, `Decimal` arithmetic, generic form helpers, `datetime-local` input
-  conversion and file downloads
+- `src/lib/` - framework-agnostic technical utilities with no domain or business knowledge. If a
+  helper needs to know what a jar, an account or a movement is, it belongs in a context instead.
 - `src/services/` - bounded contexts
   - `finance/` - the core finance context
     - `application/` - command/query orchestration (`commands/`)
