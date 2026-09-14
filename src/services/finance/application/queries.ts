@@ -1,6 +1,7 @@
 import { repositories } from '../infrastructure/repositories';
 import { financeDomainQueries, type FinanceRepositories } from '../domain';
 import type { YearMonthKey } from 'src/lib/yearMonth';
+import { makeVersionedMemoize } from 'src/lib/utils';
 
 const listMovementsByKind = async (deps: FinanceRepositories) => ({
   transactions: await deps.transactions.list(),
@@ -15,6 +16,25 @@ export const createFinanceQueries = (deps: FinanceRepositories) => {
       deps.transactions.getLastOperationId(),
       deps.transfers.getLastOperationId(),
     ].join(':');
+
+  const databaseStateId = () =>
+    [
+      movementsStateId(),
+      deps.accounts.getLastOperationId(),
+      deps.jars.getLastOperationId(),
+      deps.categories.getLastOperationId(),
+    ].join(':');
+
+  const withDatabaseCache = <T extends unknown[], U>(f: (...args: T) => U) => {
+    const versionedMemo = makeVersionedMemoize();
+    const memoized = versionedMemo.memoize(f);
+
+    return (...args: T) => {
+      versionedMemo.version.set(databaseStateId());
+      return memoized(...args);
+    };
+  };
+
   return {
     accounts: {
       list: async (params?: { includeArchived?: boolean }) =>
@@ -62,13 +82,7 @@ export const createFinanceQueries = (deps: FinanceRepositories) => {
     },
     database: {
       snapshot: () => deps.database.snapshot(),
-      stateId: () =>
-        [
-          movementsStateId(),
-          deps.accounts.getLastOperationId(),
-          deps.jars.getLastOperationId(),
-          deps.categories.getLastOperationId(),
-        ].join(':'),
+      stateId: databaseStateId,
     },
     movements: {
       list: async (params?: {
@@ -76,8 +90,9 @@ export const createFinanceQueries = (deps: FinanceRepositories) => {
         orderBy?: { dateISO?: 'asc' | 'desc' }[];
         month?: YearMonthKey;
       }) => financeDomainQueries.movements.list(await listMovementsByKind(deps), params ?? {}),
-      months: async (params?: { includeArchived?: boolean }) =>
-        financeDomainQueries.movements.months(await listMovementsByKind(deps), params ?? {}),
+      months: withDatabaseCache(async (params?: { includeArchived?: boolean }) => {
+        return financeDomainQueries.movements.months(await listMovementsByKind(deps), params ?? {});
+      }),
       stateId: movementsStateId,
     },
   };
