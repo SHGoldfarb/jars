@@ -91,26 +91,29 @@ export const memoize = <T extends unknown[], U>(
 
 export const makeVersionedMemoize = (options: { maxSize?: number | null } = {}) => {
   const { maxSize } = { maxSize: 256, ...options };
-  let version = 0;
+  let version: string = generateId();
+
+  const setVersion = (newVersion: string) => {
+    version = newVersion;
+  };
+
+  const invalidateVersion = () => {
+    setVersion(generateId());
+  };
 
   const versionedMemoize = <T extends unknown[], U>(f: (...args: T) => U) => {
-    const memoized = memoize((_version: number, ...args: T) => f(...args), { maxSize });
+    const memoized = memoize((_version: string, ...args: T) => f(...args), { maxSize });
     return (...args: T) => memoized(version, ...args);
   };
 
-  const upVersion = () => {
-    version++;
-  };
-
-  const versionInvalidator =
-    <T extends unknown[], U>(f: (...args: T) => U) =>
-    async (...args: T) => {
-      const result = await f(...args);
-      upVersion();
-      return result;
-    };
-
   const getCurrentVersion = () => version;
 
-  return { versionedMemoize, upVersion, versionInvalidator, getCurrentVersion };
+  return {
+    memoize: versionedMemoize,
+    version: {
+      invalidate: invalidateVersion,
+      current: getCurrentVersion,
+      set: setVersion,
+    },
+  };
 };

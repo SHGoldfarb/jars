@@ -14,14 +14,14 @@ export interface AccountRepository {
   getById(accountId: string): Promise<Account>;
   list(): Promise<Account[]>;
   save(account: Account): Promise<unknown>;
-  getLastOperationId: () => number;
+  getLastOperationId: () => string;
 }
 
 export interface JarRepository {
   getById(jarId: string): Promise<Jar>;
   list(): Promise<Jar[]>;
   save(jar: Jar): Promise<unknown>;
-  getLastOperationId: () => number;
+  getLastOperationId: () => string;
 }
 
 export interface CategoryRepository {
@@ -30,7 +30,7 @@ export interface CategoryRepository {
   listIncome(): Promise<CategoryIncome[]>;
   listExpense(): Promise<CategoryExpense[]>;
   save(category: Category): Promise<unknown>;
-  getLastOperationId: () => number;
+  getLastOperationId: () => string;
 }
 
 export interface MovementOrderItem {
@@ -41,21 +41,21 @@ export interface TransactionRepository {
   getById(transactionId: string): Promise<Transaction>;
   list(): Promise<Transaction[]>;
   save(transaction: Transaction): Promise<unknown>;
-  getLastOperationId: () => number;
+  getLastOperationId: () => string;
 }
 
 export interface TransferRepository {
   getById(transferId: string): Promise<Transfer>;
   list(): Promise<Transfer[]>;
   save(transfer: Transfer): Promise<unknown>;
-  getLastOperationId: () => number;
+  getLastOperationId: () => string;
 }
 
 export interface AllocationRepository {
   getById(allocationId: string): Promise<Allocation>;
   list(): Promise<Allocation[]>;
   save(allocation: Allocation): Promise<unknown>;
-  getLastOperationId: () => number;
+  getLastOperationId: () => string;
 }
 
 // Whole-database reads and writes belong to no single entity, so they get their own port.

@@ -48,12 +48,9 @@ interface Identified {
 }
 
 const memoizedTable = <T extends Identified, U, V>(table: Table<T, U, V>) => {
-  const { versionedMemoize, versionInvalidator, upVersion, getCurrentVersion } =
-    makeVersionedMemoize({
-      maxSize: 3,
-    });
+  const versionedMemoize = makeVersionedMemoize({ maxSize: 3 });
 
-  const getMap = versionedMemoize(async () => {
+  const getMap = versionedMemoize.memoize(async () => {
     const items = await table.toArray();
     const map: Record<string, T> = {};
     for (const item of items) {
@@ -62,11 +59,20 @@ const memoizedTable = <T extends Identified, U, V>(table: Table<T, U, V>) => {
     return map;
   });
 
-  const upsert = versionInvalidator((item: V) => table.put(item));
+  const upsert = async (item: V) => {
+    const result = await table.put(item);
+    versionedMemoize.version.invalidate();
+    return result;
+  };
 
   // `upVersion` is exposed so a whole-database write can invalidate a table it wrote
   // through some path other than `upsert`.
-  return { getMap, upsert, upVersion, getStateVersion: getCurrentVersion };
+  return {
+    getMap,
+    upsert,
+    upVersion: versionedMemoize.version.invalidate,
+    getStateVersion: versionedMemoize.version.current,
+  };
 };
 
 const TABLE_NAMES = [
