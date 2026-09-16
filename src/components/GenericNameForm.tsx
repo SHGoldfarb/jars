@@ -1,15 +1,7 @@
-import { Link } from '@tanstack/react-router';
-import { Button } from 'src/components/ui/button';
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSeparator,
-  FieldSet,
-} from 'src/components/ui/field';
-import { Input } from 'src/components/ui/input';
-import { useForm } from '@tanstack/react-form';
+import type { LinkProps } from '@tanstack/react-router';
+import * as z from 'zod';
+import { Form } from 'src/components/Form';
+import type { FormFieldSpec, FormValues } from 'src/lib/formSpec';
 
 export const GenericNameForm = ({
   initialName,
@@ -24,78 +16,32 @@ export const GenericNameForm = ({
   initialName?: string;
   title: string;
   onSubmit: (name: string) => void;
-  onCancelRoute: string;
+  onCancelRoute: LinkProps['to'];
   onDelete?: () => void;
   fieldName: string;
   placeholder: string;
   disableDeleteButton?: boolean;
 }) => {
-  const form = useForm({
-    defaultValues: {
-      [fieldName]: initialName ?? '',
-    },
-    onSubmit: ({ value }) => {
-      onSubmit(value[fieldName]);
-    },
-  });
+  // The name is the only field, so the browser's own `required` is still what guards it; the
+  // schema is here to give the form its parsed shape.
+  const fields: FormFieldSpec<FormValues>[] = [
+    { kind: 'text', name: fieldName, label: 'Name', placeholder, required: true },
+  ];
 
   return (
-    <div className="w-full max-w-md p-6 ">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          void form.handleSubmit();
-        }}
-      >
-        <FieldGroup>
-          <FieldSet>
-            <FieldLegend>{title}</FieldLegend>
-            <FieldGroup>
-              <form.Field
-                name={fieldName}
-                children={(field) => (
-                  <Field>
-                    <FieldLabel htmlFor={field.name}>Name</FieldLabel>
-                    <Input
-                      // eslint-disable-next-line jsx-a11y/no-autofocus -- user navigates here manually -> autofocus is fine
-                      autoFocus
-                      id={field.name}
-                      name={field.name}
-                      placeholder={placeholder}
-                      required
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                    />
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-          </FieldSet>
-          <FieldSeparator />
-          <Field orientation="horizontal">
-            <Button type="submit">Submit</Button>
-            <Link to={onCancelRoute}>
-              <Button variant="outline" type="button">
-                Cancel
-              </Button>
-            </Link>
-            {onDelete ? (
-              <Button
-                variant="destructive"
-                type="button"
-                onClick={onDelete}
-                disabled={!!disableDeleteButton}
-              >
-                Delete
-              </Button>
-            ) : null}
-          </Field>
-        </FieldGroup>
-      </form>
-    </div>
+    <Form
+      title={title}
+      fields={fields}
+      defaultValues={{ [fieldName]: initialName ?? '' }}
+      schema={z.object({ [fieldName]: z.string() })}
+      onSubmit={(values) => {
+        onSubmit(values[fieldName]);
+        return Promise.resolve();
+      }}
+      defaultErrorMessage="Error saving"
+      cancel={{ to: onCancelRoute }}
+      onDelete={onDelete}
+      deleteDisabled={disableDeleteButton}
+    />
   );
 };

@@ -1,7 +1,7 @@
 import { Select, SelectTrigger, SelectValue } from 'src/components/ui/select';
 import { SelectOptions } from './ui/SelectOptions';
 
-export const TransactionFormFieldSelect = <
+export const FormFieldSelect = <
   T extends {
     state: { value: string | undefined };
     handleChange: (value: T['state']['value']) => unknown;

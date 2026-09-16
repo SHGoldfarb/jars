@@ -21,9 +21,12 @@ const getFirstErrorMessage = (errors: unknown[] | undefined): string | undefined
   );
 };
 
+// The schema is left unparameterised on purpose: `safeParse` takes `unknown`, and tying its
+// input to the value here would only duplicate - more loosely - the pairing that `Form` already
+// pins down through `defaultValues` and `schema` together.
 const validateWithSchema = <T extends object>(
   value: T,
-  schema: z.ZodType<T>
+  schema: z.ZodType
 ): { fields: Partial<Record<keyof T, string>> } | undefined => {
   const result = schema.safeParse(value);
 

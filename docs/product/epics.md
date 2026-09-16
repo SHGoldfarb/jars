@@ -281,3 +281,4 @@ WIP
 - localization (language, money amount format)
 - Bookmarks (favorites - auto populate)
 - Auto recurring transactions
+- Subcategories

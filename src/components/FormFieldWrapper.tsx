@@ -2,7 +2,7 @@ import { Field, FieldError, FieldLabel } from 'src/components/ui/field';
 
 import { formUtils } from 'src/lib/formUtils';
 
-export const TransactionFormFieldWrapper = ({
+export const FormFieldWrapper = ({
   field,
   label,
   children,

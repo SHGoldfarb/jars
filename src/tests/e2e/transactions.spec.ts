@@ -468,3 +468,48 @@ test('after editing a transaction, it automatically restores archived jars and a
   await rootLayoutPage.navButton('Jars').click();
   await jarsPage.expectJarToExist(jarName);
 });
+
+test('focus flows from one field to the next as a new transaction is filled in', async ({
+  createAccount,
+  createJar,
+  createCategory,
+  rootLayoutPage,
+  movementsPage,
+  transactionFormPage,
+  page,
+}) => {
+  const accountName = 'Focus flow account';
+  const jarName = 'Focus flow jar';
+  const categoryName = 'Focus flow salary';
+
+  await createAccount(accountName);
+  await createJar(jarName);
+  await createCategory('Income', categoryName);
+
+  await rootLayoutPage.navButton('Movements').click();
+  await movementsPage.createTransactionButton.click();
+
+  // The type selector opens on its own
+  await expect(page.getByRole('option', { name: 'Income', exact: true })).toBeVisible();
+  await page.getByRole('option', { name: 'Income', exact: true }).click();
+
+  // Picking the type opens the category selector
+  await expect(page.getByRole('option', { name: categoryName, exact: true })).toBeVisible();
+  await page.getByRole('option', { name: categoryName, exact: true }).click();
+
+  // Picking the category opens the account selector
+  await expect(page.getByRole('option', { name: accountName, exact: true })).toBeVisible();
+  await page.getByRole('option', { name: accountName, exact: true }).click();
+
+  // Picking the account opens the jar selector
+  await expect(page.getByRole('option', { name: jarName, exact: true })).toBeVisible();
+  await page.getByRole('option', { name: jarName, exact: true }).click();
+
+  // Picking the jar moves focus to the amount field
+  await expect(transactionFormPage.amountInput).toBeFocused();
+  await transactionFormPage.amountInput.fill('1000');
+
+  // Enter on the amount field moves focus to the description field
+  await transactionFormPage.amountInput.press('Enter');
+  await expect(transactionFormPage.descriptionInput).toBeFocused();
+});
