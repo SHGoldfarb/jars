@@ -3,30 +3,31 @@ import { formatCurrencyAmount } from 'src/presentation/formatters/currencyFormat
 import { formatDateISO } from 'src/presentation/formatters/dateFormatters';
 import type { Transfer } from 'src/services/finance';
 import { useAccount } from 'src/hooks/useAccount';
-import { ItemContent, ItemDescription, ItemMedia, ItemTitle } from './ui/item';
+import { ItemDescription, ItemTitle } from './ui/item';
+import { MovementListItem } from './MovementListItem';
 
 export const TransferListItem = ({ transfer }: { transfer: Transfer }) => {
   const originAccount = useAccount(transfer.originAccountId);
   const destinationAccount = useAccount(transfer.destinationAccountId);
 
   return (
-    <>
-      <ItemMedia variant="icon">
-        <ArrowLeftRightIcon className="text-sky-400" />
-      </ItemMedia>
-      <ItemContent className="max-w-1/3">
-        <ItemTitle>
-          {originAccount?.name} → {destinationAccount?.name}
-        </ItemTitle>
-        <ItemDescription>Transfer</ItemDescription>
-      </ItemContent>
-      <ItemContent>
-        <ItemTitle>{transfer.description}</ItemTitle>
-      </ItemContent>
-      <ItemContent className="ml-auto items-end">
-        <ItemTitle>{formatCurrencyAmount(transfer.amount)}</ItemTitle>
-        <ItemDescription>{formatDateISO(transfer.dateISO)}</ItemDescription>
-      </ItemContent>
-    </>
+    <MovementListItem
+      icon={<ArrowLeftRightIcon className="text-sky-400" />}
+      contentLeft={
+        <>
+          <ItemTitle>
+            {originAccount?.name} → {destinationAccount?.name}
+          </ItemTitle>
+          <ItemDescription>Transfer</ItemDescription>
+        </>
+      }
+      contentMiddle={<ItemTitle>{transfer.description}</ItemTitle>}
+      contentRight={
+        <>
+          <ItemTitle>{formatCurrencyAmount(transfer.amount)}</ItemTitle>
+          <ItemDescription>{formatDateISO(transfer.dateISO)}</ItemDescription>
+        </>
+      }
+    />
   );
 };
