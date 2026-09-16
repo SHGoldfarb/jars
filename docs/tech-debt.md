@@ -3,8 +3,6 @@
 Known engineering debt, roughly in priority order. Unlike `product/epics.md`, nothing here is
 user-facing.
 
-- Abstract transactions and movements forms into a single one.
-
 <!--
 Example item. Keep when the list empties out, so the next entry follows the same shape:
 
