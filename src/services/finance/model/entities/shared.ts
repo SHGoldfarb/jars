@@ -18,6 +18,8 @@ export const Nameable = z.object({
   name: z.string().trim().min(1),
 });
 
+export type Nameable = z.infer<typeof Nameable>;
+
 export const Movement = z.object({
   ...Identifiable.shape,
   ...Archivable.shape,

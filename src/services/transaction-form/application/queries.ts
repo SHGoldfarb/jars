@@ -1,4 +1,4 @@
-import { financeQueries } from 'src/services/finance';
+import { byName, financeQueries } from 'src/services/finance';
 
 const createTransactionFormQueries = (financeQueriesDeps: typeof financeQueries) => {
   return {
@@ -16,7 +16,7 @@ const createTransactionFormQueries = (financeQueriesDeps: typeof financeQueries)
           const transactionAccount = await financeQueriesDeps.accounts.getById(
             transaction.accountId
           );
-          return [transactionAccount, ...accounts];
+          return [transactionAccount, ...accounts].sort(byName);
         }
       }
       return accounts;
@@ -32,7 +32,7 @@ const createTransactionFormQueries = (financeQueriesDeps: typeof financeQueries)
         const isTransactionJarIncluded = jars.map(({ id }) => id).includes(transaction.jarId);
         if (!isTransactionJarIncluded) {
           const transactionJar = await financeQueriesDeps.jars.getById(transaction.jarId);
-          return [transactionJar, ...jars];
+          return [transactionJar, ...jars].sort(byName);
         }
       }
       return jars;
@@ -58,7 +58,7 @@ const createTransactionFormQueries = (financeQueriesDeps: typeof financeQueries)
           const transactionCategory = await financeQueriesDeps.categories.getById(
             transaction.categoryId
           );
-          return [transactionCategory, ...categories];
+          return [transactionCategory, ...categories].sort(byName);
         }
       }
       return categories;

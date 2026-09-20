@@ -1,20 +1,35 @@
-import { Account, Allocation, Category, Jar, Movement, Transaction, Transfer } from '../model';
+import {
+  Account,
+  Allocation,
+  Category,
+  Jar,
+  Movement,
+  type Nameable,
+  Transaction,
+  Transfer,
+} from '../model';
 import { yearMonth, type YearMonthKey } from 'src/lib/yearMonth';
 import type { MovementOrderItem } from './repositories';
 
+// Named entities are shown alphabetically everywhere they are listed - a page or a form
+// selector - so the place a name sits does not depend on when it was created. Exported for the
+// callers that add an entity to one of the lists below - a form selector keeping the archived
+// entity its movement still points at - and have to place it.
+export const byName = (a: Nameable, b: Nameable) => a.name.localeCompare(b.name);
+
 const listJars = (jars: Jar[], params: { includeArchived?: boolean }) => {
   const { includeArchived = false } = params;
-  return jars.filter((jar) => includeArchived || !jar.archivedAtISO);
+  return jars.filter((jar) => includeArchived || !jar.archivedAtISO).sort(byName);
 };
 
 const listCategories = (categories: Category[], params: { includeArchived?: boolean }) => {
   const { includeArchived = false } = params;
-  return categories.filter((category) => includeArchived || !category.archivedAtISO);
+  return categories.filter((category) => includeArchived || !category.archivedAtISO).sort(byName);
 };
 
 const listAccounts = (accounts: Account[], params: { includeArchived?: boolean }) => {
   const { includeArchived = false } = params;
-  return accounts.filter((account) => includeArchived || !account.archivedAtISO);
+  return accounts.filter((account) => includeArchived || !account.archivedAtISO).sort(byName);
 };
 
 const orderMovements = (a: Movement, b: Movement, orderItem: MovementOrderItem) => {

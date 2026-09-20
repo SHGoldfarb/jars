@@ -119,3 +119,21 @@ test('shows categories', async ({ categoriesPage, createCategory }) => {
     await categoriesPage.expectCategoryToNotExist(initialName);
   });
 });
+
+test('categories are listed alphabetically', async ({ categoriesPage, createCategory }) => {
+  test.slow();
+  // Created out of alphabetical order, so the order shown cannot be the creation order.
+  const incomeCategoryNames = ['Salary', 'Bonus', 'Dividends'];
+  const expenseCategoryNames = ['Rent', 'Groceries', 'Electricity'];
+
+  await runInOrder([
+    ...incomeCategoryNames.map((categoryName) => () => createCategory('Income', categoryName)),
+    ...expenseCategoryNames.map((categoryName) => () => createCategory('Expense', categoryName)),
+  ]);
+
+  await categoriesPage.incomeTabButton.click();
+  await categoriesPage.expectCategoriesInOrder('Income', ['Bonus', 'Dividends', 'Salary']);
+
+  await categoriesPage.expensesTabButton.click();
+  await categoriesPage.expectCategoriesInOrder('Expense', ['Electricity', 'Groceries', 'Rent']);
+});

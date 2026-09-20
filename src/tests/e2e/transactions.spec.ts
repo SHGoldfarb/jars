@@ -513,3 +513,33 @@ test('focus flows from one field to the next as a new transaction is filled in',
   await transactionFormPage.amountInput.press('Enter');
   await expect(transactionFormPage.descriptionInput).toBeFocused();
 });
+
+test('transaction form selectors are ordered alphabetically', async ({
+  createAccount,
+  createJar,
+  createCategory,
+  rootLayoutPage,
+  movementsPage,
+  transactionFormPage,
+}) => {
+  test.slow();
+  // Everything is created out of alphabetical order, so the order each selector offers cannot
+  // be the creation order.
+  const accountNames = ['Wallet', 'Bank'];
+  const jarNames = ['Travel', 'Emergency'];
+  const expenseCategoryNames = ['Rent', 'Groceries'];
+
+  await runInOrder([
+    ...accountNames.map((accountName) => () => createAccount(accountName)),
+    ...jarNames.map((jarName) => () => createJar(jarName)),
+    ...expenseCategoryNames.map((categoryName) => () => createCategory('Expense', categoryName)),
+  ]);
+
+  await rootLayoutPage.navButton('Movements').click();
+  await movementsPage.createTransactionButton.click();
+  await transactionFormPage.selectType('Expense');
+
+  await transactionFormPage.expectOptionsInOrder('Account', ['Bank', 'Wallet']);
+  await transactionFormPage.expectOptionsInOrder('Jar', ['Emergency', 'Travel']);
+  await transactionFormPage.expectOptionsInOrder('Category', ['Groceries', 'Rent']);
+});

@@ -18,6 +18,17 @@ export const categoriesPageConstructor = (page: Page) => {
   const expensesTabButton = tabButton('Expense');
   const incomeTabButton = tabButton('Income');
 
+  // The categories list of the open tab, told apart from the page's navigation lists by the add
+  // action it holds - which is also the row that heads it.
+  const categoriesList = (kind: 'Income' | 'Expense') =>
+    page.getByRole('list').filter({ has: createCategoryButton(kind) });
+  const expectCategoriesInOrder = async (kind: 'Income' | 'Expense', categoryNames: string[]) => {
+    await expect(categoriesList(kind).getByRole('link')).toHaveText([
+      `Add ${kind} category`,
+      ...categoryNames,
+    ]);
+  };
+
   const createIncomeCategoryButton = createCategoryButton('Income');
   const createExpenseCategoryButton = createCategoryButton('Expense');
 
@@ -28,6 +39,7 @@ export const categoriesPageConstructor = (page: Page) => {
     createExpenseCategoryButton,
     expectCategoryToExist,
     expectCategoryToNotExist,
+    expectCategoriesInOrder,
     getCategory,
     tabButton,
     expensesTabButton,

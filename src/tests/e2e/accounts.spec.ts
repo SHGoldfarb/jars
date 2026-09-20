@@ -180,3 +180,12 @@ test('delete button is disabled for accounts with non zero balance', async ({
   await accountsPage.clickAccount(defaultData.accounts[0]);
   await expect(accountFormPage.deleteButton).toBeDisabled();
 });
+
+test('accounts are listed alphabetically', async ({ accountsPage, createAccount }) => {
+  // Created out of alphabetical order, so the order shown cannot be the creation order.
+  const accountNames = ['Wallet', 'Bank', 'Mattress'];
+
+  await runInOrder(accountNames.map((accountName) => () => createAccount(accountName)));
+
+  await accountsPage.expectAccountsInOrder(['Bank', 'Mattress', 'Wallet']);
+});

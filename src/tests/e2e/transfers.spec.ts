@@ -332,3 +332,23 @@ test('after editing a transfer, it automatically restores archived accounts if t
   await accountsPage.expectAccountToExist(originName);
   await accountsPage.expectAccountToExist(destinationName);
 });
+
+test('transfer form account selectors are ordered alphabetically', async ({
+  createAccount,
+  rootLayoutPage,
+  movementsPage,
+  transferFormPage,
+}) => {
+  // Created out of alphabetical order, so the order the selectors offer cannot be the
+  // creation order.
+  const accountNames = ['Wallet', 'Bank', 'Mattress'];
+
+  await runInOrder(accountNames.map((accountName) => () => createAccount(accountName)));
+
+  await rootLayoutPage.navButton('Movements').click();
+  await movementsPage.createTransferButton.click();
+
+  const orderedNames = ['Bank', 'Mattress', 'Wallet'];
+  await transferFormPage.expectOptionsInOrder('Origin account', orderedNames);
+  await transferFormPage.expectOptionsInOrder('Destination account', orderedNames);
+});

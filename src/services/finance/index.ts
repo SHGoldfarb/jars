@@ -1,5 +1,6 @@
 export { financeCommands, financeQueries } from './application';
 export {
+  byName,
   TransactionUnsaved,
   TransferUnsaved,
   AllocationUnsaved,

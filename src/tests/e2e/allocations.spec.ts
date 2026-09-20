@@ -306,3 +306,23 @@ test('after editing an allocation, it automatically restores archived jars if th
   await jarsPage.expectJarToExist(originName);
   await jarsPage.expectJarToExist(destinationName);
 });
+
+test('allocation form jar selectors are ordered alphabetically', async ({
+  createJar,
+  rootLayoutPage,
+  movementsPage,
+  allocationFormPage,
+}) => {
+  // Created out of alphabetical order, so the order the selectors offer cannot be the
+  // creation order.
+  const jarNames = ['Travel', 'Emergency', 'Rent'];
+
+  await runInOrder(jarNames.map((jarName) => () => createJar(jarName)));
+
+  await rootLayoutPage.navButton('Movements').click();
+  await movementsPage.createAllocationButton.click();
+
+  const orderedNames = ['Emergency', 'Rent', 'Travel'];
+  await allocationFormPage.expectOptionsInOrder('Origin jar', orderedNames);
+  await allocationFormPage.expectOptionsInOrder('Destination jar', orderedNames);
+});

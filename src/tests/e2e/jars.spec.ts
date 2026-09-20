@@ -215,3 +215,12 @@ test('delete button is disabled for a jar whose balance comes from an allocation
 
   await expect(jarFormPage.deleteButton).toBeDisabled();
 });
+
+test('jars are listed alphabetically', async ({ jarsPage, createJar }) => {
+  // Created out of alphabetical order, so the order shown cannot be the creation order.
+  const jarNames = ['Travel', 'Emergency', 'Rent'];
+
+  await runInOrder(jarNames.map((jarName) => () => createJar(jarName)));
+
+  await jarsPage.expectJarsInOrder(['Emergency', 'Rent', 'Travel']);
+});

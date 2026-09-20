@@ -270,6 +270,8 @@ WIP
 ## Small features backlog
 
 - [x] Better UI on month selector: arrows currently change position depending of the length of the month name, makes it difficult to move multiple times.
+- [x] Order jars, accounts, categories alphabetically. In page and form selectors.
+- [ ] Suggest previous descriptions in description field in movements form.
 
 ## Epics Backlog
 

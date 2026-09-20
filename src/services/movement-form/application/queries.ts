@@ -1,3 +1,4 @@
+import { byName } from 'src/services/finance';
 import type { MovementEndpointOption, MovementKind, MovementLike } from './kinds';
 
 export const createMovementFormQueries = <TMovement extends MovementLike, TUnsaved>(
@@ -17,7 +18,7 @@ export const createMovementFormQueries = <TMovement extends MovementLike, TUnsav
       const missingIds = [originId, destinationId].filter((id) => !endpointIds.includes(id));
       if (missingIds.length > 0) {
         const missingEndpoints = await Promise.all(missingIds.map(kind.getEndpointById));
-        return [...missingEndpoints, ...endpoints];
+        return [...missingEndpoints, ...endpoints].sort(byName);
       }
     }
     return endpoints;

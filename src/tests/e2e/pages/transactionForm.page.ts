@@ -85,6 +85,17 @@ export const transactionFormPageConstructor = (page: Page) => {
     await page.keyboard.press('Escape');
   };
 
+  // Every option the selector offers, in the order it offers them.
+  const expectOptionsInOrder = async (
+    comboboxName: 'Type' | 'Account' | 'Jar' | 'Category',
+    options: string[]
+  ) => {
+    await closeDropdowns();
+    await page.getByRole('combobox', { name: comboboxName }).click();
+    await expect(page.getByRole('option')).toHaveText(options);
+    await page.keyboard.press('Escape');
+  };
+
   const expectCategoryOptionToExist = async (name: string) => {
     await expectOptionToExist('Category', name);
   };
@@ -126,6 +137,7 @@ export const transactionFormPageConstructor = (page: Page) => {
     selectFirstCategory,
     expectOptionToExist,
     expectOptionToNotExist,
+    expectOptionsInOrder,
     expectCategoryOptionToExist,
     expectCategoryOptionToNotExist,
     fillAmount,

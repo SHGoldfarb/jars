@@ -44,6 +44,14 @@ export const transferFormPageConstructor = (page: Page) => {
     await page.keyboard.press('Escape');
   };
 
+  // Every option the selector offers, in the order it offers them.
+  const expectOptionsInOrder = async (comboboxName: ComboboxName, options: string[]) => {
+    await closeDropdowns();
+    await page.getByRole('combobox', { name: comboboxName }).click();
+    await expect(page.getByRole('option')).toHaveText(options);
+    await page.keyboard.press('Escape');
+  };
+
   const fillAmount = async (amount: string) => {
     await closeDropdowns();
     await amountInput.fill(amount);
@@ -71,6 +79,7 @@ export const transferFormPageConstructor = (page: Page) => {
     selectDestinationAccount,
     expectOptionToExist,
     expectOptionToNotExist,
+    expectOptionsInOrder,
     fillAmount,
     fillDescription,
     fillDate,
