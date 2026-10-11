@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useForm, useStore } from '@tanstack/react-form';
 import type { LinkProps } from '@tanstack/react-router';
 import * as z from 'zod';
@@ -48,6 +48,9 @@ export const Form = <TValues extends StringValued<TValues>, TParsed>({
     widenedDefaults[spec.name] = defaultValues[spec.name];
   }
   const inputs = useRef(new Map<string, HTMLInputElement | null>());
+  // The optional fields the flow has opened and is waiting on. An offer ends when the selector
+  // closes, chosen from or not, so a dismissed one hands on to the field after it.
+  const [offers, setOffers] = useState<ReadonlySet<string>>(new Set());
 
   const form = useForm({
     defaultValues: widenedDefaults,
@@ -69,6 +72,30 @@ export const Form = <TValues extends StringValued<TValues>, TParsed>({
   // A reader accepts any of the caller's field names, so the spec keeps its key checking even
   // though what it reads from is the widened shape.
   const read = (name: string) => values[name];
+  // An offer of a selector with nothing in it - a category without subcategories - is no offer
+  // at all: the flow goes straight on past it.
+  const offered: ReadonlySet<string> = new Set(
+    fields
+      .filter(
+        (spec) =>
+          offers.has(spec.name) &&
+          spec.kind === 'select' &&
+          formSpec.selectOptions(spec, read).length > 0
+      )
+      .map(({ name }) => name)
+  );
+  const progress = { values, offered };
+
+  const endOffer = (name: string) => {
+    setOffers((current) => {
+      if (!current.has(name)) {
+        return current;
+      }
+      const next = new Set(current);
+      next.delete(name);
+      return next;
+    });
+  };
 
   const handOverFocusTo = (name: string) => {
     // Focus the field 0.1 seconds later. Its emptiness is read off the input itself rather than
@@ -94,6 +121,11 @@ export const Form = <TValues extends StringValued<TValues>, TParsed>({
       form.setFieldValue(name, '');
     }
 
+    const offer = formSpec.optionalFieldAfter(fields, index);
+    if (value && offer) {
+      setOffers((current) => new Set(current).add(offer));
+    }
+
     const handOverTo = formSpec.textFieldAfterSelect(fields, index);
     if (value && handOverTo) {
       handOverFocusTo(handOverTo);
@@ -115,11 +147,11 @@ export const Form = <TValues extends StringValued<TValues>, TParsed>({
             <FieldGroup>
               {fields.map((spec, index) => {
                 const name: string = spec.name;
-                const active = formSpec.isFieldActive(fields, index, values);
+                const active = formSpec.isFieldActive(fields, index, progress);
                 const nextTextField = formSpec.nextTextField(fields, index);
 
                 return (
-                  <form.Field key={formSpec.fieldKey(fields, index, values)} name={name}>
+                  <form.Field key={formSpec.fieldKey(fields, index, progress)} name={name}>
                     {(field) => (
                       <FormField
                         spec={spec}
@@ -131,6 +163,9 @@ export const Form = <TValues extends StringValued<TValues>, TParsed>({
                         }}
                         onSelected={(value) => {
                           handleSelected(spec, index, value);
+                        }}
+                        onClosed={() => {
+                          endOffer(name);
                         }}
                         onEnter={
                           nextTextField

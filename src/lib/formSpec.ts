@@ -45,9 +45,10 @@ interface FormFieldSelect<TValues> {
   // Emptied when this field changes. An emptied field is active again, so it re-enters the
   // focus flow on its own.
   clears?: FormFieldName<TValues>[];
-  // A field the user may leave empty. It never becomes the active one and the fields after it
-  // look straight past it, so an optional selector the user skips cannot stall the form on
-  // itself or hold up everything behind it.
+  // A field the user may leave empty. The focus flow walks through it only while it is offered -
+  // opened because the field before it was just chosen - and otherwise looks straight past it,
+  // so an optional selector the user skips cannot stall the form on itself or hold up
+  // everything behind it.
   optional?: boolean;
 }
 
@@ -64,9 +65,30 @@ interface FormFieldPosition {
   optional?: boolean;
 }
 
-// The field the focus flow treats as the one before this one: the closest preceding field the
-// user has to fill. An optional field is skipped over, so leaving it empty does not read as
-// "the form has not got this far yet".
+// How far the user has got: what is filled in, and which optional fields the flow has opened and
+// is still waiting on.
+interface FormProgress {
+  values: FormValues;
+  offered: ReadonlySet<string>;
+}
+
+// Whether the focus flow walks through a field or past it: a required one always, an optional
+// one only while it is offered.
+const isInFlow = (field: FormFieldPosition, offered: ReadonlySet<string>): boolean =>
+  !field.optional || offered.has(field.name);
+
+// The field the focus flow treats as the one before this one: the closest preceding field it
+// walks through. An optional field it is not offering is skipped over, so leaving it empty does
+// not read as "the form has not got this far yet".
+const previousFlowField = (
+  fields: FormFieldPosition[],
+  index: number,
+  offered: ReadonlySet<string>
+): FormFieldPosition | undefined =>
+  fields.slice(0, index).findLast((field) => isInFlow(field, offered));
+
+// The field a select must sit after for the focus flow to have reached it - the closest preceding
+// required one, whatever is offered.
 const previousRequiredField = (
   fields: FormFieldPosition[],
   index: number
@@ -74,15 +96,20 @@ const previousRequiredField = (
 
 // A field is active - the one the user should be filling next - when it is empty and the field
 // before it is not. The first field has nothing before it, so it is active whenever it is empty.
-// An optional field is never active: it is there to be reached for, not to be walked into.
+// An optional field is active only while it is offered: it is there to be reached for, or to be
+// led into right after the field it depends on, not to be walked into on its own.
 // An active select opens; an active text input takes focus.
-const isFieldActive = (fields: FormFieldPosition[], index: number, values: FormValues): boolean => {
+const isFieldActive = (
+  fields: FormFieldPosition[],
+  index: number,
+  { values, offered }: FormProgress
+): boolean => {
   const field = fields[index];
-  if (field.optional || values[field.name]) {
+  if (!isInFlow(field, offered) || values[field.name]) {
     return false;
   }
 
-  const previous = previousRequiredField(fields, index);
+  const previous = previousFlowField(fields, index, offered);
   return !previous || values[previous.name] !== '';
 };
 
@@ -92,9 +119,13 @@ const isFieldActive = (fields: FormFieldPosition[], index: number, values: FormV
 //
 // Every select from the last required one onwards counts, not just the immediately preceding
 // field: choosing a required category has to re-open what follows even when an optional
-// subcategory sits in between, and choosing that optional subcategory has to re-open it too,
-// so a field the user did reach for leads on rather than dead-ending.
-const fieldKey = (fields: FormFieldPosition[], index: number, values: FormValues): string => {
+// subcategory sits in between, and choosing that optional subcategory - or dismissing it, which
+// ends the offer - has to re-open it too, so the flow leads on rather than dead-ending.
+const fieldKey = (
+  fields: FormFieldPosition[],
+  index: number,
+  { values, offered }: FormProgress
+): string => {
   const field = fields[index];
   const previous = previousRequiredField(fields, index);
 
@@ -105,9 +136,15 @@ const fieldKey = (fields: FormFieldPosition[], index: number, values: FormValues
   const preceding = fields
     .slice(fields.indexOf(previous), index)
     .filter(({ kind }) => kind === 'select')
-    .map(({ name }) => values[name]);
+    .map(({ name }) => (offered.has(name) ? `${values[name]} (offered)` : values[name]));
 
   return `${field.name} - ${preceding.join(' - ')}`;
+};
+
+// The optional field choosing this one offers: the very next field, if it is optional.
+const optionalFieldAfter = (fields: FormFieldPosition[], index: number): string | undefined => {
+  const next = index + 1 < fields.length ? fields[index + 1] : undefined;
+  return next?.optional ? next.name : undefined;
 };
 
 // The text input a select hands focus to once it has a value: the very next field, and only if
@@ -117,6 +154,12 @@ const textFieldAfterSelect = (fields: FormFieldPosition[], index: number): strin
   return next?.kind === 'text' ? next.name : undefined;
 };
 
+// What a select offers given what is filled in so far.
+const selectOptions = <TValues>(
+  spec: FormFieldSelect<TValues>,
+  read: FormFieldReader<TValues>
+): FormFieldOption[] => (typeof spec.options === 'function' ? spec.options(read) : spec.options);
+
 // Where Enter in a text input goes. Without one, Enter submits, which is what the last text
 // field of a form should do.
 const nextTextField = (fields: FormFieldPosition[], index: number): string | undefined =>
@@ -125,6 +168,8 @@ const nextTextField = (fields: FormFieldPosition[], index: number): string | und
 export const formSpec = {
   isFieldActive,
   fieldKey,
+  optionalFieldAfter,
+  selectOptions,
   textFieldAfterSelect,
   nextTextField,
 };

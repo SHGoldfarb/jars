@@ -54,8 +54,8 @@ export const useTransactionFormSpec = () => {
       name: 'subcategoryId',
       label: 'Subcategory',
       placeholder: 'Select Subcategory',
-      // Empty until a category is picked, and only ever that category's own. Optional, so the
-      // form's focus flow reaches straight past it to the Account selector.
+      // Empty until a category is picked, and only ever that category's own. Optional: picking
+      // a category that has subcategories opens it, and skipping it moves on to Account.
       optional: true,
       options: (read) => toOptions(subcategoriesByCategoryId[read('categoryId')] ?? []),
     },

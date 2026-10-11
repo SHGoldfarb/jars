@@ -190,7 +190,7 @@ test.describe('on the transaction form', () => {
     await transactionFormPage.expectOptionsInOrder('Subcategory', ['Bus']);
   });
 
-  test('the form flows past the subcategory, and on again from it', async ({
+  test('picking a category opens its subcategories, and the form flows on from them', async ({
     page,
     createDefaultData,
     createSubcategory,
@@ -207,13 +207,56 @@ test.describe('on the transaction form', () => {
     await transactionFormPage.selectType('Expense');
     await transactionFormPage.selectCategory('Groceries');
 
-    // Optional, so the form reaches straight past it: picking the category opens Account,
-    // not Subcategory.
-    await expect(page.getByRole('option', { name: defaultData.accounts[0] })).toBeVisible();
+    // The category has subcategories, so they are what opens next, not Account.
+    await expect(page.getByRole('option', { name: 'Meat', exact: true })).toBeVisible();
 
-    // And reaching for it anyway leads on rather than dead-ending: picking a subcategory opens
-    // the account selector that was skipped.
-    await transactionFormPage.selectSubcategory('Meat');
+    // Picking one leads on to the account.
+    await page.getByRole('option', { name: 'Meat', exact: true }).click();
+    await expect(page.getByRole('option', { name: defaultData.accounts[0] })).toBeVisible();
+  });
+
+  test('a skipped subcategory hands on to the account', async ({
+    page,
+    createDefaultData,
+    createSubcategory,
+    rootLayoutPage,
+    movementsPage,
+    transactionFormPage,
+  }) => {
+    test.slow();
+    await createDefaultData();
+    await createSubcategory('Expense', 'Groceries', 'Meat');
+
+    await rootLayoutPage.navButton('Movements').click();
+    await movementsPage.createTransactionButton.click();
+    await transactionFormPage.selectType('Expense');
+    await transactionFormPage.selectCategory('Groceries');
+    await expect(page.getByRole('option', { name: 'Meat', exact: true })).toBeVisible();
+
+    await page.keyboard.press('Escape');
+
+    await expect(page.getByRole('option', { name: defaultData.accounts[0] })).toBeVisible();
+  });
+
+  test('a category without subcategories goes straight on to the account', async ({
+    page,
+    createDefaultData,
+    createCategory,
+    createSubcategory,
+    rootLayoutPage,
+    movementsPage,
+    transactionFormPage,
+  }) => {
+    test.slow();
+    await createDefaultData();
+    await createCategory('Expense', 'Transport');
+    await createSubcategory('Expense', 'Groceries', 'Meat');
+
+    await rootLayoutPage.navButton('Movements').click();
+    await movementsPage.createTransactionButton.click();
+    await transactionFormPage.selectType('Expense');
+    await transactionFormPage.selectCategory('Transport');
+
     await expect(page.getByRole('option', { name: defaultData.accounts[0] })).toBeVisible();
   });
 

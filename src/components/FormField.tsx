@@ -2,7 +2,7 @@ import { Input } from 'src/components/ui/input';
 import { FormFieldSelect } from 'src/components/FormFieldSelect';
 import { FormFieldWrapper } from 'src/components/FormFieldWrapper';
 import { formUtils } from 'src/lib/formUtils';
-import type { FormFieldReader, FormFieldSpec } from 'src/lib/formSpec';
+import { formSpec, type FormFieldReader, type FormFieldSpec } from 'src/lib/formSpec';
 
 // What the form's own field API offers this component, structurally, so a field stays usable
 // without naming any of TanStack Form's generics.
@@ -20,6 +20,7 @@ export const FormField = <TValues,>({
   active,
   inputRef,
   onSelected,
+  onClosed,
   onEnter,
 }: {
   spec: FormFieldSpec<TValues>;
@@ -29,6 +30,8 @@ export const FormField = <TValues,>({
   active: boolean;
   inputRef: (input: HTMLInputElement | null) => void;
   onSelected: (value: string) => void;
+  // A select closing, whether on a choice or dismissed without one.
+  onClosed: () => void;
   onEnter?: () => void;
 }) => (
   <FormFieldWrapper field={field} label={spec.label}>
@@ -56,9 +59,14 @@ export const FormField = <TValues,>({
       <FormFieldSelect
         field={field}
         placeholder={spec.placeholder}
-        options={typeof spec.options === 'function' ? spec.options(read) : spec.options}
+        options={formSpec.selectOptions(spec, read)}
         defaultOpen={active}
         onChange={onSelected}
+        onOpenChange={(open) => {
+          if (!open) {
+            onClosed();
+          }
+        }}
       />
     ) : null}
   </FormFieldWrapper>

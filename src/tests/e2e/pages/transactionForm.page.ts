@@ -3,8 +3,14 @@ import { expect, type Page } from '@playwright/test';
 type ComboboxName = 'Type' | 'Account' | 'Jar' | 'Category' | 'Subcategory';
 
 export const transactionFormPageConstructor = (page: Page) => {
+  // Dismissing an offered subcategory hands on to the Account selector, which opens in its
+  // place, so one Escape is not always enough.
   const closeDropdowns = async () => {
+    const listbox = page.getByRole('listbox');
     await page.keyboard.press('Escape');
+    while (await listbox.isVisible()) {
+      await page.keyboard.press('Escape');
+    }
   };
   const submitButtonLocator = page.getByRole('button', { name: 'Submit' });
   const submitButton = {

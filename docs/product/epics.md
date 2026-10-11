@@ -265,18 +265,18 @@ Categories can have subcategories, managed from the Categories screen and select
 
 ### Acceptance criteria
 
-- [ ] User can create a subcategory under an existing category, with a name
-- [ ] A subcategory belongs to exactly one category and inherits its kind (`income` or `expense`)
-- [ ] User can edit a subcategory's name
-- [ ] User can delete a subcategory
-- [ ] Subcategories are listed on the Categories screen, nested under the category they belong to
-- [ ] Subcategories are ordered alphabetically within their category
-- [ ] Deleting a category makes its subcategories unavailable along with it
-- [ ] The transaction form has a subcategory selector, offering only the subcategories of the selected category
-- [ ] The subcategory selector is disabled or empty until a category is selected, and resets when the category changes
-- [ ] Choosing a subcategory is optional: a transaction can be saved with a category and no subcategory
-- [ ] A transaction's subcategory is shown wherever its category is shown, and can be changed by editing the transaction
-- [ ] Subcategories and their assignment to transactions persist across page refreshes
+- [x] User can create a subcategory under an existing category, with a name
+- [x] A subcategory belongs to exactly one category and inherits its kind (`income` or `expense`)
+- [x] User can edit a subcategory's name
+- [x] User can delete a subcategory
+- [x] Subcategories are listed on the Categories screen, nested under the category they belong to
+- [x] Subcategories are ordered alphabetically within their category
+- [x] Deleting a category makes its subcategories unavailable along with it
+- [x] The transaction form has a subcategory selector, offering only the subcategories of the selected category
+- [x] The subcategory selector is disabled or empty until a category is selected, and resets when the category changes
+- [x] Choosing a subcategory is optional: a transaction can be saved with a category and no subcategory
+- [x] A transaction's subcategory is shown wherever its category is shown, and can be changed by editing the transaction
+- [x] Subcategories and their assignment to transactions persist across page refreshes
 
 ## Epic 10 — Statistics
 
