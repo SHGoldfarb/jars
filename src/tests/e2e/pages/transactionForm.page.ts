@@ -1,5 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 
+type ComboboxName = 'Type' | 'Account' | 'Jar' | 'Category' | 'Subcategory';
+
 export const transactionFormPageConstructor = (page: Page) => {
   const closeDropdowns = async () => {
     await page.keyboard.press('Escape');
@@ -28,14 +30,16 @@ export const transactionFormPageConstructor = (page: Page) => {
   const typeSelect = page.getByRole('combobox', { name: 'Type' });
   const accountSelect = page.getByRole('combobox', { name: 'Account' });
   const jarSelect = page.getByRole('combobox', { name: 'Jar' });
-  const categorySelect = page.getByRole('combobox', { name: 'Category' });
+  const categorySelect = page.getByRole('combobox', { name: 'Category', exact: true });
+  const subcategorySelect = page.getByRole('combobox', { name: 'Subcategory' });
 
-  const selectOption = async (
-    comboboxName: 'Type' | 'Account' | 'Jar' | 'Category',
-    option: string
-  ) => {
+  const combobox = (comboboxName: ComboboxName) =>
+    // Exact: "Category" would otherwise also match the Subcategory selector.
+    page.getByRole('combobox', { name: comboboxName, exact: true });
+
+  const selectOption = async (comboboxName: ComboboxName, option: string) => {
     await closeDropdowns();
-    await page.getByRole('combobox', { name: comboboxName }).click();
+    await combobox(comboboxName).click();
     await page.getByRole('option', { name: option, exact: true }).click();
   };
 
@@ -43,6 +47,7 @@ export const transactionFormPageConstructor = (page: Page) => {
   const selectAccount = (name: string) => selectOption('Account', name);
   const selectJar = (name: string) => selectOption('Jar', name);
   const selectCategory = (name: string) => selectOption('Category', name);
+  const selectSubcategory = (name: string) => selectOption('Subcategory', name);
 
   const selectFirstAccount = async () => {
     await closeDropdowns();
@@ -65,33 +70,32 @@ export const transactionFormPageConstructor = (page: Page) => {
     await firstOption.click();
   };
 
-  const expectOptionToExist = async (
-    comboboxName: 'Type' | 'Account' | 'Jar' | 'Category',
-    option: string
-  ) => {
+  // What the selector is showing: the chosen option, or its placeholder when it holds nothing.
+  // Dropdowns are closed first because an open one hides the rest of the form from the
+  // accessibility tree, and with it the selector being asked about.
+  const expectSelection = async (comboboxName: ComboboxName, selection: string) => {
     await closeDropdowns();
-    await page.getByRole('combobox', { name: comboboxName }).click();
+    await expect(combobox(comboboxName)).toHaveText(selection);
+  };
+
+  const expectOptionToExist = async (comboboxName: ComboboxName, option: string) => {
+    await closeDropdowns();
+    await combobox(comboboxName).click();
     await expect(page.getByRole('option', { name: option, exact: true })).toBeVisible();
     await page.keyboard.press('Escape');
   };
 
-  const expectOptionToNotExist = async (
-    comboboxName: 'Type' | 'Account' | 'Jar' | 'Category',
-    option: string
-  ) => {
+  const expectOptionToNotExist = async (comboboxName: ComboboxName, option: string) => {
     await closeDropdowns();
-    await page.getByRole('combobox', { name: comboboxName }).click();
+    await combobox(comboboxName).click();
     await expect(page.getByRole('option', { name: option, exact: true })).toHaveCount(0);
     await page.keyboard.press('Escape');
   };
 
   // Every option the selector offers, in the order it offers them.
-  const expectOptionsInOrder = async (
-    comboboxName: 'Type' | 'Account' | 'Jar' | 'Category',
-    options: string[]
-  ) => {
+  const expectOptionsInOrder = async (comboboxName: ComboboxName, options: string[]) => {
     await closeDropdowns();
-    await page.getByRole('combobox', { name: comboboxName }).click();
+    await combobox(comboboxName).click();
     await expect(page.getByRole('option')).toHaveText(options);
     await page.keyboard.press('Escape');
   };
@@ -128,13 +132,16 @@ export const transactionFormPageConstructor = (page: Page) => {
     accountSelect,
     jarSelect,
     categorySelect,
+    subcategorySelect,
     selectType,
     selectAccount,
     selectJar,
     selectCategory,
+    selectSubcategory,
     selectFirstAccount,
     selectFirstJar,
     selectFirstCategory,
+    expectSelection,
     expectOptionToExist,
     expectOptionToNotExist,
     expectOptionsInOrder,

@@ -33,6 +33,9 @@ export const TransactionForm = ({
           ...values,
           dateISO: values.date,
           description: values.description.trim(),
+          // No subcategory is an absent one: the form holds '' for an empty selector, which is
+          // not an id the entity would accept.
+          subcategoryId: values.subcategoryId || undefined,
         })
       }
       defaultErrorMessage={defaultErrorMessage}

@@ -22,24 +22,38 @@ export const categoriesPageConstructor = (page: Page) => {
   // action it holds - which is also the row that heads it.
   const categoriesList = (kind: 'Income' | 'Expense') =>
     page.getByRole('list').filter({ has: createCategoryButton(kind) });
-  const expectCategoriesInOrder = async (kind: 'Income' | 'Expense', categoryNames: string[]) => {
+
+  // Every row of the list, in the order it is shown: a category is followed by its own
+  // subcategories, so this is what "nested under the category they belong to" looks like from
+  // the outside.
+  const expectRowsInOrder = async (kind: 'Income' | 'Expense', rowNames: string[]) => {
     await expect(categoriesList(kind).getByRole('link')).toHaveText([
       `Add ${kind} category`,
-      ...categoryNames,
+      ...rowNames,
     ]);
   };
+
+  const expectCategoriesInOrder = expectRowsInOrder;
+
+  const clickSubcategory = clickCategory;
+  const expectSubcategoryToExist = expectCategoryToExist;
+  const expectSubcategoryToNotExist = expectCategoryToNotExist;
 
   const createIncomeCategoryButton = createCategoryButton('Income');
   const createExpenseCategoryButton = createCategoryButton('Expense');
 
   return {
     clickCategory,
+    clickSubcategory,
     createCategoryButton,
     createIncomeCategoryButton,
     createExpenseCategoryButton,
     expectCategoryToExist,
     expectCategoryToNotExist,
+    expectSubcategoryToExist,
+    expectSubcategoryToNotExist,
     expectCategoriesInOrder,
+    expectRowsInOrder,
     getCategory,
     tabButton,
     expensesTabButton,

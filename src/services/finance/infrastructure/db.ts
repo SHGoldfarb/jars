@@ -5,7 +5,7 @@ import z from 'zod';
 
 // The version the database is currently on. A backup carries it so a restore can tell
 // whether it understands the file.
-export const DB_SCHEMA_VERSION = 3;
+export const DB_SCHEMA_VERSION = 4;
 
 const db = new Dexie('JarsMainDatabase');
 
@@ -18,7 +18,7 @@ db.version(2).stores({
   transfers: '&id, originAccountId, destinationAccountId',
 });
 
-db.version(DB_SCHEMA_VERSION).upgrade((tx) => {
+db.version(3).upgrade((tx) => {
   return tx
     .table('transactions')
     .toCollection()
@@ -41,6 +41,13 @@ db.version(DB_SCHEMA_VERSION).upgrade((tx) => {
         }
       }
     });
+});
+
+// Only the added store is declared: Dexie carries every unchanged one forward, and an existing
+// database needs no data migration because a subcategory is something new rather than a
+// reshaping of what is already stored.
+db.version(DB_SCHEMA_VERSION).stores({
+  subcategories: '&id, categoryId',
 });
 
 interface Identified {
@@ -79,6 +86,7 @@ const TABLE_NAMES = [
   'accounts',
   'jars',
   'categories',
+  'subcategories',
   'transactions',
   'allocations',
   'transfers',
@@ -90,6 +98,7 @@ const tables = {
   accounts: memoizedTable(db.table('accounts')),
   jars: memoizedTable(db.table('jars')),
   categories: memoizedTable(db.table('categories')),
+  subcategories: memoizedTable(db.table('subcategories')),
   transactions: memoizedTable(db.table('transactions')),
   allocations: memoizedTable(db.table('allocations')),
   transfers: memoizedTable(db.table('transfers')),
@@ -97,19 +106,22 @@ const tables = {
 
 // Rows leave persistence unvalidated: the repository parses them into `FinanceSnapshot`.
 const snapshot = async (): Promise<Record<FinanceTableName, unknown[]>> => {
-  const [accounts, jars, categories, transactions, allocations, transfers] = await Promise.all([
-    tables.accounts.getMap(),
-    tables.jars.getMap(),
-    tables.categories.getMap(),
-    tables.transactions.getMap(),
-    tables.allocations.getMap(),
-    tables.transfers.getMap(),
-  ]);
+  const [accounts, jars, categories, subcategories, transactions, allocations, transfers] =
+    await Promise.all([
+      tables.accounts.getMap(),
+      tables.jars.getMap(),
+      tables.categories.getMap(),
+      tables.subcategories.getMap(),
+      tables.transactions.getMap(),
+      tables.allocations.getMap(),
+      tables.transfers.getMap(),
+    ]);
 
   return {
     accounts: Object.values(accounts),
     jars: Object.values(jars),
     categories: Object.values(categories),
+    subcategories: Object.values(subcategories),
     transactions: Object.values(transactions),
     allocations: Object.values(allocations),
     transfers: Object.values(transfers),

@@ -33,6 +33,24 @@ const test = base.extend<{
   settingsPage: SettingsPage;
 }>({
   rootLayoutPage: async ({ page }, use) => {
+    // The router devtools float over the bottom of every page and swallow the clicks meant for
+    // whatever sits under them - a form's Submit button, once the form is tall enough to reach
+    // that corner. They are a development aid rather than part of the app under test, so they
+    // are hidden for the whole session; an init script rather than a style tag, so a reload
+    // does not bring them back.
+    await page.addInitScript(() => {
+      const hideDevtools = () => {
+        const style = document.createElement('style');
+        style.textContent = 'footer.TanStackRouterDevtools { display: none !important; }';
+        document.head.append(style);
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', hideDevtools);
+      } else {
+        hideDevtools();
+      }
+    });
     await page.goto('/');
     await use(rootLayoutPageConstructor(page));
   },

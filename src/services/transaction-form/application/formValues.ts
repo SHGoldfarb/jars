@@ -15,6 +15,7 @@ const toFormValues = (transaction: Transaction): TransactionFormValues => ({
   kind: transaction.kind,
   accountId: transaction.accountId,
   categoryId: transaction.categoryId,
+  subcategoryId: transaction.subcategoryId ?? '',
   jarId: transaction.jarId,
 });
 

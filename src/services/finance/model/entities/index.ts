@@ -2,6 +2,7 @@ export * from './shared';
 export * from './account';
 export * from './jar';
 export * from './category';
+export * from './subcategory';
 export * from './transaction';
 export * from './transfer';
 export * from './allocation';

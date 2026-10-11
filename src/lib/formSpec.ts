@@ -45,6 +45,10 @@ interface FormFieldSelect<TValues> {
   // Emptied when this field changes. An emptied field is active again, so it re-enters the
   // focus flow on its own.
   clears?: FormFieldName<TValues>[];
+  // A field the user may leave empty. It never becomes the active one and the fields after it
+  // look straight past it, so an optional selector the user skips cannot stall the form on
+  // itself or hold up everything behind it.
+  optional?: boolean;
 }
 
 type FormFieldSpec<TValues> =
@@ -57,26 +61,53 @@ type FormFieldSpec<TValues> =
 interface FormFieldPosition {
   kind: FormFieldSpec<FormValues>['kind'];
   name: string;
+  optional?: boolean;
 }
+
+// The field the focus flow treats as the one before this one: the closest preceding field the
+// user has to fill. An optional field is skipped over, so leaving it empty does not read as
+// "the form has not got this far yet".
+const previousRequiredField = (
+  fields: FormFieldPosition[],
+  index: number
+): FormFieldPosition | undefined => fields.slice(0, index).findLast((field) => !field.optional);
 
 // A field is active - the one the user should be filling next - when it is empty and the field
 // before it is not. The first field has nothing before it, so it is active whenever it is empty.
+// An optional field is never active: it is there to be reached for, not to be walked into.
 // An active select opens; an active text input takes focus.
-const isFieldActive = (value: string, previousValue: string | undefined): boolean =>
-  !value && previousValue !== '';
+const isFieldActive = (fields: FormFieldPosition[], index: number, values: FormValues): boolean => {
+  const field = fields[index];
+  if (field.optional || values[field.name]) {
+    return false;
+  }
+
+  const previous = previousRequiredField(fields, index);
+  return !previous || values[previous.name] !== '';
+};
 
 // A select re-opens for a new choice by being re-mounted, which is what changing its key does.
 // Only a select before it can change in a way that should re-open it: a date always holds a
 // value, and a text field would re-mount it on every keystroke.
+//
+// Every select from the last required one onwards counts, not just the immediately preceding
+// field: choosing a required category has to re-open what follows even when an optional
+// subcategory sits in between, and choosing that optional subcategory has to re-open it too,
+// so a field the user did reach for leads on rather than dead-ending.
 const fieldKey = (fields: FormFieldPosition[], index: number, values: FormValues): string => {
   const field = fields[index];
-  const previous = index > 0 ? fields[index - 1] : undefined;
+  const previous = previousRequiredField(fields, index);
 
   if (field.kind !== 'select' || previous?.kind !== 'select') {
     return field.name;
   }
 
-  return `${field.name} - ${values[previous.name]}`;
+  const preceding = fields
+    .slice(fields.indexOf(previous), index)
+    .filter(({ kind }) => kind === 'select')
+    .map(({ name }) => values[name]);
+
+  return `${field.name} - ${preceding.join(' - ')}`;
 };
 
 // The text input a select hands focus to once it has a value: the very next field, and only if

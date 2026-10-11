@@ -7,6 +7,7 @@ import {
   CategoryIncome,
   FinanceSnapshot,
   Jar,
+  Subcategory,
   Transaction,
   Transfer,
 } from '../model';
@@ -16,6 +17,7 @@ import type {
   CategoryRepository,
   FinanceDatabaseRepository,
   JarRepository,
+  SubcategoryRepository,
   TransactionRepository,
   TransferRepository,
 } from '../domain';
@@ -23,7 +25,14 @@ import type z from 'zod';
 
 const createDBTableRepository = <T extends z.ZodObject>(
   Model: T,
-  table: 'accounts' | 'jars' | 'categories' | 'transactions' | 'transfers' | 'allocations'
+  table:
+    | 'accounts'
+    | 'jars'
+    | 'categories'
+    | 'subcategories'
+    | 'transactions'
+    | 'transfers'
+    | 'allocations'
 ) => ({
   getById: async (id: string) => {
     return Model.parse((await DB[table].getMap())[id]);
@@ -63,6 +72,11 @@ const categoryRepository: CategoryRepository = {
   },
 };
 
+const subcategoryRepository: SubcategoryRepository = createDBTableRepository(
+  Subcategory,
+  'subcategories'
+);
+
 const transactionRepository: TransactionRepository = createDBTableRepository(
   Transaction,
   'transactions'
@@ -85,6 +99,7 @@ export const repositories = {
   accounts: accountRepository,
   jars: jarRepository,
   categories: categoryRepository,
+  subcategories: subcategoryRepository,
   transactions: transactionRepository,
   transfers: transferRepository,
   allocations: allocationRepository,

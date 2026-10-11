@@ -333,7 +333,14 @@ test.describe('transaction form', () => {
     await expect(page.getByRole('combobox', { name: 'Type' })).toContainText('Income');
     await expect(page.getByRole('combobox', { name: 'Account' })).toContainText(accountName);
     await expect(page.getByRole('combobox', { name: 'Jar' })).toContainText(jarName);
-    await expect(page.getByRole('combobox', { name: 'Category' })).toContainText(categoryName);
+    // Exact: 'Category' alone would also match the Subcategory selector.
+    await expect(page.getByRole('combobox', { name: 'Category', exact: true })).toContainText(
+      categoryName
+    );
+    // Nothing was chosen for it, so it still shows its placeholder.
+    await expect(page.getByRole('combobox', { name: 'Subcategory' })).toContainText(
+      'Select Subcategory'
+    );
   });
 
   test('when editing a transaction, selectors include archived entities that the transaction references', async ({

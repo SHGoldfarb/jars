@@ -195,31 +195,62 @@ test('Money Manager rows to a finance snapshot', async () => {
     return result.ok ? null : result.error;
   };
 
-  await test.step('a repeated account or category is created once', () => {
+  await test.step('a repeated account, category or subcategory is created once', () => {
     const snapshot = snapshotOf(
       ['2026-02-10 09:00', 'Wallet', 'Needs', 'Groceries', 'Weekly shop', 2500, 'Expense'],
       ['2026-02-11 10:30', 'Wallet', 'Needs', 'Groceries', 'Snacks', 500, 'Expense']
     );
 
     expect(snapshot.jars.map(({ name }) => name)).toEqual(['Wallet']);
-    expect(snapshot.categories.map(({ name }) => name)).toEqual(['Needs / Groceries']);
+    expect(snapshot.categories.map(({ name }) => name)).toEqual(['Needs']);
+    expect(snapshot.subcategories.map(({ name }) => name)).toEqual(['Groceries']);
     expect(snapshot.accounts.map(({ name }) => name)).toEqual(['Cash']);
     expect(snapshot.transactions).toHaveLength(2);
   });
 
-  await test.step('a category and its subcategory are one category', () => {
+  await test.step('a subcategory column becomes a subcategory of the row category', () => {
     const snapshot = snapshotOf(
       ['2026-02-10 09:00', 'Wallet', 'Needs', 'Groceries', 'Weekly shop', 2500, 'Expense'],
       ['2026-02-11 10:30', 'Wallet', 'Needs', 'Health', 'Dentist', 3000, 'Expense'],
-      // No subcategory: the category stands on its own, and is not the same category as any of
-      // the ones it heads.
+      // No subcategory: the transaction gets the category and nothing more.
       ['2026-02-12 11:00', 'Wallet', 'Needs', '', 'Uncategorised', 400, 'Expense']
     );
 
-    expect(snapshot.categories.map(({ name }) => name)).toEqual([
-      'Needs / Groceries',
-      'Needs / Health',
-      'Needs',
+    expect(snapshot.categories.map(({ name }) => name)).toEqual(['Needs']);
+    const needs = snapshot.categories[0];
+    expect(snapshot.subcategories.map(({ name }) => name)).toEqual(['Groceries', 'Health']);
+    // Both hang off the one category the rows name.
+    expect(snapshot.subcategories.map(({ categoryId }) => categoryId)).toEqual([
+      needs.id,
+      needs.id,
+    ]);
+
+    // Every transaction points at that category; only the two that named a subcategory carry one.
+    expect(snapshot.transactions.map(({ categoryId }) => categoryId)).toEqual([
+      needs.id,
+      needs.id,
+      needs.id,
+    ]);
+    const [groceries, health] = snapshot.subcategories;
+    expect(snapshot.transactions.map(({ subcategoryId }) => subcategoryId)).toEqual([
+      groceries.id,
+      health.id,
+      undefined,
+    ]);
+  });
+
+  await test.step('the same subcategory name under two categories is two subcategories', () => {
+    const snapshot = snapshotOf(
+      ['2026-02-10 09:00', 'Wallet', 'Needs', 'Other', 'Sundries', 2500, 'Expense'],
+      ['2026-02-11 10:30', 'Wallet', 'Wants', 'Other', 'Bits', 500, 'Expense']
+    );
+
+    expect(snapshot.categories.map(({ name }) => name)).toEqual(['Needs', 'Wants']);
+    const [needs, wants] = snapshot.categories;
+    expect(snapshot.subcategories.map(({ name }) => name)).toEqual(['Other', 'Other']);
+    expect(snapshot.subcategories.map(({ categoryId }) => categoryId)).toEqual([
+      needs.id,
+      wants.id,
     ]);
   });
 

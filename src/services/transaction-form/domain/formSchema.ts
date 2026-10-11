@@ -9,6 +9,7 @@ interface TransactionFormValues {
   kind: 'income' | 'expense' | '';
   accountId: string;
   categoryId: string;
+  subcategoryId: string;
   jarId: string;
 }
 
@@ -19,6 +20,7 @@ const getDefaultValues = (): TransactionFormValues => ({
   kind: '',
   accountId: '',
   categoryId: '',
+  subcategoryId: '',
   jarId: '',
 });
 
@@ -29,15 +31,29 @@ const transactionValidators = {
   kind: z.enum(['income', 'expense']),
   accountId: z.string().trim().min(1, 'Account is required'),
   categoryId: z.string().trim().min(1, 'Category is required'),
+  // Choosing a subcategory is optional, so an empty value is a valid one.
+  subcategoryId: z.string().trim(),
   jarId: z.string().trim().min(1, 'Jar is required'),
 };
 
-const createFormSchema = (
-  accountIds: string[],
-  jarIds: string[],
-  incomeCategoryIds: string[],
-  expenseCategoryIds: string[]
-) =>
+// What the selections are checked against: the ids each selector is offering, and - for
+// subcategories - which category each of them belongs to, so a subcategory can only be kept
+// while the category it hangs off is the one selected.
+interface TransactionFormOptions {
+  accountIds: string[];
+  jarIds: string[];
+  incomeCategoryIds: string[];
+  expenseCategoryIds: string[];
+  subcategoryIdsByCategoryId: Record<string, string[]>;
+}
+
+const createFormSchema = ({
+  accountIds,
+  jarIds,
+  incomeCategoryIds,
+  expenseCategoryIds,
+  subcategoryIdsByCategoryId,
+}: TransactionFormOptions) =>
   z.object(transactionValidators).superRefine((values, ctx) => {
     if (values.accountId && !accountIds.includes(values.accountId)) {
       ctx.addIssue({
@@ -62,6 +78,16 @@ const createFormSchema = (
         code: 'custom',
         path: ['categoryId'],
         message: 'Category must match transaction type',
+      });
+    }
+
+    const subcategoryIds = subcategoryIdsByCategoryId[values.categoryId] ?? [];
+
+    if (values.subcategoryId && !subcategoryIds.includes(values.subcategoryId)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['subcategoryId'],
+        message: 'Subcategory must belong to the selected category',
       });
     }
   });

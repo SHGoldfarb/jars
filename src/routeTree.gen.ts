@@ -31,6 +31,8 @@ import { Route as CategoriesExpenseNewRouteImport } from './routes/categories/ex
 import { Route as CategoriesCategoryIdEditRouteImport } from './routes/categories/$categoryId.edit'
 import { Route as AllocationsAllocationIdEditRouteImport } from './routes/allocations/$allocationId.edit'
 import { Route as AccountsAccountIdEditRouteImport } from './routes/accounts/$accountId.edit'
+import { Route as CategoriesSubcategoriesSubcategoryIdEditRouteImport } from './routes/categories/subcategories/$subcategoryId.edit'
+import { Route as CategoriesCategoryIdSubcategoriesNewRouteImport } from './routes/categories/$categoryId.subcategories.new'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -145,6 +147,18 @@ const AccountsAccountIdEditRoute = AccountsAccountIdEditRouteImport.update({
   path: '/accounts/$accountId/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CategoriesSubcategoriesSubcategoryIdEditRoute =
+  CategoriesSubcategoriesSubcategoryIdEditRouteImport.update({
+    id: '/subcategories/$subcategoryId/edit',
+    path: '/subcategories/$subcategoryId/edit',
+    getParentRoute: () => CategoriesRoute,
+  } as any)
+const CategoriesCategoryIdSubcategoriesNewRoute =
+  CategoriesCategoryIdSubcategoriesNewRouteImport.update({
+    id: '/$categoryId/subcategories/new',
+    path: '/$categoryId/subcategories/new',
+    getParentRoute: () => CategoriesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -169,6 +183,8 @@ export interface FileRoutesByFullPath {
   '/transfers/$transferId/edit': typeof TransfersTransferIdEditRoute
   '/categories/expense/': typeof CategoriesExpenseIndexRoute
   '/categories/income/': typeof CategoriesIncomeIndexRoute
+  '/categories/$categoryId/subcategories/new': typeof CategoriesCategoryIdSubcategoriesNewRoute
+  '/categories/subcategories/$subcategoryId/edit': typeof CategoriesSubcategoriesSubcategoryIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -192,6 +208,8 @@ export interface FileRoutesByTo {
   '/transfers/$transferId/edit': typeof TransfersTransferIdEditRoute
   '/categories/expense': typeof CategoriesExpenseIndexRoute
   '/categories/income': typeof CategoriesIncomeIndexRoute
+  '/categories/$categoryId/subcategories/new': typeof CategoriesCategoryIdSubcategoriesNewRoute
+  '/categories/subcategories/$subcategoryId/edit': typeof CategoriesSubcategoriesSubcategoryIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -217,6 +235,8 @@ export interface FileRoutesById {
   '/transfers/$transferId/edit': typeof TransfersTransferIdEditRoute
   '/categories/expense/': typeof CategoriesExpenseIndexRoute
   '/categories/income/': typeof CategoriesIncomeIndexRoute
+  '/categories/$categoryId/subcategories/new': typeof CategoriesCategoryIdSubcategoriesNewRoute
+  '/categories/subcategories/$subcategoryId/edit': typeof CategoriesSubcategoriesSubcategoryIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -243,6 +263,8 @@ export interface FileRouteTypes {
     | '/transfers/$transferId/edit'
     | '/categories/expense/'
     | '/categories/income/'
+    | '/categories/$categoryId/subcategories/new'
+    | '/categories/subcategories/$subcategoryId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -266,6 +288,8 @@ export interface FileRouteTypes {
     | '/transfers/$transferId/edit'
     | '/categories/expense'
     | '/categories/income'
+    | '/categories/$categoryId/subcategories/new'
+    | '/categories/subcategories/$subcategoryId/edit'
   id:
     | '__root__'
     | '/'
@@ -290,6 +314,8 @@ export interface FileRouteTypes {
     | '/transfers/$transferId/edit'
     | '/categories/expense/'
     | '/categories/income/'
+    | '/categories/$categoryId/subcategories/new'
+    | '/categories/subcategories/$subcategoryId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -467,6 +493,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountsAccountIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/categories/subcategories/$subcategoryId/edit': {
+      id: '/categories/subcategories/$subcategoryId/edit'
+      path: '/subcategories/$subcategoryId/edit'
+      fullPath: '/categories/subcategories/$subcategoryId/edit'
+      preLoaderRoute: typeof CategoriesSubcategoriesSubcategoryIdEditRouteImport
+      parentRoute: typeof CategoriesRoute
+    }
+    '/categories/$categoryId/subcategories/new': {
+      id: '/categories/$categoryId/subcategories/new'
+      path: '/$categoryId/subcategories/new'
+      fullPath: '/categories/$categoryId/subcategories/new'
+      preLoaderRoute: typeof CategoriesCategoryIdSubcategoriesNewRouteImport
+      parentRoute: typeof CategoriesRoute
+    }
   }
 }
 
@@ -477,6 +517,8 @@ interface CategoriesRouteChildren {
   CategoriesIncomeNewRoute: typeof CategoriesIncomeNewRoute
   CategoriesExpenseIndexRoute: typeof CategoriesExpenseIndexRoute
   CategoriesIncomeIndexRoute: typeof CategoriesIncomeIndexRoute
+  CategoriesCategoryIdSubcategoriesNewRoute: typeof CategoriesCategoryIdSubcategoriesNewRoute
+  CategoriesSubcategoriesSubcategoryIdEditRoute: typeof CategoriesSubcategoriesSubcategoryIdEditRoute
 }
 
 const CategoriesRouteChildren: CategoriesRouteChildren = {
@@ -486,6 +528,10 @@ const CategoriesRouteChildren: CategoriesRouteChildren = {
   CategoriesIncomeNewRoute: CategoriesIncomeNewRoute,
   CategoriesExpenseIndexRoute: CategoriesExpenseIndexRoute,
   CategoriesIncomeIndexRoute: CategoriesIncomeIndexRoute,
+  CategoriesCategoryIdSubcategoriesNewRoute:
+    CategoriesCategoryIdSubcategoriesNewRoute,
+  CategoriesSubcategoriesSubcategoryIdEditRoute:
+    CategoriesSubcategoriesSubcategoryIdEditRoute,
 }
 
 const CategoriesRouteWithChildren = CategoriesRoute._addFileChildren(

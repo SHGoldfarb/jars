@@ -2,6 +2,7 @@ import { useTransactionEditCurrentTransaction } from 'src/hooks/useTransactionEd
 import { useTransactionFormAccounts } from 'src/hooks/useTransactionFormAccounts';
 import { useTransactionFormCategories } from 'src/hooks/useTransactionFormCategories';
 import { useTransactionFormJars } from 'src/hooks/useTransactionFormJars';
+import { useTransactionFormSubcategories } from 'src/hooks/useTransactionFormSubcategories';
 import type { FormFieldOption, FormFieldSpec } from 'src/lib/formSpec';
 import { transactionForm, type TransactionFormValues } from 'src/services/transaction-form';
 
@@ -18,6 +19,7 @@ export const useTransactionFormSpec = () => {
   const jars = useTransactionFormJars(transaction?.id);
   const incomeCategories = useTransactionFormCategories('income', transaction?.id);
   const expenseCategories = useTransactionFormCategories('expense', transaction?.id);
+  const subcategoriesByCategoryId = useTransactionFormSubcategories(transaction?.id);
 
   const fields: FormFieldSpec<TransactionFormValues>[] = [
     { kind: 'date', name: 'date', label: 'Date' },
@@ -45,6 +47,17 @@ export const useTransactionFormSpec = () => {
         }
         return toOptions(kind === 'income' ? incomeCategories : expenseCategories);
       },
+      clears: ['subcategoryId'],
+    },
+    {
+      kind: 'select',
+      name: 'subcategoryId',
+      label: 'Subcategory',
+      placeholder: 'Select Subcategory',
+      // Empty until a category is picked, and only ever that category's own. Optional, so the
+      // form's focus flow reaches straight past it to the Account selector.
+      optional: true,
+      options: (read) => toOptions(subcategoriesByCategoryId[read('categoryId')] ?? []),
     },
     {
       kind: 'select',
@@ -66,11 +79,17 @@ export const useTransactionFormSpec = () => {
 
   return {
     fields,
-    schema: transactionForm.createFormSchema(
-      accounts.map(({ id }) => id),
-      jars.map(({ id }) => id),
-      incomeCategories.map(({ id }) => id),
-      expenseCategories.map(({ id }) => id)
-    ),
+    schema: transactionForm.createFormSchema({
+      accountIds: accounts.map(({ id }) => id),
+      jarIds: jars.map(({ id }) => id),
+      incomeCategoryIds: incomeCategories.map(({ id }) => id),
+      expenseCategoryIds: expenseCategories.map(({ id }) => id),
+      subcategoryIdsByCategoryId: Object.fromEntries(
+        Object.entries(subcategoriesByCategoryId).map(([categoryId, subcategories]) => [
+          categoryId,
+          subcategories.map(({ id }) => id),
+        ])
+      ),
+    }),
   };
 };

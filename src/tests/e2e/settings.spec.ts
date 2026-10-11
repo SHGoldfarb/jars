@@ -80,6 +80,7 @@ test.describe('create backup', () => {
       accounts: z.array(NamedRecord),
       jars: z.array(NamedRecord),
       categories: z.array(z.object({ ...NamedRecord.shape, kind: z.string() })),
+      subcategories: z.array(z.object({ ...NamedRecord.shape, categoryId: z.string() })),
       transactions: z.array(
         z.object({
           id: z.string(),
@@ -93,6 +94,7 @@ test.describe('create backup', () => {
           accountId: z.string(),
           jarId: z.string(),
           categoryId: z.string(),
+          subcategoryId: z.string().optional(),
         })
       ),
       transfers: z.array(z.unknown()),
@@ -120,6 +122,7 @@ test.describe('create backup', () => {
 
   test('the backup contains the full database state', async ({
     createDefaultData,
+    createSubcategory,
     createTransaction,
     rootLayoutPage,
     settingsPage,
@@ -127,6 +130,7 @@ test.describe('create backup', () => {
     test.slow();
 
     await createDefaultData();
+    await createSubcategory('Expense', defaultData.expenseCategories[0], 'Fruit');
     await createTransaction({
       amount: '1234.56',
       date: '2026-02-10T09:00',
@@ -135,6 +139,7 @@ test.describe('create backup', () => {
       accountName: defaultData.accounts[0],
       jarName: defaultData.jars[0],
       categoryName: defaultData.expenseCategories[0],
+      subcategoryName: 'Fruit',
     });
 
     await rootLayoutPage.navButton('Settings').click();
@@ -142,7 +147,7 @@ test.describe('create backup', () => {
       JSON.parse(await settingsPage.downloadContentsFromAction('Create backup'))
     );
 
-    expect(backup.schemaVersion).toBe(3);
+    expect(backup.schemaVersion).toBe(4);
     expect(backup.data.accounts.map(({ name }) => name)).toEqual(['Wallet']);
     expect(backup.data.jars.map(({ name }) => name)).toEqual(['Monthly expenses']);
     expect(backup.data.categories.map(({ name, kind }) => `${name} (${kind})`).sort()).toEqual([
@@ -167,6 +172,10 @@ test.describe('create backup', () => {
     expect(transaction.categoryId).toBe(
       backup.data.categories.find(({ name }) => name === 'Groceries')?.id
     );
+
+    expect(backup.data.subcategories.map(({ name }) => name)).toEqual(['Fruit']);
+    expect(backup.data.subcategories[0].categoryId).toBe(transaction.categoryId);
+    expect(transaction.subcategoryId).toBe(backup.data.subcategories[0].id);
   });
 
   test('creating a backup leaves the data untouched', async ({
@@ -208,12 +217,13 @@ test.describe('load from backup', () => {
   }) => {
     const jars = [{ id: uuid('2'), name: 'Hand-written jar' }];
     return JSON.stringify({
-      schemaVersion: overrides.schemaVersion ?? 3,
+      schemaVersion: overrides.schemaVersion ?? 4,
       createdAtISO: '2026-02-10T09:00:00.000Z',
       data: {
         accounts: [{ id: uuid('1'), name: 'Hand-written account' }],
         ...(overrides.omitJars ? {} : { jars }),
         categories: [{ id: uuid('3'), name: 'Hand-written category', kind: 'expense' }],
+        subcategories: [{ id: uuid('5'), name: 'Hand-written subcategory', categoryId: uuid('3') }],
         transactions: [
           {
             id: uuid('4'),
@@ -224,6 +234,7 @@ test.describe('load from backup', () => {
             accountId: overrides.accountId ?? uuid('1'),
             jarId: uuid('2'),
             categoryId: uuid('3'),
+            subcategoryId: uuid('5'),
           },
         ],
         transfers: [],
@@ -461,6 +472,8 @@ test.describe('load from backup', () => {
   });
 });
 
+// TODO: most of these can be merged into a single test that exports and checks
+// for all those cases.
 test.describe('export to CSV', () => {
   test.use({ timezoneId: 'UTC' });
 
@@ -473,7 +486,7 @@ test.describe('export to CSV', () => {
   // The header the file must be written with, spelled out here so a change to the columns has
   // to be mirrored deliberately.
   const header =
-    'Type,Date,Description,Amount,Currency,Account,Category,Jar,' +
+    'Type,Date,Description,Amount,Currency,Account,Category,Subcategory,Jar,' +
     'Origin account,Destination account,Origin jar,Destination jar';
 
   const csvLines = (contents: string) => contents.split('\r\n');
@@ -493,12 +506,13 @@ test.describe('export to CSV', () => {
 
   const backupWith = (transactions: StoredTransaction[]) =>
     JSON.stringify({
-      schemaVersion: 3,
+      schemaVersion: 4,
       createdAtISO: '2026-02-10T09:00:00.000Z',
       data: {
         accounts: [{ id: accountId, name: 'Wallet' }],
         jars: [{ id: jarId, name: 'Monthly expenses' }],
         categories: [{ id: categoryId, name: 'Groceries', kind: 'expense' }],
+        subcategories: [],
         transactions: transactions.map(({ description, amountDecimal }, index) => ({
           id: id(100 + index),
           kind: 'expense',
@@ -591,9 +605,52 @@ test.describe('export to CSV', () => {
     // currency, a `YYYY-MM-DD HH:mm` date, and every reference by name.
     expect(csvLines(contents)).toEqual([
       header,
-      'Allocation,2026-02-12 11:45,Exported allocation,3000.50,CLP,,,,,,Monthly expenses,Holidays',
-      'Transfer,2026-02-11 10:30,Exported transfer,2000,CLP,,,,Wallet,Savings,,',
-      'Income,2026-02-10 09:00,Exported income,10000,CLP,Wallet,Salary,Monthly expenses,,,,',
+      'Allocation,2026-02-12 11:45,Exported allocation,3000.50,CLP,,,,,,,Monthly expenses,Holidays',
+      'Transfer,2026-02-11 10:30,Exported transfer,2000,CLP,,,,,Wallet,Savings,,',
+      'Income,2026-02-10 09:00,Exported income,10000,CLP,Wallet,Salary,,Monthly expenses,,,,',
+      '',
+    ]);
+  });
+
+  test("a transaction's subcategory is exported beside its category", async ({
+    createDefaultData,
+    createSubcategory,
+    createTransaction,
+    rootLayoutPage,
+    settingsPage,
+  }) => {
+    test.slow();
+
+    await createDefaultData();
+    await createSubcategory('Expense', defaultData.expenseCategories[0], 'Fruit');
+    await createTransaction({
+      amount: '5000',
+      date: '2026-02-10T09:00',
+      description: 'With a subcategory',
+      type: 'Expense',
+      accountName: defaultData.accounts[0],
+      jarName: defaultData.jars[0],
+      categoryName: defaultData.expenseCategories[0],
+      subcategoryName: 'Fruit',
+    });
+    await createTransaction({
+      amount: '6000',
+      date: '2026-02-09T09:00',
+      description: 'Without a subcategory',
+      type: 'Expense',
+      accountName: defaultData.accounts[0],
+      jarName: defaultData.jars[0],
+      categoryName: defaultData.expenseCategories[0],
+    });
+
+    await rootLayoutPage.navButton('Settings').click();
+    const contents = await settingsPage.downloadContentsFromAction('Export to CSV');
+
+    // The subcategory fills its own column, and a transaction without one leaves it empty.
+    expect(csvLines(contents)).toEqual([
+      header,
+      'Expense,2026-02-10 09:00,With a subcategory,5000,CLP,Wallet,Groceries,Fruit,Monthly expenses,,,,',
+      'Expense,2026-02-09 09:00,Without a subcategory,6000,CLP,Wallet,Groceries,,Monthly expenses,,,,',
       '',
     ]);
   });
@@ -724,7 +781,7 @@ test.describe('export to CSV', () => {
 
     expect(csvLines(contents)).toEqual([
       header,
-      'Expense,2026-02-10 09:00,"Lunch, ""the good one""",1000,CLP,Wallet,Groceries,' +
+      'Expense,2026-02-10 09:00,"Lunch, ""the good one""",1000,CLP,Wallet,Groceries,,' +
         'Monthly expenses,,,,',
       '',
     ]);
@@ -748,7 +805,7 @@ test.describe('export to CSV', () => {
     // separator still yields one row.
     expect(csvLines(contents)).toEqual([
       header,
-      'Expense,2026-02-10 09:00,"Lunch\nwith friends",1000,CLP,Wallet,Groceries,' +
+      'Expense,2026-02-10 09:00,"Lunch\nwith friends",1000,CLP,Wallet,Groceries,,' +
         'Monthly expenses,,,,',
       '',
     ]);

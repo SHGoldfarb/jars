@@ -6,6 +6,7 @@ import type {
   CategoryIncome,
   FinanceSnapshot,
   Jar,
+  Subcategory,
   Transaction,
   Transfer,
 } from '../model';
@@ -30,6 +31,13 @@ export interface CategoryRepository {
   listIncome(): Promise<CategoryIncome[]>;
   listExpense(): Promise<CategoryExpense[]>;
   save(category: Category): Promise<unknown>;
+  getLastOperationId: () => string;
+}
+
+export interface SubcategoryRepository {
+  getById(subcategoryId: string): Promise<Subcategory>;
+  list(): Promise<Subcategory[]>;
+  save(subcategory: Subcategory): Promise<unknown>;
   getLastOperationId: () => string;
 }
 
@@ -70,6 +78,7 @@ export interface FinanceRepositories {
   accounts: AccountRepository;
   jars: JarRepository;
   categories: CategoryRepository;
+  subcategories: SubcategoryRepository;
   transactions: TransactionRepository;
   transfers: TransferRepository;
   allocations: AllocationRepository;

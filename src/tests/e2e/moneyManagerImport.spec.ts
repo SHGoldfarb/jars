@@ -51,17 +51,14 @@ test('a Money Manager export becomes jars, categories and movements under one Ca
   await jarsPage.expectJarToExist('Wallet');
   await jarsPage.expectJarToExist('Holidays');
 
-  // A category and its subcategory are one category here, and a row with no subcategory keeps
-  // the category on its own. Categories carry the kind of the rows that used them, and the
-  // transfer row contributes none - its `Category` column is the jar it paid into.
+  // The `Category` column becomes a category and the `Subcategory` column a subcategory nested
+  // under it. Categories carry the kind of the rows that used them, and the transfer row
+  // contributes none - its `Category` column is the jar it paid into.
   await rootLayoutPage.navButton('Categories').click();
   await categoriesPage.incomeTabButton.click();
-  await categoriesPage.expectCategoryToExist('Salary');
-  await categoriesPage.expectCategoryToNotExist('Needs / Groceries');
+  await categoriesPage.expectRowsInOrder('Income', ['Salary']);
   await categoriesPage.expensesTabButton.click();
-  await categoriesPage.expectCategoryToExist('Needs / Groceries');
-  await categoriesPage.expectCategoryToExist('Wants / Snacks');
-  await categoriesPage.expectCategoryToNotExist('Salary');
+  await categoriesPage.expectRowsInOrder('Expense', ['Needs', 'Groceries', 'Wants', 'Snacks']);
   await categoriesPage.expectCategoryToNotExist('Holidays');
 
   // Hardcoded from the rows above: the note as the description, dates as the file writes them,
@@ -78,7 +75,8 @@ test('a Money Manager export becomes jars, categories and movements under one Ca
   // one that is imported.
   const expense = movementsPage.getMovement('Snacks');
   await expect(expense).toContainText(`${CASH_ACCOUNT} · Holidays`);
-  await expect(expense).toContainText('Wants / Snacks');
+  // Its category and the subcategory the row named, both carried onto the transaction.
+  await expect(expense).toContainText('Wants · Snacks');
   await expect(expense).toContainText('$500');
   await expect(expense).toContainText('2/13/2026, 8:15:00 AM');
 });

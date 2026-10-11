@@ -115,11 +115,7 @@ export const Form = <TValues extends StringValued<TValues>, TParsed>({
             <FieldGroup>
               {fields.map((spec, index) => {
                 const name: string = spec.name;
-                const previous = index > 0 ? fields[index - 1] : undefined;
-                const active = formSpec.isFieldActive(
-                  values[name],
-                  previous && values[previous.name]
-                );
+                const active = formSpec.isFieldActive(fields, index, values);
                 const nextTextField = formSpec.nextTextField(fields, index);
 
                 return (

@@ -10,6 +10,7 @@ export {
   Account,
   Jar,
   Category,
+  Subcategory,
   Transaction,
   Transfer,
   Allocation,

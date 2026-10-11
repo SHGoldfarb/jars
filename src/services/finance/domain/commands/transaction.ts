@@ -13,6 +13,7 @@ const NewTransactionInput = z.object({
   kind: Transaction.shape.kind,
   accountId: Transaction.shape.accountId,
   categoryId: Transaction.shape.categoryId,
+  subcategoryId: Transaction.shape.subcategoryId,
   jarId: Transaction.shape.jarId,
   amount: Transaction.shape.amount,
   dateISO: Transaction.shape.dateISO,

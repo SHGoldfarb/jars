@@ -5,6 +5,7 @@ import {
   Jar,
   Movement,
   type Nameable,
+  Subcategory,
   Transaction,
   Transfer,
 } from '../model';
@@ -25,6 +26,32 @@ const listJars = (jars: Jar[], params: { includeArchived?: boolean }) => {
 const listCategories = (categories: Category[], params: { includeArchived?: boolean }) => {
   const { includeArchived = false } = params;
   return categories.filter((category) => includeArchived || !category.archivedAtISO).sort(byName);
+};
+
+interface SubcategoryListParams {
+  includeArchived?: boolean;
+  categoryId?: string;
+}
+
+// A subcategory is only ever available through its category, so deleting a category takes its
+// subcategories with it without a single write: the parent an archived category left behind is
+// not in `activeCategories`, and neither are its children in this list. A subcategory whose
+// category is gone entirely is dropped the same way.
+const listSubcategories = (
+  subcategories: Subcategory[],
+  categories: Category[],
+  params: SubcategoryListParams
+) => {
+  const { includeArchived = false, categoryId } = params;
+  const availableCategoryIds = new Set(
+    listCategories(categories, { includeArchived }).map(({ id }) => id)
+  );
+
+  return subcategories
+    .filter((subcategory) => includeArchived || !subcategory.archivedAtISO)
+    .filter((subcategory) => availableCategoryIds.has(subcategory.categoryId))
+    .filter((subcategory) => !categoryId || subcategory.categoryId === categoryId)
+    .sort(byName);
 };
 
 const listAccounts = (accounts: Account[], params: { includeArchived?: boolean }) => {
@@ -148,6 +175,9 @@ export const financeDomainQueries = {
   },
   categories: {
     list: listCategories,
+  },
+  subcategories: {
+    list: listSubcategories,
   },
   jars: {
     list: listJars,

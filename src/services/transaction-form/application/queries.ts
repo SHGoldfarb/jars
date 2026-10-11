@@ -1,4 +1,4 @@
-import { byName, financeQueries } from 'src/services/finance';
+import { byName, financeQueries, type Subcategory } from 'src/services/finance';
 
 const createTransactionFormQueries = (financeQueriesDeps: typeof financeQueries) => {
   return {
@@ -62,6 +62,38 @@ const createTransactionFormQueries = (financeQueriesDeps: typeof financeQueries)
         }
       }
       return categories;
+    },
+
+    // Gets the options the transaction form subcategories selector offers, grouped by the
+    // category they belong to. Grouped rather than fetched per category because which category
+    // is selected lives in the form itself, and because the schema has to validate against
+    // every group anyway - the same reason both kinds of category are fetched up front.
+    // A transaction being edited keeps the subcategory it already carries, even if it or its
+    // category has since been archived.
+    getSubcategoriesByCategoryForSelector: async (transactionId: string | undefined) => {
+      const subcategories = await financeQueriesDeps.subcategories.list();
+      const editedSubcategoryId = transactionId
+        ? (await financeQueries.transactions.getById(transactionId)).subcategoryId
+        : undefined;
+
+      const all =
+        editedSubcategoryId && !subcategories.some(({ id }) => id === editedSubcategoryId)
+          ? [await financeQueriesDeps.subcategories.getById(editedSubcategoryId), ...subcategories]
+          : subcategories;
+
+      const byCategory: Record<string, Subcategory[]> = {};
+      for (const subcategory of all) {
+        byCategory[subcategory.categoryId] = [
+          ...(byCategory[subcategory.categoryId] ?? []),
+          subcategory,
+        ];
+      }
+
+      for (const group of Object.values(byCategory)) {
+        group.sort(byName);
+      }
+
+      return byCategory;
     },
   };
 };

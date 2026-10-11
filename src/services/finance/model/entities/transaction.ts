@@ -6,6 +6,8 @@ export const Transaction = z.object({
   kind: z.enum(['income', 'expense']),
   accountId: idShape,
   categoryId: idShape,
+  // Optional: a transaction can be saved with a category and no subcategory.
+  subcategoryId: idShape.optional(),
   jarId: idShape,
 });
 

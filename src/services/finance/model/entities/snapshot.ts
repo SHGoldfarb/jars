@@ -3,6 +3,7 @@ import { Account } from './account';
 import { Allocation } from './allocation';
 import { Category } from './category';
 import { Jar } from './jar';
+import { Subcategory } from './subcategory';
 import { Transaction } from './transaction';
 import { Transfer } from './transfer';
 
@@ -12,6 +13,7 @@ export const FinanceSnapshot = z.object({
   accounts: z.array(Account),
   jars: z.array(Jar),
   categories: z.array(Category),
+  subcategories: z.array(Subcategory),
   transactions: z.array(Transaction),
   transfers: z.array(Transfer),
   allocations: z.array(Allocation),

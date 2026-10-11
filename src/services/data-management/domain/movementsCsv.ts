@@ -1,5 +1,5 @@
 import { decimal } from 'src/lib/decimal';
-import type { Account, Category, Jar, MovementListEntry } from 'src/services/finance';
+import type { Account, Category, Jar, MovementListEntry, Subcategory } from 'src/services/finance';
 import { dateStamp } from './fileName';
 
 // One table for every movement kind: the shared columns are filled by all of them, and each
@@ -13,6 +13,7 @@ const COLUMNS = [
   'Currency',
   'Account',
   'Category',
+  'Subcategory',
   'Jar',
   'Origin account',
   'Destination account',
@@ -30,6 +31,7 @@ export interface MovementsCsvData {
   accounts: Account[];
   jars: Jar[];
   categories: Category[];
+  subcategories: Subcategory[];
 }
 
 export const movementsCsvFileName = (date: Date) => `jars-export-${dateStamp(date)}.csv`;
@@ -48,10 +50,12 @@ export const toMovementsCsvRows = ({
   accounts,
   jars,
   categories,
+  subcategories,
 }: MovementsCsvData): string[][] => {
   const accountNames = namesById(accounts);
   const jarNames = namesById(jars);
   const categoryNames = namesById(categories);
+  const subcategoryNames = namesById(subcategories);
 
   // A movement always names something that exists; an empty name would be a broken reference
   // rather than a value the file should carry an id for.
@@ -72,6 +76,11 @@ export const toMovementsCsvRows = ({
           Type: transactionTypes[movement.kind],
           Account: nameOf(accountNames, movement.accountId),
           Category: nameOf(categoryNames, movement.categoryId),
+          // Optional on a transaction, so unlike every other reference here an empty cell is a
+          // transaction without one rather than a broken reference.
+          Subcategory: movement.subcategoryId
+            ? nameOf(subcategoryNames, movement.subcategoryId)
+            : '',
           Jar: nameOf(jarNames, movement.jarId),
         };
       case 'transfer':

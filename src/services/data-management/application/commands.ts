@@ -40,22 +40,25 @@ const createDataManagementCommands = (deps: {
 
   // Reads and formats; writes nothing.
   exportMovementsCsv: async (): Promise<DataFile> => {
-    const [movements, accounts, jars, incomeCategories, expenseCategories] = await Promise.all([
-      deps.finance.movements.list(),
-      // The names are looked up including the archived ones: a live movement may point at an
-      // archived account, jar or category, and it still has to print that name. Nothing an
-      // exported movement doesn't reference is ever looked up, so it never reaches the file.
-      deps.finance.accounts.list({ includeArchived: true }),
-      deps.finance.jars.list({ includeArchived: true }),
-      deps.finance.categories.listIncome({ includeArchived: true }),
-      deps.finance.categories.listExpense({ includeArchived: true }),
-    ]);
+    const [movements, accounts, jars, incomeCategories, expenseCategories, subcategories] =
+      await Promise.all([
+        deps.finance.movements.list(),
+        // The names are looked up including the archived ones: a live movement may point at an
+        // archived account, jar or category, and it still has to print that name. Nothing an
+        // exported movement doesn't reference is ever looked up, so it never reaches the file.
+        deps.finance.accounts.list({ includeArchived: true }),
+        deps.finance.jars.list({ includeArchived: true }),
+        deps.finance.categories.listIncome({ includeArchived: true }),
+        deps.finance.categories.listExpense({ includeArchived: true }),
+        deps.finance.subcategories.list({ includeArchived: true }),
+      ]);
 
     const rows = toMovementsCsvRows({
       movements,
       accounts,
       jars,
       categories: [...incomeCategories, ...expenseCategories],
+      subcategories,
     });
 
     return { fileName: movementsCsvFileName(new Date()), contents: csv.serialize(rows) };

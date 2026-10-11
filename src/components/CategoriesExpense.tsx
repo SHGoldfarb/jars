@@ -1,16 +1,3 @@
-import { GenericNameableList } from 'src/components/GenericNameableList';
-import { useCategoriesExpense } from 'src/hooks/useCategories';
+import { CategoriesList } from 'src/components/CategoriesList';
 
-export const CategoriesExpense = () => {
-  const { categories } = useCategoriesExpense();
-
-  return (
-    <GenericNameableList
-      items={categories.map((category) => ({
-        ...category,
-        url: `/categories/${category.id}/edit`,
-      }))}
-      actions={[{ label: 'Add Expense category', url: '/categories/expense/new' }]}
-    />
-  );
-};
+export const CategoriesExpense = () => <CategoriesList kind="expense" />;

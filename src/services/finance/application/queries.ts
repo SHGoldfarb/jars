@@ -23,6 +23,7 @@ export const createFinanceQueries = (deps: FinanceRepositories) => {
       deps.accounts.getLastOperationId(),
       deps.jars.getLastOperationId(),
       deps.categories.getLastOperationId(),
+      deps.subcategories.getLastOperationId(),
     ].join(':');
 
   const withDatabaseCache = <T extends unknown[], U>(f: (...args: T) => U) => {
@@ -55,6 +56,18 @@ export const createFinanceQueries = (deps: FinanceRepositories) => {
         financeDomainQueries.categories.list(await deps.categories.listExpense(), params ?? {}),
       getById: (categoryId: string) => deps.categories.getById(categoryId),
       lastOperationId: () => deps.categories.getLastOperationId(),
+    },
+    subcategories: {
+      // The categories are read alongside so the list can drop the ones whose category is gone:
+      // a subcategory is never available on its own.
+      list: async (params?: { includeArchived?: boolean; categoryId?: string }) =>
+        financeDomainQueries.subcategories.list(
+          await deps.subcategories.list(),
+          await deps.categories.list(),
+          params ?? {}
+        ),
+      getById: (subcategoryId: string) => deps.subcategories.getById(subcategoryId),
+      lastOperationId: () => deps.subcategories.getLastOperationId(),
     },
     transactions: {
       list: async (params?: {

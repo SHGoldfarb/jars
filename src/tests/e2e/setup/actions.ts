@@ -20,6 +20,7 @@ export interface CreateTransactionParams {
   accountName?: string;
   jarName?: string;
   categoryName?: string;
+  subcategoryName?: string;
 }
 
 export interface CreateTransferParams {
@@ -42,6 +43,11 @@ const test = base.extend<{
   createAccount: (accountName: string) => Promise<void>;
   createJar: (jarName: string) => Promise<void>;
   createCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
+  createSubcategory: (
+    kind: 'Income' | 'Expense',
+    categoryName: string,
+    subcategoryName: string
+  ) => Promise<void>;
   createTransaction: (params?: CreateTransactionParams) => Promise<void>;
   createTransfer: (params: CreateTransferParams) => Promise<void>;
   createAllocation: (params: CreateAllocationParams) => Promise<void>;
@@ -77,6 +83,16 @@ const test = base.extend<{
       await categoryFormPage.submitButton.click();
     });
   },
+  createSubcategory: async ({ categoriesPage, categoryFormPage, rootLayoutPage }, use) => {
+    await use(async (kind, categoryName, subcategoryName) => {
+      await rootLayoutPage.navButton('Categories').click();
+      await categoriesPage.tabButton(kind).click();
+      await categoriesPage.clickCategory(categoryName);
+      await categoryFormPage.addSubcategoryButton.click();
+      await categoryFormPage.nameInput.fill(subcategoryName);
+      await categoryFormPage.submitButton.click();
+    });
+  },
   createTransaction: async ({ rootLayoutPage, movementsPage, transactionFormPage }, use) => {
     await use(async (params?: CreateTransactionParams) => {
       const defaultParams = {
@@ -106,6 +122,11 @@ const test = base.extend<{
         await transactionFormPage.selectCategory(params.categoryName);
       } else {
         await transactionFormPage.selectFirstCategory();
+      }
+      // Left alone unless asked for: a transaction without a subcategory is a valid one, and
+      // it is what every test that does not care about them gets.
+      if (params?.subcategoryName) {
+        await transactionFormPage.selectSubcategory(params.subcategoryName);
       }
       await transactionFormPage.submitButton.click();
     });

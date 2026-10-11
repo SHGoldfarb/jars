@@ -4,6 +4,7 @@ import { CircleDollarSignIcon } from 'lucide-react';
 import type { Transaction } from 'src/services/finance';
 import { useJar } from 'src/hooks/useJar';
 import { useCategory } from 'src/hooks/useCategory';
+import { useSubcategory } from 'src/hooks/useSubcategory';
 import { useAccount } from 'src/hooks/useAccount';
 import { formatDateISO } from 'src/presentation/formatters/dateFormatters';
 import { MovementListItem } from './MovementListItem';
@@ -11,6 +12,7 @@ import { MovementListItem } from './MovementListItem';
 export const TransactionListItem = ({ transaction }: { transaction: Transaction }) => {
   const jar = useJar(transaction.jarId);
   const category = useCategory(transaction.categoryId);
+  const subcategory = useSubcategory(transaction.subcategoryId ?? '');
   const account = useAccount(transaction.accountId);
   const kindColor = transaction.kind === 'income' ? 'text-emerald-400' : 'text-rose-400';
 
@@ -28,7 +30,10 @@ export const TransactionListItem = ({ transaction }: { transaction: Transaction 
       contentMiddle={
         <>
           <ItemTitle>{transaction.description}</ItemTitle>
-          <ItemDescription>{category?.name}</ItemDescription>
+          <ItemDescription>
+            {category?.name}
+            {subcategory ? ` · ${subcategory.name}` : null}
+          </ItemDescription>
         </>
       }
       contentRight={

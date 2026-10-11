@@ -7,6 +7,7 @@ import type {
   Category,
   FinanceSnapshot,
   Jar,
+  Subcategory,
   Transaction,
 } from 'src/services/finance';
 import { currencyInput } from 'src/services/shared';
@@ -19,8 +20,8 @@ import type { ParseResult } from './result';
 //
 //   - `Account` is a Money Manager account, which is a jar here: Money Manager has no accounts
 //     in this app's sense, so every movement lands in the one invented `Cash` account.
-//   - `Category` and `Subcategory` are one category here, joined by `CATEGORY_SEPARATOR`. A row
-//     with no subcategory keeps the category on its own.
+//   - `Category` is a category here, and `Subcategory` a subcategory of it. A row with no
+//     subcategory gives its transaction a category and nothing more.
 //   - `Note` is what this app calls a description. The column the export heads `Description` is
 //     written empty on every row, so it is not read at all.
 //   - The amount is the main-currency column. `Amount` and `Currency` hold what was originally
@@ -55,10 +56,6 @@ type RowKind = (typeof ROW_KINDS)[number];
 
 // Money Manager has no accounts in this app's sense, so everything it exports lands in one.
 const CASH_ACCOUNT_NAME = 'Cash';
-
-// What joins a category to its subcategory: `Needs` and `Groceries` become `Needs / Groceries`,
-// one category of that name in this app.
-const CATEGORY_SEPARATOR = ' / ';
 
 const NOT_FOUND = -1;
 
@@ -203,9 +200,13 @@ const toFinanceSnapshot = (rows: XlsxCell[][]): ParseResult<FinanceSnapshot> => 
 
   // One jar per distinct account name, and one category per name and kind, however many rows
   // mention them. A name used by both an income and an expense row is two categories, because
-  // a category carries its kind and nothing else would preserve both.
+  // a category carries its kind and nothing else would preserve both. Subcategories hang off
+  // the category a row names, so the same subcategory name under two categories is two
+  // subcategories - and under one category of each kind, two as well, since the categories
+  // they belong to are different.
   const jars = new Map<string, Jar>();
   const categories = new Map<string, Category>();
+  const subcategories = new Map<string, Subcategory>();
 
   const jarFor = (name: string): Jar => {
     const existing = jars.get(name);
@@ -228,6 +229,18 @@ const toFinanceSnapshot = (rows: XlsxCell[][]): ParseResult<FinanceSnapshot> => 
     const category: Category = { id: generateId(), name, kind };
     categories.set(key, category);
     return category;
+  };
+
+  const subcategoryFor = (name: string, category: Category): Subcategory => {
+    const key = `${category.id}:${name}`;
+    const existing = subcategories.get(key);
+    if (existing) {
+      return existing;
+    }
+
+    const subcategory: Subcategory = { id: generateId(), name, categoryId: category.id };
+    subcategories.set(key, subcategory);
+    return subcategory;
   };
 
   const cashAccount: Account = { id: generateId(), name: CASH_ACCOUNT_NAME };
@@ -298,16 +311,17 @@ const toFinanceSnapshot = (rows: XlsxCell[][]): ParseResult<FinanceSnapshot> => 
 
     const subcategoryName = textAt(row, columns.subcategory);
     const kind = rowKind === 'Income' ? 'income' : 'expense';
-    const fullCategoryName =
-      subcategoryName === ''
-        ? categoryName
-        : `${categoryName}${CATEGORY_SEPARATOR}${subcategoryName}`;
+    const category = categoryFor(categoryName, kind);
 
     transactions.push({
       ...movement,
       kind,
       accountId: cashAccount.id,
-      categoryId: categoryFor(fullCategoryName, kind).id,
+      categoryId: category.id,
+      // A row with no subcategory leaves the transaction without one, which is what an optional
+      // subcategory means here as anywhere else.
+      subcategoryId:
+        subcategoryName === '' ? undefined : subcategoryFor(subcategoryName, category).id,
       jarId: jarFor(accountName).id,
     });
   }
@@ -318,6 +332,7 @@ const toFinanceSnapshot = (rows: XlsxCell[][]): ParseResult<FinanceSnapshot> => 
       accounts: [cashAccount],
       jars: [...jars.values()],
       categories: [...categories.values()],
+      subcategories: [...subcategories.values()],
       transactions,
       // Every movement lives in the single `Cash` account, so nothing moves between accounts.
       transfers: [],

@@ -8,6 +8,7 @@ interface CreateTransactionInput {
   kind: 'income' | 'expense';
   accountId: string;
   categoryId: string;
+  subcategoryId?: string;
   jarId: string;
   amount: CurrencyAmount;
   dateISO: string;
