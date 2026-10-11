@@ -76,6 +76,9 @@ const decimalToNumber = (value: Decimal) => {
 
 const isZeroDigits = (digits: string) => /^0*$/.test(digits);
 
+// "0", "0.00" and "-0" are all zero, however many digits or whichever sign they carry.
+const isZeroDecimal = (value: Decimal) => isZeroDigits(value.value.replace(/^-/, ''));
+
 const stripLeadingZeros = (digits: string) => digits.replace(/^0+(?=\d)/, '');
 
 // The plain decimal form of a Decimal, placed by moving the point through the digit string
@@ -121,4 +124,5 @@ export const decimal = {
   toNumber: decimalToNumber,
   toDecimalString: decimalToDecimalString,
   parseString,
+  isZero: isZeroDecimal,
 };

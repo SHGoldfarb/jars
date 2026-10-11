@@ -3,5 +3,5 @@ import { moneyManager } from './domain/moneyManager';
 
 export const dataManagement = { commands: dataManagementCommands, moneyManager };
 
-export type { DataFile } from './application/commands';
+export type { DataFile, MoneyManagerImportOptions } from './application/commands';
 export type { CommandResult, ParseResult } from './domain/result';

@@ -8,6 +8,7 @@ import type { SettingsPage } from './pages/settings.page';
 test.use({ locale: 'en-US', timezoneId: 'UTC' });
 
 const ACTION = 'Import from Money Manager Excel';
+const ARCHIVE_EMPTY_JARS = 'Archive jars with zero balance';
 
 // Every expected value below is hardcoded from the rows in `fixtures/moneyManagerSample.ts`.
 const CASH_ACCOUNT = 'Cash';
@@ -79,6 +80,47 @@ test('a Money Manager export becomes jars, categories and movements under one Ca
   await expect(expense).toContainText('Wants · Snacks');
   await expect(expense).toContainText('$500');
   await expect(expense).toContainText('2/13/2026, 8:15:00 AM');
+});
+
+test('jars with zero balance are archived by default', async ({
+  rootLayoutPage,
+  settingsPage,
+  jarsPage,
+  movementsPage,
+}) => {
+  test.slow();
+
+  await rootLayoutPage.navButton('Settings').click();
+  await expect(settingsPage.actionOption(ACTION, ARCHIVE_EMPTY_JARS)).toBeChecked();
+  await importSample(settingsPage);
+
+  // `Old card` took 1000 in and paid 1000 out, so it nets to zero and is archived.
+  await rootLayoutPage.navButton('Jars').click();
+  await jarsPage.expectJarToExist('Wallet');
+  await jarsPage.expectJarToExist('Holidays');
+  await jarsPage.expectJarToNotExist('Old card');
+
+  // Archived, not dropped: its movements still name it.
+  await rootLayoutPage.navButton('Movements').click();
+  await movementsPage.selectMonth(SAMPLE_MONTH);
+  await expect(movementsPage.getMovement('Old card payment')).toContainText(
+    `${CASH_ACCOUNT} · Old card`
+  );
+});
+
+test('jars with zero balance are kept when the option is turned off', async ({
+  rootLayoutPage,
+  settingsPage,
+  jarsPage,
+}) => {
+  test.slow();
+
+  await rootLayoutPage.navButton('Settings').click();
+  await settingsPage.actionOption(ACTION, ARCHIVE_EMPTY_JARS).uncheck();
+  await importSample(settingsPage);
+
+  await rootLayoutPage.navButton('Jars').click();
+  await expect(jarsPage.getJar('Old card')).toContainText('$0');
 });
 
 test('transfer rows become a single allocation and no transfers', async ({

@@ -1,3 +1,6 @@
+import { useId, useState } from 'react';
+import { Checkbox } from 'components/ui/checkbox';
+import { Label } from 'components/ui/label';
 import { useDataManagement } from 'src/hooks/useDataManagement';
 import { SettingsAction } from './SettingsAction';
 
@@ -14,6 +17,8 @@ export const Settings = () => {
     importMoneyManagerExcel,
     clearAllData,
   } = useDataManagement();
+  const [archiveEmptyJars, setArchiveEmptyJars] = useState(true);
+  const archiveEmptyJarsId = useId();
 
   // A download either happens or it doesn't; there is nothing of the user's to lose either way,
   // so a failure is logged rather than reported next to the destructive actions' messages.
@@ -61,8 +66,20 @@ export const Settings = () => {
         warning={replacesAllData}
         accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         confirmation={replacesAllDataConfirmation}
+        options={
+          <Label htmlFor={archiveEmptyJarsId} className="font-normal">
+            <Checkbox
+              id={archiveEmptyJarsId}
+              checked={archiveEmptyJars}
+              onCheckedChange={(checked) => {
+                setArchiveEmptyJars(checked === true);
+              }}
+            />
+            Archive jars with zero balance
+          </Label>
+        }
         onFile={(file) => {
-          void importMoneyManagerExcel(file);
+          void importMoneyManagerExcel(file, { archiveEmptyJars });
         }}
       />
       <SettingsAction

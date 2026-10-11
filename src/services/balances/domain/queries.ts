@@ -76,6 +76,11 @@ const createGetters = (balances: Balances) => ({
 
 export type BalancesGetters = ReturnType<typeof createGetters>;
 
+// The same balances for movements that are not in the database yet - an import being prepared,
+// say - so a decision about them follows the one rule every balance in the app follows.
+export const balancesFromMovements = (movements: Movements): BalancesGetters =>
+  createGetters(computeBalances(movements));
+
 export const balancesGetters = async ({
   dataStateId,
   readMovements,

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { downloadTextFile } from 'src/lib/fileDownload';
-import { dataManagement } from 'src/services/data-management';
+import { dataManagement, type MoneyManagerImportOptions } from 'src/services/data-management';
 
 export interface DataManagementStatus {
   kind: 'success' | 'error';
@@ -38,10 +38,10 @@ export const useDataManagement = () => {
 
   // The file goes to the command as it came from the picker: reading an `.xlsx` as text would
   // corrupt it, so the binary is handed over untouched.
-  const importMoneyManagerExcel = async (file: File) => {
+  const importMoneyManagerExcel = async (file: File, options: MoneyManagerImportOptions) => {
     setStatus(null);
     try {
-      const result = await dataManagement.commands.importMoneyManagerExcel(file);
+      const result = await dataManagement.commands.importMoneyManagerExcel(file, options);
       setStatus(
         result.ok
           ? { kind: 'success', message: 'Money Manager file imported.' }

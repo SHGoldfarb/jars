@@ -6,6 +6,10 @@ import { moneyManager } from '../domain/moneyManager';
 import { movementsCsvFileName, toMovementsCsvRows } from '../domain/movementsCsv';
 import type { CommandResult, ParseResult } from '../domain/result';
 
+export interface MoneyManagerImportOptions {
+  archiveEmptyJars: boolean;
+}
+
 export interface DataFile {
   fileName: string;
   contents: string;
@@ -78,7 +82,10 @@ const createDataManagementCommands = (deps: {
 
   // Nothing is written until the whole workbook has been mapped, so a file rejected for its
   // fifth row leaves the existing data exactly as untouched as one rejected for its header.
-  importMoneyManagerExcel: async (file: Blob): Promise<CommandResult> => {
+  importMoneyManagerExcel: async (
+    file: Blob,
+    options: MoneyManagerImportOptions
+  ): Promise<CommandResult> => {
     const rows = await readWorkbook(file);
     if (!rows.ok) {
       return rows;
@@ -89,7 +96,11 @@ const createDataManagementCommands = (deps: {
       return snapshot;
     }
 
-    await deps.financeWrites.database.replaceAll(snapshot.value);
+    const data = options.archiveEmptyJars
+      ? moneyManager.archiveEmptyJars(snapshot.value, new Date().toISOString())
+      : snapshot.value;
+
+    await deps.financeWrites.database.replaceAll(data);
     return { ok: true };
   },
 

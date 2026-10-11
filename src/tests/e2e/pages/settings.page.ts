@@ -23,6 +23,8 @@ export const settingsPageConstructor = (page: Page) => {
   const actionDescription = (name: SettingsActionName) =>
     action(name).getByRole('paragraph').first();
   const actionWarning = (name: SettingsActionName) => action(name).getByRole('paragraph').nth(1);
+  const actionOption = (name: SettingsActionName, option: string) =>
+    action(name).getByRole('checkbox', { name: option });
   const statusMessage = page.getByRole('alert');
 
   // The dialog is portalled out of the action's card, so it is located from the page.
@@ -71,6 +73,7 @@ export const settingsPageConstructor = (page: Page) => {
     fileInput,
     actionDescription,
     actionWarning,
+    actionOption,
     statusMessage,
     confirmDialog,
     confirmButton,

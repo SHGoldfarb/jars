@@ -10,7 +10,8 @@ import type {
   Subcategory,
   Transaction,
 } from 'src/services/finance';
-import { currencyInput } from 'src/services/shared';
+import { balances } from 'src/services/balances';
+import { currency, currencyInput } from 'src/services/shared';
 import type { ParseResult } from './result';
 
 // The shape of a Money Manager export, read off a real one.
@@ -341,6 +342,21 @@ const toFinanceSnapshot = (rows: XlsxCell[][]): ParseResult<FinanceSnapshot> => 
   };
 };
 
+// Money Manager keeps every account it ever had, so an export carries the ones that were emptied
+// and left behind. A jar whose movements net to nothing is archived rather than dropped: its
+// movements still point at it and still have to show its name.
+const archiveEmptyJars = (snapshot: FinanceSnapshot, archivedAtISO: string): FinanceSnapshot => {
+  const balanceOf = balances.fromMovements(snapshot).jars;
+
+  return {
+    ...snapshot,
+    jars: snapshot.jars.map((jar) =>
+      currency.isZero(balanceOf(jar.id)) ? { ...jar, archivedAtISO } : jar
+    ),
+  };
+};
+
 export const moneyManager = {
   toFinanceSnapshot,
+  archiveEmptyJars,
 };

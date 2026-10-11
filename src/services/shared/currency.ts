@@ -29,8 +29,11 @@ const toCurrency = (
   amountDecimal: decimal.parseString(value.toString()),
 });
 
+const isZeroCurrencyAmount = (amount: CurrencyAmount) => decimal.isZero(amount.amountDecimal);
+
 export const currency = {
   sum: sumCurrencyAmounts,
   negate: negateCurrencyAmount,
+  isZero: isZeroCurrencyAmount,
   new: toCurrency,
 };

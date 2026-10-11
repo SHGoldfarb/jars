@@ -101,6 +101,30 @@ const ROWS: SampleRow[] = [
     spent: '0.53',
     currency: 'USD',
   },
+  // An account that was filled and then spent down to nothing, as one left behind in Money
+  // Manager would be: the jar it becomes nets to zero, and so is what the import archives.
+  {
+    date: at('2026-02-14T10:00'),
+    account: 'Old card',
+    category: 'Salary',
+    subcategory: '',
+    note: 'Old card top-up',
+    clp: 1000,
+    kind: 'Income',
+    spent: '1000.0',
+    currency: 'CLP',
+  },
+  {
+    date: at('2026-02-15T10:00'),
+    account: 'Old card',
+    category: 'Needs',
+    subcategory: '',
+    note: 'Old card payment',
+    clp: 1000,
+    kind: 'Expense',
+    spent: '1000.0',
+    currency: 'CLP',
+  },
 ];
 
 const toCells = (row: SampleRow) => [
