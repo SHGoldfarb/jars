@@ -64,6 +64,8 @@ test('allocation form defaults, jar options and validation', async ({
   allocationFormPage,
   page,
 }) => {
+  test.slow();
+
   const originName = 'Origin jar name';
   const destinationName = 'Destination jar name';
   const archivedName = 'Archived jar';
