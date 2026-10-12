@@ -434,6 +434,220 @@ test.describe('transaction form', () => {
     await transactionFormPage.expectOptionToExist('Jar', jarName);
     await transactionFormPage.expectOptionToExist('Category', categoryName);
   });
+
+  test.describe('subcategories', () => {
+    test('the subcategory selector offers only the selected category subcategories', async ({
+      createDefaultData,
+      createSubcategory,
+      rootLayoutPage,
+      movementsPage,
+      transactionFormPage,
+    }) => {
+      test.slow();
+      await createDefaultData();
+      await createSubcategory('Expense', 'Groceries', 'Meat');
+      await createSubcategory('Expense', 'Groceries', 'Bread');
+      await createSubcategory('Income', 'Salary', 'Bonus');
+
+      await rootLayoutPage.navButton('Movements').click();
+      await movementsPage.createTransactionButton.click();
+      await transactionFormPage.selectType('Expense');
+      await transactionFormPage.selectCategory('Groceries');
+
+      // Alphabetical, and nothing belonging to another category.
+      await transactionFormPage.expectOptionsInOrder('Subcategory', ['Bread', 'Meat']);
+      await transactionFormPage.expectOptionToNotExist('Subcategory', 'Bonus');
+    });
+
+    test('the subcategory selector is empty until a category is selected', async ({
+      createDefaultData,
+      createSubcategory,
+      rootLayoutPage,
+      movementsPage,
+      transactionFormPage,
+    }) => {
+      await createDefaultData();
+      await createSubcategory('Expense', 'Groceries', 'Meat');
+
+      await rootLayoutPage.navButton('Movements').click();
+      await movementsPage.createTransactionButton.click();
+      await transactionFormPage.selectType('Expense');
+
+      await transactionFormPage.expectOptionsInOrder('Subcategory', []);
+    });
+
+    test('the subcategory resets when the category changes', async ({
+      createDefaultData,
+      createCategory,
+      createSubcategory,
+      rootLayoutPage,
+      movementsPage,
+      transactionFormPage,
+    }) => {
+      test.slow();
+      await createDefaultData();
+      await createCategory('Expense', 'Transport');
+      await createSubcategory('Expense', 'Groceries', 'Meat');
+      await createSubcategory('Expense', 'Transport', 'Bus');
+
+      await rootLayoutPage.navButton('Movements').click();
+      await movementsPage.createTransactionButton.click();
+      await transactionFormPage.selectType('Expense');
+      await transactionFormPage.selectCategory('Groceries');
+      await transactionFormPage.selectSubcategory('Meat');
+      await transactionFormPage.expectSelection('Subcategory', 'Meat');
+
+      await transactionFormPage.selectCategory('Transport');
+
+      // Emptied, and now offering the new category's own.
+      await transactionFormPage.expectSelection('Subcategory', 'Select Subcategory');
+      await transactionFormPage.expectOptionsInOrder('Subcategory', ['Bus']);
+    });
+
+    test('picking a category opens its subcategories, and the form flows on from them', async ({
+      page,
+      createDefaultData,
+      createSubcategory,
+      rootLayoutPage,
+      movementsPage,
+      transactionFormPage,
+    }) => {
+      test.slow();
+      await createDefaultData();
+      await createSubcategory('Expense', 'Groceries', 'Meat');
+
+      await rootLayoutPage.navButton('Movements').click();
+      await movementsPage.createTransactionButton.click();
+      await transactionFormPage.selectType('Expense');
+      await transactionFormPage.selectCategory('Groceries');
+
+      // The category has subcategories, so they are what opens next, not Account.
+      await expect(page.getByRole('option', { name: 'Meat', exact: true })).toBeVisible();
+
+      // Picking one leads on to the account.
+      await page.getByRole('option', { name: 'Meat', exact: true }).click();
+      await expect(page.getByRole('option', { name: defaultData.accounts[0] })).toBeVisible();
+    });
+
+    test('a skipped subcategory hands on to the account', async ({
+      page,
+      createDefaultData,
+      createSubcategory,
+      rootLayoutPage,
+      movementsPage,
+      transactionFormPage,
+    }) => {
+      test.slow();
+      await createDefaultData();
+      await createSubcategory('Expense', 'Groceries', 'Meat');
+
+      await rootLayoutPage.navButton('Movements').click();
+      await movementsPage.createTransactionButton.click();
+      await transactionFormPage.selectType('Expense');
+      await transactionFormPage.selectCategory('Groceries');
+      await expect(page.getByRole('option', { name: 'Meat', exact: true })).toBeVisible();
+
+      await page.keyboard.press('Escape');
+
+      await expect(page.getByRole('option', { name: defaultData.accounts[0] })).toBeVisible();
+    });
+
+    test('a category without subcategories goes straight on to the account', async ({
+      page,
+      createDefaultData,
+      createCategory,
+      createSubcategory,
+      rootLayoutPage,
+      movementsPage,
+      transactionFormPage,
+    }) => {
+      test.slow();
+      await createDefaultData();
+      await createCategory('Expense', 'Transport');
+      await createSubcategory('Expense', 'Groceries', 'Meat');
+
+      await rootLayoutPage.navButton('Movements').click();
+      await movementsPage.createTransactionButton.click();
+      await transactionFormPage.selectType('Expense');
+      await transactionFormPage.selectCategory('Transport');
+
+      await expect(page.getByRole('option', { name: defaultData.accounts[0] })).toBeVisible();
+    });
+
+    test('a transaction can be saved with a category and no subcategory', async ({
+      createDefaultData,
+      createSubcategory,
+      createTransaction,
+      movementsPage,
+    }) => {
+      test.slow();
+      await createDefaultData();
+      await createSubcategory('Expense', 'Groceries', 'Meat');
+
+      await createTransaction({ description: 'No subcategory', categoryName: 'Groceries' });
+
+      const transaction = movementsPage.getMovement('No subcategory');
+      await expect(transaction).toBeVisible();
+      await expect(transaction.getByText('Groceries')).toBeVisible();
+      await expect(transaction.getByText('Meat')).toHaveCount(0);
+    });
+
+    test('a saved subcategory is shown with the category and survives a refresh', async ({
+      page,
+      createDefaultData,
+      createSubcategory,
+      createTransaction,
+      movementsPage,
+    }) => {
+      test.slow();
+      await createDefaultData();
+      await createSubcategory('Expense', 'Groceries', 'Meat');
+
+      await createTransaction({
+        description: 'With a subcategory',
+        categoryName: 'Groceries',
+        subcategoryName: 'Meat',
+      });
+
+      const transaction = movementsPage.getMovement('With a subcategory');
+      await expect(transaction.getByText('Groceries · Meat')).toBeVisible();
+
+      await page.reload();
+
+      await expect(
+        movementsPage.getMovement('With a subcategory').getByText('Groceries · Meat')
+      ).toBeVisible();
+    });
+
+    test('a transaction subcategory can be changed by editing it', async ({
+      createDefaultData,
+      createSubcategory,
+      createTransaction,
+      movementsPage,
+      transactionFormPage,
+    }) => {
+      test.slow();
+      await createDefaultData();
+      await createSubcategory('Expense', 'Groceries', 'Meat');
+      await createSubcategory('Expense', 'Groceries', 'Bread');
+
+      await createTransaction({
+        description: 'Changing subcategory',
+        categoryName: 'Groceries',
+        subcategoryName: 'Meat',
+      });
+
+      await movementsPage.getMovement('Changing subcategory').click();
+      // The form opens on what was saved.
+      await transactionFormPage.expectSelection('Subcategory', 'Meat');
+      await transactionFormPage.selectSubcategory('Bread');
+      await transactionFormPage.submitButton.click();
+
+      await expect(
+        movementsPage.getMovement('Changing subcategory').getByText('Groceries · Bread')
+      ).toBeVisible();
+    });
+  });
 });
 
 test('after editing a transaction, it automatically restores archived jars and accounts if their balance is no longer zero', async ({

@@ -291,7 +291,7 @@ WIP
 - [x] Better UI on month selector: arrows currently change position depending of the length of the month name, makes it difficult to move multiple times.
 - [x] Order jars, accounts, categories alphabetically. In page and form selectors.
 - [ ] Suggest previous descriptions in description field in movements form.
-- [ ] Live format amount in input field.
+- [x] Live format amount in input field.
 
 ## Epics Backlog
 
@@ -300,7 +300,7 @@ WIP
 - Sync support (open in desktop browser and keep synced with phone)
 - switch between dark/light modes
 - multi currency
-- localization (language, money amount format)
+- localization (language, currebcy format, date format)
 - Bookmarks (favorites - auto populate)
 - Auto recurring transactions
 - Custom category, jar and account selectors
