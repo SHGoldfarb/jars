@@ -1,16 +1,6 @@
 import { testUtils } from 'src/tests/utils.ts';
 import { test as base } from './pages.ts';
-
-// A valid datetime-local value for movements whose date the caller doesn't care about. Movements
-// lists one month at a time and opens on the current one, so it is dated inside that month -
-// a hardcoded month would only be on screen during that month of the year. Day and time are
-// fixed, so the value is stable for the whole run.
-const now = new Date();
-export const DEFAULT_MOVEMENT_DATE = new Date(
-  Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 10, 9, 0)
-)
-  .toISOString()
-  .slice(0, 16);
+import { DEFAULT_MOVEMENT_DATE } from './seed.ts';
 
 export interface CreateTransactionParams {
   amount?: string;
@@ -23,76 +13,11 @@ export interface CreateTransactionParams {
   subcategoryName?: string;
 }
 
-export interface CreateTransferParams {
-  amount?: string;
-  date?: string;
-  description?: string;
-  originAccountName: string;
-  destinationAccountName: string;
-}
-
-export interface CreateAllocationParams {
-  amount?: string;
-  date?: string;
-  description?: string;
-  originJarName: string;
-  destinationJarName: string;
-}
-
 const test = base.extend<{
-  createAccount: (accountName: string) => Promise<void>;
-  createJar: (jarName: string) => Promise<void>;
-  createCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
-  createSubcategory: (
-    kind: 'Income' | 'Expense',
-    categoryName: string,
-    subcategoryName: string
-  ) => Promise<void>;
   createTransaction: (params?: CreateTransactionParams) => Promise<void>;
-  createTransfer: (params: CreateTransferParams) => Promise<void>;
-  createAllocation: (params: CreateAllocationParams) => Promise<void>;
-  deleteAccount: (accountName: string) => Promise<void>;
   deleteCategory: (kind: 'Income' | 'Expense', categoryName: string) => Promise<void>;
   deleteJar: (jarName: string) => Promise<void>;
-  deleteTransaction: (transactionDescription: string) => Promise<void>;
-  deleteTransfer: (transferDescription: string) => Promise<void>;
-  deleteAllocation: (allocationDescription: string) => Promise<void>;
 }>({
-  createAccount: async ({ accountsPage, accountFormPage, rootLayoutPage }, use) => {
-    await use(async (accountName: string) => {
-      await rootLayoutPage.navButton('Accounts').click();
-      await accountsPage.createAccountButton.click();
-      await accountFormPage.nameInput.fill(accountName);
-      await accountFormPage.submitButton.click();
-    });
-  },
-  createJar: async ({ jarsPage, jarFormPage, rootLayoutPage }, use) => {
-    await use(async (jarName: string) => {
-      await rootLayoutPage.navButton('Jars').click();
-      await jarsPage.createJarButton.click();
-      await jarFormPage.nameInput.fill(jarName);
-      await jarFormPage.submitButton.click();
-    });
-  },
-  createCategory: async ({ categoriesPage, categoryFormPage, rootLayoutPage }, use) => {
-    await use(async (kind, categoryName) => {
-      await rootLayoutPage.navButton('Categories').click();
-      await categoriesPage.tabButton(kind).click();
-      await categoriesPage.createCategoryButton(kind).click();
-      await categoryFormPage.nameInput.fill(categoryName);
-      await categoryFormPage.submitButton.click();
-    });
-  },
-  createSubcategory: async ({ categoriesPage, categoryFormPage, rootLayoutPage }, use) => {
-    await use(async (kind, categoryName, subcategoryName) => {
-      await rootLayoutPage.navButton('Categories').click();
-      await categoriesPage.tabButton(kind).click();
-      await categoriesPage.clickCategory(categoryName);
-      await categoryFormPage.addSubcategoryButton.click();
-      await categoryFormPage.nameInput.fill(subcategoryName);
-      await categoryFormPage.submitButton.click();
-    });
-  },
   createTransaction: async ({ rootLayoutPage, movementsPage, transactionFormPage }, use) => {
     await use(async (params?: CreateTransactionParams) => {
       const defaultParams = {
@@ -131,49 +56,6 @@ const test = base.extend<{
       await transactionFormPage.submitButton.click();
     });
   },
-  createTransfer: async ({ rootLayoutPage, movementsPage, transferFormPage }, use) => {
-    await use(async (params: CreateTransferParams) => {
-      const defaultParams = {
-        amount: (1000 + testUtils.generateIntId()).toString(),
-        date: DEFAULT_MOVEMENT_DATE,
-        description: `Transfer description${testUtils.generateId()}`,
-      } as const;
-
-      await rootLayoutPage.navButton('Movements').click();
-      await movementsPage.createTransferButton.click();
-      await transferFormPage.fillDate(params.date ?? defaultParams.date);
-      await transferFormPage.selectOriginAccount(params.originAccountName);
-      await transferFormPage.selectDestinationAccount(params.destinationAccountName);
-      await transferFormPage.fillAmount(params.amount ?? defaultParams.amount);
-      await transferFormPage.fillDescription(params.description ?? defaultParams.description);
-      await transferFormPage.submitButton.click();
-    });
-  },
-  createAllocation: async ({ rootLayoutPage, movementsPage, allocationFormPage }, use) => {
-    await use(async (params: CreateAllocationParams) => {
-      const defaultParams = {
-        amount: (1000 + testUtils.generateIntId()).toString(),
-        date: DEFAULT_MOVEMENT_DATE,
-        description: `Allocation description${testUtils.generateId()}`,
-      } as const;
-
-      await rootLayoutPage.navButton('Movements').click();
-      await movementsPage.createAllocationButton.click();
-      await allocationFormPage.fillDate(params.date ?? defaultParams.date);
-      await allocationFormPage.selectOriginJar(params.originJarName);
-      await allocationFormPage.selectDestinationJar(params.destinationJarName);
-      await allocationFormPage.fillAmount(params.amount ?? defaultParams.amount);
-      await allocationFormPage.fillDescription(params.description ?? defaultParams.description);
-      await allocationFormPage.submitButton.click();
-    });
-  },
-  deleteAccount: async ({ rootLayoutPage, accountsPage, accountFormPage }, use) => {
-    await use(async (accountName) => {
-      await rootLayoutPage.navButton('Accounts').click();
-      await accountsPage.clickAccount(accountName);
-      await accountFormPage.deleteButton.click();
-    });
-  },
   deleteCategory: async ({ rootLayoutPage, categoriesPage, categoryFormPage }, use) => {
     await use(async (kind, categoryName) => {
       await rootLayoutPage.navButton('Categories').click();
@@ -187,27 +69,6 @@ const test = base.extend<{
       await rootLayoutPage.navButton('Jars').click();
       await jarsPage.clickJar(jarName);
       await jarFormPage.deleteButton.click();
-    });
-  },
-  deleteTransaction: async ({ rootLayoutPage, movementsPage, transactionFormPage }, use) => {
-    await use(async (transactionDescription) => {
-      await rootLayoutPage.navButton('Movements').click();
-      await movementsPage.getMovement(transactionDescription).click();
-      await transactionFormPage.deleteButton.click();
-    });
-  },
-  deleteTransfer: async ({ rootLayoutPage, movementsPage, transferFormPage }, use) => {
-    await use(async (transferDescription) => {
-      await rootLayoutPage.navButton('Movements').click();
-      await movementsPage.getMovement(transferDescription).click();
-      await transferFormPage.deleteButton.click();
-    });
-  },
-  deleteAllocation: async ({ rootLayoutPage, movementsPage, allocationFormPage }, use) => {
-    await use(async (allocationDescription) => {
-      await rootLayoutPage.navButton('Movements').click();
-      await movementsPage.getMovement(allocationDescription).click();
-      await allocationFormPage.deleteButton.click();
     });
   },
 });

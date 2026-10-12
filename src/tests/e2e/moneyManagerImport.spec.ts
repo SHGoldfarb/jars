@@ -122,8 +122,7 @@ test('jars with zero balance are kept when the option is turned off', async ({
 });
 
 test('the import is confirmed, then replaces the current data without a manual refresh', async ({
-  createDefaultData,
-  createTransaction,
+  seedData,
   rootLayoutPage,
   settingsPage,
   movementsPage,
@@ -131,8 +130,7 @@ test('the import is confirmed, then replaces the current data without a manual r
 }) => {
   test.slow();
 
-  await createDefaultData();
-  await createTransaction({ description: 'Created before the import' });
+  await seedData({ ...defaultData, transactions: [{ description: 'Created before the import' }] });
 
   // Cancelling the confirmation writes nothing.
   await rootLayoutPage.navButton('Settings').click();
@@ -165,16 +163,14 @@ test('the import is confirmed, then replaces the current data without a manual r
 });
 
 test('a file that is not a spreadsheet is rejected and changes nothing', async ({
-  createDefaultData,
-  createTransaction,
+  seedData,
   rootLayoutPage,
   settingsPage,
   movementsPage,
 }) => {
   test.slow();
 
-  await createDefaultData();
-  await createTransaction({ description: 'Survives the rejected file' });
+  await seedData({ ...defaultData, transactions: [{ description: 'Survives the rejected file' }] });
 
   await rootLayoutPage.navButton('Settings').click();
   await settingsPage.pickFileAndConfirm(ACTION, notASpreadsheet);

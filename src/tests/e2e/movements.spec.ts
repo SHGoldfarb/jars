@@ -1,6 +1,5 @@
 import { expect } from '@playwright/test';
 import { test, defaultData } from './setup';
-import type { CreateTransactionParams } from './setup/actions';
 
 // Pin locale/timezone: the month labels asserted below are rendered by the browser.
 test.use({ locale: 'en-US', timezoneId: 'UTC' });
@@ -43,75 +42,43 @@ const twoMonthsOnTransaction = {
   description: 'Two months on transaction',
 } as const;
 
-// The month selector tests only care about when a movement is dated, so everything else comes
-// from the default data.
-const createTransactionOn = (
-  createTransaction: (params: CreateTransactionParams) => Promise<void>,
-  { date, description }: { date: string; description: string }
-) =>
-  createTransaction({
-    amount: '1000',
-    date,
-    description,
-    type: 'Income',
-    accountName: defaultData.accounts[0],
-    jarName: defaultData.jars[0],
-    categoryName: defaultData.incomeCategories[0],
-  });
-
 test('movements list shows transactions, transfers and allocations interleaved by date descending', async ({
-  createDefaultData,
-  createAccount,
-  createJar,
-  createTransaction,
-  createTransfer,
-  createAllocation,
+  seedData,
   page,
   rootLayoutPage,
 }) => {
-  test.slow();
-
-  await createDefaultData();
-
   const originAccountName = defaultData.accounts[0];
   const destinationAccountName = 'Second account';
   const originJarName = defaultData.jars[0];
   const destinationJarName = 'Second jar';
-  const transaction = {
-    amount: '1000',
-    type: 'Income',
-    accountName: originAccountName,
-    jarName: originJarName,
-    categoryName: defaultData.incomeCategories[0],
-  } as const;
 
-  await createAccount(destinationAccountName);
-  await createJar(destinationJarName);
-
-  // Movements of every kind, and more than one transaction, created in non-sorted order
-  await createTransaction({
-    ...transaction,
-    date: monthDate(0, 3),
-    description: 'Middle transaction',
-  });
-  await createTransaction({
-    ...transaction,
-    date: monthDate(0, 1),
-    description: 'Oldest transaction',
-  });
-  await createAllocation({
-    amount: '2000',
-    date: monthDate(0, 2),
-    description: 'Older allocation',
-    originJarName,
-    destinationJarName,
-  });
-  await createTransfer({
-    amount: '3000',
-    date: monthDate(0, 4),
-    description: 'Newest transfer',
-    originAccountName,
-    destinationAccountName,
+  // Movements of every kind, and more than one transaction, seeded in non-sorted order
+  await seedData({
+    ...defaultData,
+    accounts: [originAccountName, destinationAccountName],
+    jars: [originJarName, destinationJarName],
+    transactions: [
+      { type: 'Income', date: monthDate(0, 3), description: 'Middle transaction' },
+      { type: 'Income', date: monthDate(0, 1), description: 'Oldest transaction' },
+    ],
+    allocations: [
+      {
+        amount: '2000',
+        date: monthDate(0, 2),
+        description: 'Older allocation',
+        originJarName,
+        destinationJarName,
+      },
+    ],
+    transfers: [
+      {
+        amount: '3000',
+        date: monthDate(0, 4),
+        description: 'Newest transfer',
+        originAccountName,
+        destinationAccountName,
+      },
+    ],
   });
 
   await rootLayoutPage.navButton('Movements').click();
@@ -137,18 +104,17 @@ test('movements list shows transactions, transfers and allocations interleaved b
 
 test.describe('movements month selector', () => {
   test('the list is browsed one month at a time', async ({
-    createDefaultData,
-    createTransaction,
+    seedData,
     page,
     rootLayoutPage,
     movementsPage,
   }) => {
     test.slow();
 
-    await createDefaultData();
-    await createTransactionOn(createTransaction, thisMonthTransaction);
-    await createTransactionOn(createTransaction, lastMonthTransaction);
-    await createTransactionOn(createTransaction, twoMonthsOnTransaction);
+    await seedData({
+      ...defaultData,
+      transactions: [thisMonthTransaction, lastMonthTransaction, twoMonthsOnTransaction],
+    });
 
     // The list opens on the current month, listing only that month's movements.
     await rootLayoutPage.navButton('Movements').click();
@@ -188,14 +154,12 @@ test.describe('movements month selector', () => {
   });
 
   test('cancelling a new movement returns to the month it was started from', async ({
-    createDefaultData,
+    seedData,
     rootLayoutPage,
     movementsPage,
     transactionFormPage,
   }) => {
-    test.slow();
-
-    await createDefaultData();
+    await seedData(defaultData);
 
     await rootLayoutPage.navButton('Movements').click();
     await movementsPage.nextMonthButton.click();
@@ -206,16 +170,12 @@ test.describe('movements month selector', () => {
   });
 
   test('saving a movement into another month follows it there', async ({
-    createDefaultData,
-    createTransaction,
+    seedData,
     rootLayoutPage,
     movementsPage,
     transactionFormPage,
   }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransactionOn(createTransaction, thisMonthTransaction);
+    await seedData({ ...defaultData, transactions: [thisMonthTransaction] });
 
     await rootLayoutPage.navButton('Movements').click();
     await movementsPage.getMovement(thisMonthTransaction.description).click();

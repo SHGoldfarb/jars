@@ -1,6 +1,5 @@
 import { expect } from '@playwright/test';
-import { DEFAULT_MOVEMENT_DATE, defaultData, test } from './setup';
-import { runInOrder } from 'src/lib/utils';
+import { defaultData, test } from './setup';
 
 test('can create account', async ({ rootLayoutPage, accountsPage, accountFormPage }) => {
   const accountName = 'Test Account';
@@ -16,11 +15,12 @@ test('can create account', async ({ rootLayoutPage, accountsPage, accountFormPag
   await accountsPage.expectAccountToExist(accountName);
 });
 
-test('can delete account', async ({ accountsPage, accountFormPage, createAccount }) => {
+test('can delete account', async ({ rootLayoutPage, accountsPage, accountFormPage, seedData }) => {
   const name = 'Account to delete';
 
-  await createAccount(name);
+  await seedData({ accounts: [name] });
 
+  await rootLayoutPage.navButton('Accounts').click();
   await accountsPage.clickAccount(name);
   await accountFormPage.deleteButton.click();
 
@@ -31,12 +31,13 @@ test('can delete account', async ({ accountsPage, accountFormPage, createAccount
   await accountsPage.expectAccountToNotExist(name);
 });
 
-test('can edit account', async ({ accountsPage, accountFormPage, createAccount }) => {
+test('can edit account', async ({ rootLayoutPage, accountsPage, accountFormPage, seedData }) => {
   const initialName = 'Account to be renamed';
   const newName = 'Renamed account';
 
-  await createAccount(initialName);
+  await seedData({ accounts: [initialName] });
 
+  await rootLayoutPage.navButton('Accounts').click();
   await accountsPage.clickAccount(initialName);
 
   // Name input should be pre-filled with the current name
@@ -54,98 +55,59 @@ test('can edit account', async ({ accountsPage, accountFormPage, createAccount }
   await accountsPage.expectAccountToNotExist(initialName);
 });
 
-test('accounts show balance', async ({
-  createDefaultData,
-  createTransaction,
-  deleteTransaction,
-  createTransfer,
-  deleteTransfer,
-  rootLayoutPage,
-  accountsPage,
-  createAccount,
-}) => {
-  test.slow();
-  const jarName = defaultData.jars[0];
-  const expenseCategoryName = defaultData.expenseCategories[0];
-  const incomeCategoryName = defaultData.incomeCategories[0];
+test('accounts show balance', async ({ seedData, rootLayoutPage, accountsPage }) => {
   const accountName = defaultData.accounts[0];
-  const date = DEFAULT_MOVEMENT_DATE;
   const secondAccountName = 'Checking Account';
-  const incomeTransactionAmount = 10000;
-  const expenseTransactionAmount = 3000;
-  const outgoingTransferAmount = 5000;
-  const incomingTransferAmount = 2000;
 
-  await createDefaultData();
-  await createAccount(secondAccountName);
-  // Income transaction should add to acocunt balance
-  await createTransaction({
-    amount: incomeTransactionAmount.toString(),
-    date,
-    description: 'income transaction',
-    type: 'Income',
-    accountName,
-    jarName,
-    categoryName: incomeCategoryName,
+  await seedData({
+    ...defaultData,
+    accounts: [accountName, secondAccountName],
+    transactions: [
+      // Income transaction should add to account balance
+      { amount: '10000', description: 'income transaction', type: 'Income', accountName },
+      // Expense transaction should substract from account balance
+      { amount: '3000', description: 'expense transaction', type: 'Expense', accountName },
+      // Deleted transaction should not count
+      {
+        amount: '12345',
+        description: 'deleted transaction',
+        type: 'Expense',
+        accountName,
+        archived: true,
+      },
+      // Transaction belonging to another account shouldn't count
+      {
+        amount: '12345',
+        description: 'different account',
+        type: 'Expense',
+        accountName: secondAccountName,
+      },
+    ],
+    transfers: [
+      // A transfer out of the account should substract from its balance
+      {
+        amount: '5000',
+        description: 'outgoing transfer',
+        originAccountName: accountName,
+        destinationAccountName: secondAccountName,
+      },
+      // A transfer into the account should add to its balance
+      {
+        amount: '2000',
+        description: 'incoming transfer',
+        originAccountName: secondAccountName,
+        destinationAccountName: accountName,
+      },
+      // Deleted transfer should not count
+      {
+        amount: '54321',
+        description: 'deleted transfer',
+        originAccountName: secondAccountName,
+        destinationAccountName: accountName,
+        archived: true,
+      },
+    ],
   });
-  // Expense transaction should substract from account balance
-  await createTransaction({
-    amount: expenseTransactionAmount.toString(),
-    date,
-    description: 'expense transaction',
-    type: 'Expense',
-    accountName,
-    jarName,
-    categoryName: expenseCategoryName,
-  });
-  // Deleted transaction should not count
-  const deletedTransactionDescription = 'deleted transaction';
-  await createTransaction({
-    amount: '12345',
-    date,
-    description: deletedTransactionDescription,
-    type: 'Expense',
-    accountName,
-    jarName,
-    categoryName: expenseCategoryName,
-  });
-  await deleteTransaction(deletedTransactionDescription);
-  // Transaction belonging to another account shouldn't count
-  await createTransaction({
-    amount: '12345',
-    date,
-    description: 'different account',
-    type: 'Expense',
-    accountName: secondAccountName,
-    jarName,
-    categoryName: expenseCategoryName,
-  });
-  // A transfer out of the account should substract from its balance
-  await createTransfer({
-    amount: outgoingTransferAmount.toString(),
-    date,
-    description: 'outgoing transfer',
-    originAccountName: accountName,
-    destinationAccountName: secondAccountName,
-  });
-  // A transfer into the account should add to its balance
-  await createTransfer({
-    amount: incomingTransferAmount.toString(),
-    date,
-    description: 'incoming transfer',
-    originAccountName: secondAccountName,
-    destinationAccountName: accountName,
-  });
-  // Deleted transfer should not count
-  const deletedTransferDescription = 'deleted transfer';
-  await createTransfer({
-    amount: '54321',
-    date,
-    description: deletedTransferDescription,
-    originAccountName: secondAccountName,
-    destinationAccountName: accountName,
-  });
-  await deleteTransfer(deletedTransferDescription);
 
   await rootLayoutPage.navButton('Accounts').click();
 
@@ -155,25 +117,28 @@ test('accounts show balance', async ({
 });
 
 test('delete button is disabled for accounts with non zero balance', async ({
-  createTransaction,
-  createDefaultData,
+  seedData,
   rootLayoutPage,
   accountsPage,
   accountFormPage,
 }) => {
-  test.slow();
-  await createDefaultData();
-  await createTransaction();
+  await seedData({
+    ...defaultData,
+    transactions: [{ description: 'Gives the account a balance' }],
+  });
   await rootLayoutPage.navButton('Accounts').click();
   await accountsPage.clickAccount(defaultData.accounts[0]);
   await expect(accountFormPage.deleteButton).toBeDisabled();
 });
 
-test('shows accounts, listed alphabetically', async ({ accountsPage, createAccount }) => {
-  // Created out of alphabetical order, so the order shown cannot be the creation order.
-  const accountNames = ['Wallet', 'Bank', 'Mattress'];
+test('shows accounts, listed alphabetically', async ({
+  rootLayoutPage,
+  accountsPage,
+  seedData,
+}) => {
+  // Seeded out of alphabetical order, so the order shown cannot be the seeded order.
+  await seedData({ accounts: ['Wallet', 'Bank', 'Mattress'] });
 
-  await runInOrder(accountNames.map((accountName) => () => createAccount(accountName)));
-
+  await rootLayoutPage.navButton('Accounts').click();
   await accountsPage.expectAccountsInOrder(['Bank', 'Mattress', 'Wallet']);
 });

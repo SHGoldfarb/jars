@@ -1,6 +1,8 @@
 import { expect } from '@playwright/test';
 import { test } from './setup';
-import { runInOrder } from 'src/lib/utils';
+
+const seedCategory = (kind: 'Income' | 'Expense', name: string) =>
+  kind === 'Income' ? { incomeCategories: [name] } : { expenseCategories: [name] };
 
 (['Income', 'Expense'] as const).forEach((kind) => {
   const otherKind = kind === 'Income' ? 'Expense' : 'Income';
@@ -32,14 +34,16 @@ import { runInOrder } from 'src/lib/utils';
   });
 
   test(`can delete ${kind} category`, async ({
+    rootLayoutPage,
     categoriesPage,
     categoryFormPage,
-    createCategory,
+    seedData,
   }) => {
     const name = 'Category to delete';
 
-    await createCategory(kind, name);
+    await seedData(seedCategory(kind, name));
 
+    await rootLayoutPage.navButton('Categories').click();
     await categoriesPage.tabButton(kind).click();
     await categoriesPage.clickCategory(name);
     await categoryFormPage.deleteButton.click();
@@ -54,15 +58,17 @@ import { runInOrder } from 'src/lib/utils';
   });
 
   test(`can edit ${kind} category`, async ({
+    rootLayoutPage,
     categoriesPage,
     categoryFormPage,
-    createCategory,
+    seedData,
   }) => {
     const initialName = 'Category to be renamed';
     const newName = 'Renamed category';
 
-    await createCategory(kind, initialName);
+    await seedData(seedCategory(kind, initialName));
 
+    await rootLayoutPage.navButton('Categories').click();
     await categoriesPage.tabButton(kind).click();
     await categoriesPage.clickCategory(initialName);
 
@@ -84,19 +90,17 @@ import { runInOrder } from 'src/lib/utils';
 });
 
 test('shows categories in the tab of their kind, listed alphabetically', async ({
+  rootLayoutPage,
   categoriesPage,
-  createCategory,
+  seedData,
 }) => {
-  test.slow();
-  // Created out of alphabetical order, so the order shown cannot be the creation order.
-  const incomeCategoryNames = ['Salary', 'Bonus', 'Dividends'];
-  const expenseCategoryNames = ['Rent', 'Groceries', 'Electricity'];
+  // Seeded out of alphabetical order, so the order shown cannot be the seeded order.
+  await seedData({
+    incomeCategories: ['Salary', 'Bonus', 'Dividends'],
+    expenseCategories: ['Rent', 'Groceries', 'Electricity'],
+  });
 
-  await runInOrder([
-    ...incomeCategoryNames.map((categoryName) => () => createCategory('Income', categoryName)),
-    ...expenseCategoryNames.map((categoryName) => () => createCategory('Expense', categoryName)),
-  ]);
-
+  await rootLayoutPage.navButton('Categories').click();
   await categoriesPage.incomeTabButton.click();
   await categoriesPage.expectCategoriesInOrder('Income', ['Bonus', 'Dividends', 'Salary']);
 

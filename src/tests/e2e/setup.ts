@@ -1,34 +1,19 @@
+import { expect } from '@playwright/test';
 import { test as base } from './setup/actions';
-import { runInOrder } from 'src/lib/utils';
+import { seedBackupFile, type SeedData } from './setup/seed';
 
-export { DEFAULT_MOVEMENT_DATE } from './setup/actions';
-
-export const defaultData = {
-  incomeCategories: ['Salary'],
-  expenseCategories: ['Groceries'],
-  accounts: ['Wallet'],
-  jars: ['Monthly expenses'],
-};
+export { DEFAULT_MOVEMENT_DATE, defaultData } from './setup/seed';
 
 const test = base.extend<{
-  createDefaultData: () => Promise<void>;
+  // Replaces all data with the given data and leaves the browser on Settings. A test whose
+  // subject is a create form walks that form itself; every other test starts from here.
+  seedData: (data: SeedData) => Promise<void>;
 }>({
-  createDefaultData: async ({ createCategory, createAccount, createJar }, use) => {
-    await use(async () => {
-      await runInOrder([
-        ...defaultData.incomeCategories.map((name) => async () => {
-          await createCategory('Income', name);
-        }),
-        ...defaultData.expenseCategories.map((name) => async () => {
-          await createCategory('Expense', name);
-        }),
-        ...defaultData.accounts.map((name) => async () => {
-          await createAccount(name);
-        }),
-        ...defaultData.jars.map((name) => async () => {
-          await createJar(name);
-        }),
-      ]);
+  seedData: async ({ rootLayoutPage, settingsPage }, use) => {
+    await use(async (data) => {
+      await rootLayoutPage.navButton('Settings').click();
+      await settingsPage.pickFileAndConfirm('Load from backup', seedBackupFile(data));
+      await expect(settingsPage.statusMessage).toHaveText('Backup restored.');
     });
   },
 });

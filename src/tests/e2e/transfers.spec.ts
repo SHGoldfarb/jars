@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test } from './setup';
+import { DEFAULT_MOVEMENT_DATE, test } from './setup';
 import { runInOrder } from 'src/lib/utils';
 
 // Pin locale/timezone so the expected rendered strings below are deterministic
@@ -7,21 +7,19 @@ import { runInOrder } from 'src/lib/utils';
 test.use({ locale: 'en-US', timezoneId: 'UTC' });
 
 test('can create a transfer, focus flowing from one field to the next', async ({
-  createAccount,
+  seedData,
   rootLayoutPage,
   movementsPage,
   transferFormPage,
   page,
 }) => {
-  test.slow();
   const originName = 'Checking';
   const destinationName = 'Vault';
   const description = 'Rent buffer';
   const amount = '150000';
   const date = '2026-05-20T15:20';
 
-  await createAccount(originName);
-  await createAccount(destinationName);
+  await seedData({ accounts: [originName, destinationName] });
 
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.createTransferButton.click();
@@ -58,23 +56,20 @@ test('can create a transfer, focus flowing from one field to the next', async ({
 });
 
 test('transfer form defaults, account options and validation', async ({
-  createAccount,
-  deleteAccount,
+  seedData,
   rootLayoutPage,
   movementsPage,
   transferFormPage,
   page,
 }) => {
-  test.slow();
   const originName = 'Origin acc';
   const destinationName = 'Destination acc';
   const archivedName = 'Archived account';
   const description = 'Zero transfer';
 
-  await createAccount(originName);
-  await createAccount(destinationName);
-  await createAccount(archivedName);
-  await deleteAccount(archivedName);
+  await seedData({
+    accounts: [originName, destinationName, { name: archivedName, archived: true }],
+  });
 
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.createTransferButton.click();
@@ -128,8 +123,8 @@ test('transfer form defaults, account options and validation', async ({
 });
 
 test('can edit a transfer', async ({
-  createAccount,
-  createTransfer,
+  seedData,
+  rootLayoutPage,
   movementsPage,
   transferFormPage,
   page,
@@ -140,7 +135,8 @@ test('can edit a transfer', async ({
   const initialDestinationName = 'Initial destination';
   const initialDescription = 'Initial transfer';
   const initialAmount = '150000';
-  const initialDate = '2026-06-15T10:00';
+  // In the current month, so the list opens on it.
+  const initialDate = DEFAULT_MOVEMENT_DATE;
 
   // New data (every field will change)
   const newOriginName = 'New origin';
@@ -149,21 +145,21 @@ test('can edit a transfer', async ({
   const newAmount = '275000';
   const newDate = '2026-07-11T08:45';
 
-  await createAccount(initialOriginName);
-  await createAccount(initialDestinationName);
-  await createAccount(newOriginName);
-  await createAccount(newDestinationName);
-
-  await createTransfer({
-    amount: initialAmount,
-    date: initialDate,
-    description: initialDescription,
-    originAccountName: initialOriginName,
-    destinationAccountName: initialDestinationName,
+  await seedData({
+    accounts: [initialOriginName, initialDestinationName, newOriginName, newDestinationName],
+    transfers: [
+      {
+        amount: initialAmount,
+        date: initialDate,
+        description: initialDescription,
+        originAccountName: initialOriginName,
+        destinationAccountName: initialDestinationName,
+      },
+    ],
   });
 
-  // Verify the initial transfer exists, then open its edit form
-  await expect(movementsPage.createTransferButton).toBeVisible();
+  // Open the initial transfer's edit form
+  await rootLayoutPage.navButton('Movements').click();
   await movementsPage.getMovement(initialDescription).click();
 
   // The form is populated with the transfer's current values
@@ -193,27 +189,24 @@ test('can edit a transfer', async ({
 });
 
 test('can delete a transfer', async ({
-  createAccount,
-  createTransfer,
+  seedData,
+  rootLayoutPage,
   movementsPage,
   transferFormPage,
 }) => {
-  test.slow();
   const originName = 'Deletable origin';
   const destinationName = 'Deletable destination';
   const description = 'Transfer to delete';
 
-  await createAccount(originName);
-  await createAccount(destinationName);
-
-  await createTransfer({
-    description,
-    originAccountName: originName,
-    destinationAccountName: destinationName,
+  await seedData({
+    accounts: [originName, destinationName],
+    transfers: [
+      { description, originAccountName: originName, destinationAccountName: destinationName },
+    ],
   });
 
   // Verify the transfer exists, then open its edit form
-  await expect(movementsPage.createTransferButton).toBeVisible();
+  await rootLayoutPage.navButton('Movements').click();
   await expect(movementsPage.getMovement(description)).toBeVisible();
   await movementsPage.getMovement(description).click();
 
@@ -225,34 +218,32 @@ test('can delete a transfer', async ({
 });
 
 test('when editing a transfer, selectors include archived accounts that the transfer references, and editing restores them once their balance is no longer zero', async ({
-  createAccount,
-  createTransfer,
-  deleteAccount,
+  seedData,
   rootLayoutPage,
   movementsPage,
   transferFormPage,
   accountsPage,
 }) => {
-  test.slow();
   const originName = 'Archived origin account';
   const destinationName = 'Archived destination account';
   const description = 'Transfer between archived accounts';
 
-  await createAccount(originName);
-  await createAccount(destinationName);
-
-  // A zero amount keeps both account balances at zero, so they can still be archived.
-  await createTransfer({
-    amount: '0',
-    description,
-    originAccountName: originName,
-    destinationAccountName: destinationName,
+  // Archived, as deleting them leaves them. A zero amount keeps both account balances at zero,
+  // which deleting them requires.
+  await seedData({
+    accounts: [
+      { name: originName, archived: true },
+      { name: destinationName, archived: true },
+    ],
+    transfers: [
+      {
+        amount: '0',
+        description,
+        originAccountName: originName,
+        destinationAccountName: destinationName,
+      },
+    ],
   });
-
-  await expect(movementsPage.createTransferButton).toBeVisible();
-
-  await deleteAccount(originName);
-  await deleteAccount(destinationName);
 
   // Ensure they no longer exist
   await rootLayoutPage.navButton('Accounts').click();
@@ -280,16 +271,14 @@ test('when editing a transfer, selectors include archived accounts that the tran
 });
 
 test('transfer form account selectors are ordered alphabetically', async ({
-  createAccount,
+  seedData,
   rootLayoutPage,
   movementsPage,
   transferFormPage,
 }) => {
-  // Created out of alphabetical order, so the order the selectors offer cannot be the
-  // creation order.
-  const accountNames = ['Wallet', 'Bank', 'Mattress'];
-
-  await runInOrder(accountNames.map((accountName) => () => createAccount(accountName)));
+  // Seeded out of alphabetical order, so the order the selectors offer cannot be the seeded
+  // order.
+  await seedData({ accounts: ['Wallet', 'Bank', 'Mattress'] });
 
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.createTransferButton.click();

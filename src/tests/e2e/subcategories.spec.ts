@@ -1,9 +1,15 @@
 import { expect } from '@playwright/test';
 import { test } from './setup';
 
-test('can create a subcategory', async ({ categoriesPage, categoryFormPage, createCategory }) => {
-  await createCategory('Expense', 'Groceries');
+test('can create a subcategory', async ({
+  rootLayoutPage,
+  categoriesPage,
+  categoryFormPage,
+  seedData,
+}) => {
+  await seedData({ expenseCategories: ['Groceries'] });
 
+  await rootLayoutPage.navButton('Categories').click();
   await categoriesPage.expensesTabButton.click();
   await categoriesPage.clickCategory('Groceries');
   await categoryFormPage.addSubcategoryButton.click();
@@ -16,14 +22,17 @@ test('can create a subcategory', async ({ categoriesPage, categoryFormPage, crea
 });
 
 test('can edit a subcategory', async ({
+  rootLayoutPage,
   categoriesPage,
   categoryFormPage,
-  createCategory,
-  createSubcategory,
+  seedData,
 }) => {
-  await createCategory('Expense', 'Groceries');
-  await createSubcategory('Expense', 'Groceries', 'Fruti');
+  await seedData({
+    expenseCategories: ['Groceries'],
+    subcategories: [{ categoryName: 'Groceries', name: 'Fruti' }],
+  });
 
+  await rootLayoutPage.navButton('Categories').click();
   await categoriesPage.expensesTabButton.click();
   await categoriesPage.clickSubcategory('Fruti');
 
@@ -37,14 +46,17 @@ test('can edit a subcategory', async ({
 });
 
 test('can delete a subcategory', async ({
+  rootLayoutPage,
   categoriesPage,
   categoryFormPage,
-  createCategory,
-  createSubcategory,
+  seedData,
 }) => {
-  await createCategory('Expense', 'Groceries');
-  await createSubcategory('Expense', 'Groceries', 'Fruit');
+  await seedData({
+    expenseCategories: ['Groceries'],
+    subcategories: [{ categoryName: 'Groceries', name: 'Fruit' }],
+  });
 
+  await rootLayoutPage.navButton('Categories').click();
   await categoriesPage.expensesTabButton.click();
   await categoriesPage.clickSubcategory('Fruit');
   await categoryFormPage.deleteButton.click();
@@ -56,21 +68,24 @@ test('can delete a subcategory', async ({
 });
 
 test('subcategories are listed under their parent, alphabetically', async ({
+  rootLayoutPage,
   categoriesPage,
-  createCategory,
-  createSubcategory,
+  seedData,
 }) => {
-  test.slow();
-  // Created out of alphabetical order, so the order shown cannot be the creation order.
-  await createCategory('Expense', 'Transport');
-  await createCategory('Expense', 'Groceries');
-  await createCategory('Income', 'Salary');
-  await createSubcategory('Expense', 'Groceries', 'Meat');
-  await createSubcategory('Expense', 'Groceries', 'Bread');
-  await createSubcategory('Expense', 'Transport', 'Taxi');
-  await createSubcategory('Expense', 'Transport', 'Bus');
+  // Seeded out of alphabetical order, so the order shown cannot be the seeded order.
+  await seedData({
+    incomeCategories: ['Salary'],
+    expenseCategories: ['Transport', 'Groceries'],
+    subcategories: [
+      { categoryName: 'Groceries', name: 'Meat' },
+      { categoryName: 'Groceries', name: 'Bread' },
+      { categoryName: 'Transport', name: 'Taxi' },
+      { categoryName: 'Transport', name: 'Bus' },
+    ],
+  });
 
   // Only under its own category, and only in the kind that category lives in.
+  await rootLayoutPage.navButton('Categories').click();
   await categoriesPage.expensesTabButton.click();
   await categoriesPage.expectRowsInOrder('Expense', [
     'Groceries',
@@ -86,17 +101,20 @@ test('subcategories are listed under their parent, alphabetically', async ({
 });
 
 test('deleting a category takes its subcategories with it', async ({
+  rootLayoutPage,
   categoriesPage,
   categoryFormPage,
-  createCategory,
-  createSubcategory,
+  seedData,
 }) => {
-  test.slow();
-  await createCategory('Expense', 'Groceries');
-  await createCategory('Expense', 'Transport');
-  await createSubcategory('Expense', 'Groceries', 'Fruit');
-  await createSubcategory('Expense', 'Transport', 'Bus');
+  await seedData({
+    expenseCategories: ['Groceries', 'Transport'],
+    subcategories: [
+      { categoryName: 'Groceries', name: 'Fruit' },
+      { categoryName: 'Transport', name: 'Bus' },
+    ],
+  });
 
+  await rootLayoutPage.navButton('Categories').click();
   await categoriesPage.expensesTabButton.click();
   await categoriesPage.clickCategory('Groceries');
   await categoryFormPage.deleteButton.click();

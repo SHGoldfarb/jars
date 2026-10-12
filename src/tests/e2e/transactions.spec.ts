@@ -6,9 +6,7 @@ import { decimal } from 'src/lib/decimal';
 import { formatDateISO } from 'src/presentation/formatters/dateFormatters';
 
 test('can create income transaction, focus flowing from one field to the next', async ({
-  createAccount,
-  createJar,
-  createCategory,
+  seedData,
   rootLayoutPage,
   movementsPage,
   transactionFormPage,
@@ -21,9 +19,7 @@ test('can create income transaction, focus flowing from one field to the next', 
   const amount = '1200000';
   const date = '2026-05-20T15:20';
 
-  await createAccount(accountName);
-  await createJar(jarName);
-  await createCategory('Income', categoryName);
+  await seedData({ accounts: [accountName], jars: [jarName], incomeCategories: [categoryName] });
 
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.createTransactionButton.click();
@@ -73,10 +69,8 @@ test('can create income transaction, focus flowing from one field to the next', 
 });
 
 test('can edit transaction, the form opening on its current values', async ({
-  createAccount,
-  createJar,
-  createCategory,
-  createTransaction,
+  seedData,
+  rootLayoutPage,
   movementsPage,
   transactionFormPage,
   page,
@@ -89,7 +83,8 @@ test('can edit transaction, the form opening on its current values', async ({
   const initialCategoryName = 'Investments';
   const initialDescription = 'Consulting work';
   const initialAmount = '750000';
-  const initialDate = '2026-07-15T14:30';
+  // In the current month, so the list opens on it.
+  const initialDate = DEFAULT_MOVEMENT_DATE;
 
   // New data (every field will change)
   const newAccountName = 'New checking';
@@ -99,27 +94,26 @@ test('can edit transaction, the form opening on its current values', async ({
   const newAmount = '75000';
   const newDate = '2026-06-20T14:30';
 
-  // Setup all entities
-  await createAccount(initialAccountName);
-  await createJar(initialJarName);
-  await createCategory('Income', initialCategoryName);
-  await createAccount(newAccountName);
-  await createJar(newJarName);
-  await createCategory('Expense', newCategoryName);
-
-  // Create initial transaction
-  await createTransaction({
-    amount: initialAmount,
-    date: initialDate,
-    description: initialDescription,
-    type: 'Income',
-    accountName: initialAccountName,
-    jarName: initialJarName,
-    categoryName: initialCategoryName,
+  await seedData({
+    accounts: [initialAccountName, newAccountName],
+    jars: [initialJarName, newJarName],
+    incomeCategories: [initialCategoryName],
+    expenseCategories: [newCategoryName],
+    transactions: [
+      {
+        amount: initialAmount,
+        date: initialDate,
+        description: initialDescription,
+        type: 'Income',
+        accountName: initialAccountName,
+        jarName: initialJarName,
+        categoryName: initialCategoryName,
+      },
+    ],
   });
 
   // Verify the initial transaction exists
-  await expect(movementsPage.createTransactionButton).toBeVisible();
+  await rootLayoutPage.navButton('Movements').click();
   await expect(movementsPage.getMovement(initialDescription)).toBeVisible();
 
   // Open the edit form by clicking the transaction link
@@ -168,30 +162,16 @@ test('can edit transaction, the form opening on its current values', async ({
   ).toBeVisible();
 });
 
-test('can delete transaction', async ({
-  createDefaultData,
-  createTransaction,
-  movementsPage,
-  page,
-}) => {
+test('can delete transaction', async ({ seedData, rootLayoutPage, movementsPage, page }) => {
   const description = 'Invoice for June';
-  const amount = '250000';
-  const date = '2026-06-30T09:00';
 
-  await createDefaultData();
-
-  await createTransaction({
-    amount,
-    date,
-    description,
-    type: 'Income',
-    accountName: defaultData.accounts[0],
-    jarName: defaultData.jars[0],
-    categoryName: defaultData.incomeCategories[0],
+  await seedData({
+    ...defaultData,
+    transactions: [{ amount: '250000', description, type: 'Income' }],
   });
 
   // Verify the transaction exists
-  await expect(movementsPage.createTransactionButton).toBeVisible();
+  await rootLayoutPage.navButton('Movements').click();
   await expect(movementsPage.getMovement(description)).toBeVisible();
 
   // Open the edit form by clicking the transaction link
@@ -207,41 +187,21 @@ test('can delete transaction', async ({
 
 test.describe('transaction form', () => {
   test('selectors offer the active entities of the selected kind, alphabetically', async ({
-    createAccount,
-    createJar,
-    createCategory,
+    seedData,
     rootLayoutPage,
     movementsPage,
     transactionFormPage,
-    deleteAccount,
-    deleteJar,
-    deleteCategory,
   }) => {
-    test.slow();
-    // Everything is created out of alphabetical order, so the order each selector offers cannot
-    // be the creation order.
-    const accountNames = ['Wallet', 'Bank'];
-    const jarNames = ['Travel', 'Emergency'];
-    const expenseCategoryNames = ['Rent', 'Groceries'];
     const incomeCategoryName = 'Dividends';
 
-    await runInOrder([
-      ...accountNames.map((accountName) => () => createAccount(accountName)),
-      ...jarNames.map((jarName) => () => createJar(jarName)),
-      ...expenseCategoryNames.map((categoryName) => () => createCategory('Expense', categoryName)),
-      () => createCategory('Income', incomeCategoryName),
-    ]);
-
-    // Setup deleted data
-    const deletedCategoryName = 'Deleted Category';
-    const deletedAccountName = 'Deleted Account';
-    const deletedJarName = 'Deleted Jar';
-    await createAccount(deletedAccountName);
-    await createCategory('Expense', deletedCategoryName);
-    await createJar(deletedJarName);
-    await deleteAccount(deletedAccountName);
-    await deleteCategory('Expense', deletedCategoryName);
-    await deleteJar(deletedJarName);
+    // Everything is seeded out of alphabetical order, so the order each selector offers cannot
+    // be the seeded order. The deleted entities are archived, as deleting them leaves them.
+    await seedData({
+      accounts: ['Wallet', 'Bank', { name: 'Deleted Account', archived: true }],
+      jars: ['Travel', 'Emergency', { name: 'Deleted Jar', archived: true }],
+      expenseCategories: ['Rent', 'Groceries', { name: 'Deleted Category', archived: true }],
+      incomeCategories: [incomeCategoryName],
+    });
 
     // Go to form
     await rootLayoutPage.navButton('Movements').click();
@@ -261,12 +221,11 @@ test.describe('transaction form', () => {
   test('form validations', async ({
     transactionFormPage,
     page,
-    createDefaultData,
+    seedData,
     rootLayoutPage,
     movementsPage,
   }) => {
-    // Setup data
-    await createDefaultData();
+    await seedData(defaultData);
 
     // Go to form
     await rootLayoutPage.navButton('Movements').click();
@@ -322,11 +281,11 @@ test.describe('transaction form', () => {
   test('accepts a zero amount', async ({
     transactionFormPage,
     page,
-    createDefaultData,
+    seedData,
     rootLayoutPage,
     movementsPage,
   }) => {
-    await createDefaultData();
+    await seedData(defaultData);
 
     await rootLayoutPage.navButton('Movements').click();
     await movementsPage.createTransactionButton.click();
@@ -347,60 +306,41 @@ test.describe('transaction form', () => {
   });
 
   test('when editing a transaction, selectors include archived entities that the transaction references, and editing restores them once their balance is no longer zero', async ({
-    createAccount,
-    createJar,
-    createCategory,
-    createTransaction,
+    seedData,
     movementsPage,
     transactionFormPage,
-    deleteAccount,
-    deleteJar,
-    deleteCategory,
     rootLayoutPage,
     accountsPage,
     jarsPage,
   }) => {
     test.slow();
-    // Create entities
     const accountName = 'Archived checking account';
     const jarName = 'Archived vacation fund';
     const categoryName = 'Old freelance income';
     const expenseCategoryName = 'Groceries';
     const description = 'Invoice for work done';
     const amount = '350000';
-    const date = DEFAULT_MOVEMENT_DATE;
 
-    await createAccount(accountName);
-    await createJar(jarName);
-    await createCategory('Income', categoryName);
-    await createCategory('Expense', expenseCategoryName);
-
-    // Create a transaction referencing these entities
-    await createTransaction({
-      amount,
-      date,
-      description,
-      type: 'Income',
-      accountName,
-      jarName,
-      categoryName,
+    // Archived entities, as deleting them leaves them, referenced by a transaction. A second
+    // transaction with the reverse amount leaves the account and jar at the zero balance
+    // deleting them requires.
+    await seedData({
+      accounts: [{ name: accountName, archived: true }],
+      jars: [{ name: jarName, archived: true }],
+      incomeCategories: [{ name: categoryName, archived: true }],
+      expenseCategories: [expenseCategoryName],
+      transactions: [
+        { amount, description, type: 'Income', accountName, jarName, categoryName },
+        {
+          amount,
+          description: 'reverse transaction',
+          type: 'Expense',
+          accountName,
+          jarName,
+          categoryName: expenseCategoryName,
+        },
+      ],
     });
-
-    // Create a transaction with reverse amount to be able to delete the account and jar
-    await createTransaction({
-      amount,
-      date,
-      description: 'reverse transaction',
-      type: 'Expense',
-      accountName,
-      jarName,
-      categoryName: expenseCategoryName,
-    });
-
-    // Archive the entities
-    await deleteAccount(accountName);
-    await deleteJar(jarName);
-    await deleteCategory('Income', categoryName);
 
     // Ensure they no longer exist
     await rootLayoutPage.navButton('Accounts').click();
@@ -434,21 +374,21 @@ test.describe('transaction form', () => {
   test.describe('subcategories', () => {
     test('the subcategory selector offers the selected category subcategories, and the form flows on from it', async ({
       page,
-      createDefaultData,
-      createCategory,
-      createSubcategory,
+      seedData,
       rootLayoutPage,
       movementsPage,
       transactionFormPage,
     }) => {
-      test.slow();
-      await createDefaultData();
-      await createCategory('Expense', 'Transport');
-      await createCategory('Expense', 'Rent');
-      await createSubcategory('Expense', 'Groceries', 'Meat');
-      await createSubcategory('Expense', 'Groceries', 'Bread');
-      await createSubcategory('Expense', 'Transport', 'Bus');
-      await createSubcategory('Income', 'Salary', 'Bonus');
+      await seedData({
+        ...defaultData,
+        expenseCategories: [...defaultData.expenseCategories, 'Transport', 'Rent'],
+        subcategories: [
+          { categoryName: 'Groceries', name: 'Meat' },
+          { categoryName: 'Groceries', name: 'Bread' },
+          { categoryName: 'Transport', name: 'Bus' },
+          { categoryName: 'Salary', name: 'Bonus' },
+        ],
+      });
 
       await rootLayoutPage.navButton('Movements').click();
       await movementsPage.createTransactionButton.click();
@@ -484,14 +424,15 @@ test.describe('transaction form', () => {
     });
 
     test('a transaction can be saved with or without a subcategory, shown beside its category', async ({
-      createDefaultData,
-      createSubcategory,
+      seedData,
       createTransaction,
       movementsPage,
     }) => {
       test.slow();
-      await createDefaultData();
-      await createSubcategory('Expense', 'Groceries', 'Meat');
+      await seedData({
+        ...defaultData,
+        subcategories: [{ categoryName: 'Groceries', name: 'Meat' }],
+      });
 
       await createTransaction({ description: 'No subcategory', categoryName: 'Groceries' });
       await createTransaction({
@@ -511,23 +452,27 @@ test.describe('transaction form', () => {
     });
 
     test('a transaction subcategory can be changed by editing it', async ({
-      createDefaultData,
-      createSubcategory,
-      createTransaction,
+      seedData,
+      rootLayoutPage,
       movementsPage,
       transactionFormPage,
     }) => {
-      test.slow();
-      await createDefaultData();
-      await createSubcategory('Expense', 'Groceries', 'Meat');
-      await createSubcategory('Expense', 'Groceries', 'Bread');
-
-      await createTransaction({
-        description: 'Changing subcategory',
-        categoryName: 'Groceries',
-        subcategoryName: 'Meat',
+      await seedData({
+        ...defaultData,
+        subcategories: [
+          { categoryName: 'Groceries', name: 'Meat' },
+          { categoryName: 'Groceries', name: 'Bread' },
+        ],
+        transactions: [
+          {
+            description: 'Changing subcategory',
+            categoryName: 'Groceries',
+            subcategoryName: 'Meat',
+          },
+        ],
       });
 
+      await rootLayoutPage.navButton('Movements').click();
       await movementsPage.getMovement('Changing subcategory').click();
       // The form opens on what was saved.
       await transactionFormPage.expectSelection('Subcategory', 'Meat');

@@ -99,8 +99,7 @@ test.describe('create backup', () => {
   });
 
   test('create backup downloads a JSON file named for today with the full database state', async ({
-    createDefaultData,
-    createSubcategory,
+    seedData,
     createTransaction,
     rootLayoutPage,
     settingsPage,
@@ -108,8 +107,12 @@ test.describe('create backup', () => {
   }) => {
     test.slow();
 
-    await createDefaultData();
-    await createSubcategory('Expense', defaultData.expenseCategories[0], 'Fruit');
+    await seedData({
+      ...defaultData,
+      subcategories: [{ categoryName: defaultData.expenseCategories[0], name: 'Fruit' }],
+    });
+    // Through the form rather than seeded: how the app stores what was typed into it is what the
+    // backup is checked for below, and a seeded transaction would only echo the seed.
     await createTransaction({
       // Typed as an English amount: the point is the decimal separator.
       amount: '1234.56',
@@ -219,12 +222,7 @@ test.describe('load from backup', () => {
   };
 
   test('a backup created from the app can be loaded back into it', async ({
-    createDefaultData,
-    createAccount,
-    createJar,
-    createTransaction,
-    createTransfer,
-    createAllocation,
+    seedData,
     rootLayoutPage,
     settingsPage,
     movementsPage,
@@ -236,28 +234,27 @@ test.describe('load from backup', () => {
     const secondAccountName = 'Savings';
     const secondJarName = 'Holidays';
 
-    await createDefaultData();
-    await createAccount(secondAccountName);
-    await createJar(secondJarName);
-    await createTransaction({
-      amount: '10000',
-      description: 'Backed up income',
-      type: 'Income',
-      accountName: defaultData.accounts[0],
-      jarName: defaultData.jars[0],
-      categoryName: defaultData.incomeCategories[0],
-    });
-    await createTransfer({
-      amount: '5000',
-      description: 'Backed up transfer',
-      originAccountName: defaultData.accounts[0],
-      destinationAccountName: secondAccountName,
-    });
-    await createAllocation({
-      amount: '2000',
-      description: 'Backed up allocation',
-      originJarName: defaultData.jars[0],
-      destinationJarName: secondJarName,
+    await seedData({
+      ...defaultData,
+      accounts: [defaultData.accounts[0], secondAccountName],
+      jars: [defaultData.jars[0], secondJarName],
+      transactions: [{ amount: '10000', description: 'Backed up income', type: 'Income' }],
+      transfers: [
+        {
+          amount: '5000',
+          description: 'Backed up transfer',
+          originAccountName: defaultData.accounts[0],
+          destinationAccountName: secondAccountName,
+        },
+      ],
+      allocations: [
+        {
+          amount: '2000',
+          description: 'Backed up allocation',
+          originJarName: defaultData.jars[0],
+          destinationJarName: secondJarName,
+        },
+      ],
     });
 
     await rootLayoutPage.navButton('Settings').click();
@@ -290,23 +287,19 @@ test.describe('load from backup', () => {
   });
 
   test('the restore is confirmed, then replaces the current data without a manual refresh', async ({
-    createDefaultData,
-    createTransaction,
-    deleteTransaction,
+    seedData,
     rootLayoutPage,
     settingsPage,
     movementsPage,
   }) => {
     test.slow();
 
-    await createDefaultData();
-    await createTransaction({ description: 'In the backup' });
+    await seedData({ ...defaultData, transactions: [{ description: 'In the backup' }] });
 
     await rootLayoutPage.navButton('Settings').click();
     const backup = await settingsPage.downloadContentsFromAction('Create backup');
 
-    await deleteTransaction('In the backup');
-    await createTransaction({ description: 'Created after the backup' });
+    await seedData({ ...defaultData, transactions: [{ description: 'Created after the backup' }] });
 
     // Cancelling the confirmation writes nothing.
     await rootLayoutPage.navButton('Settings').click();
@@ -357,16 +350,15 @@ test.describe('load from backup', () => {
   ];
 
   test('files that are not valid backups are rejected with an explanation and change nothing', async ({
-    createDefaultData,
-    createTransaction,
+    seedData,
     rootLayoutPage,
     settingsPage,
     movementsPage,
   }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransaction({ description: 'Survives the rejected files' });
+    await seedData({
+      ...defaultData,
+      transactions: [{ description: 'Survives the rejected files' }],
+    });
 
     await rootLayoutPage.navButton('Settings').click();
     const exportedCsv = await settingsPage.downloadContentsFromAction('Export to CSV');
@@ -455,78 +447,56 @@ test.describe('export to CSV', () => {
   });
 
   test('every movement is exported with its kind, its values and named references', async ({
-    createDefaultData,
-    createAccount,
-    createJar,
-    createSubcategory,
-    createTransaction,
-    createTransfer,
-    createAllocation,
+    seedData,
     rootLayoutPage,
     settingsPage,
     movementsPage,
   }) => {
-    test.slow();
-
     const secondAccountName = 'Savings';
     const secondJarName = 'Holidays';
-    const expense = {
-      type: 'Expense',
-      accountName: defaultData.accounts[0],
-      jarName: defaultData.jars[0],
-      categoryName: defaultData.expenseCategories[0],
-    } as const;
 
-    await createDefaultData();
-    await createAccount(secondAccountName);
-    await createJar(secondJarName);
-    await createSubcategory('Expense', defaultData.expenseCategories[0], 'Fruit');
     // Distinct dates, so the order the file is written in is the newest-first order of the
-    // movements list rather than an accident of how the kinds are gathered.
-    await createTransaction({
-      amount: '20000',
-      date: '2026-02-10T09:00',
-      description: 'Exported income',
-      type: 'Income',
-      accountName: defaultData.accounts[0],
-      jarName: defaultData.jars[0],
-      categoryName: defaultData.incomeCategories[0],
-    });
-    await createTransfer({
-      amount: '2000',
-      date: '2026-02-11T10:30',
-      description: 'Exported transfer',
-      originAccountName: defaultData.accounts[0],
-      destinationAccountName: secondAccountName,
-    });
-    await createAllocation({
-      // Typed as an English amount: the point is the decimal separator.
-      amount: '3000.50',
-      date: '2026-02-12T11:45',
-      description: 'Exported allocation',
-      originJarName: defaultData.jars[0],
-      destinationJarName: secondJarName,
-    });
-    await createTransaction({
-      ...expense,
-      amount: '1234.56',
-      date: '2026-02-09T09:00',
-      description: 'With a subcategory',
-      subcategoryName: 'Fruit',
-    });
-    await createTransaction({
-      ...expense,
-      amount: '6000',
-      date: '2026-02-08T09:00',
-      description: 'Without a subcategory',
-    });
-    // A description is a single-line field, so a line break cannot be typed into one; the
-    // restored-backup test below reaches that case instead.
-    await createTransaction({
-      ...expense,
-      amount: '1000',
-      date: '2026-02-07T09:00',
-      description: 'Lunch, "the good one"',
+    // movements list rather than an accident of how the kinds are gathered. A line break in a
+    // description is left to the test below, which looks at stored values on their own.
+    await seedData({
+      ...defaultData,
+      accounts: [defaultData.accounts[0], secondAccountName],
+      jars: [defaultData.jars[0], secondJarName],
+      subcategories: [{ categoryName: defaultData.expenseCategories[0], name: 'Fruit' }],
+      transactions: [
+        {
+          amount: '20000',
+          date: '2026-02-10T09:00',
+          description: 'Exported income',
+          type: 'Income',
+        },
+        {
+          amount: '1234.56',
+          date: '2026-02-09T09:00',
+          description: 'With a subcategory',
+          subcategoryName: 'Fruit',
+        },
+        { amount: '6000', date: '2026-02-08T09:00', description: 'Without a subcategory' },
+        { amount: '1000', date: '2026-02-07T09:00', description: 'Lunch, "the good one"' },
+      ],
+      transfers: [
+        {
+          amount: '2000',
+          date: '2026-02-11T10:30',
+          description: 'Exported transfer',
+          originAccountName: defaultData.accounts[0],
+          destinationAccountName: secondAccountName,
+        },
+      ],
+      allocations: [
+        {
+          amount: '3000.50',
+          date: '2026-02-12T11:45',
+          description: 'Exported allocation',
+          originJarName: defaultData.jars[0],
+          destinationJarName: secondJarName,
+        },
+      ],
     });
 
     await rootLayoutPage.navButton('Settings').click();
@@ -561,10 +531,7 @@ test.describe('export to CSV', () => {
   });
 
   test('only the accounts, jars and categories movements reference are named, archived or not', async ({
-    createDefaultData,
-    createJar,
-    createCategory,
-    createTransaction,
+    seedData,
     deleteJar,
     deleteCategory,
     rootLayoutPage,
@@ -575,15 +542,11 @@ test.describe('export to CSV', () => {
     const unusedJarName = 'Unused jar';
     const unusedCategoryName = 'Unused category';
 
-    await createDefaultData();
-    await createJar(unusedJarName);
-    await createCategory('Expense', unusedCategoryName);
-    await createTransaction({
-      description: 'Exported transaction',
-      type: 'Expense',
-      accountName: defaultData.accounts[0],
-      jarName: defaultData.jars[0],
-      categoryName: defaultData.expenseCategories[0],
+    await seedData({
+      ...defaultData,
+      jars: [defaultData.jars[0], unusedJarName],
+      expenseCategories: [defaultData.expenseCategories[0], unusedCategoryName],
+      transactions: [{ description: 'Exported transaction', type: 'Expense' }],
     });
 
     // An account, jar or category no movement references is absent...
@@ -665,12 +628,7 @@ test.describe('export to CSV', () => {
 
 test.describe('clear all data', () => {
   test('the clear is confirmed, then empties the database without a manual refresh', async ({
-    createDefaultData,
-    createAccount,
-    createJar,
-    createTransaction,
-    createTransfer,
-    createAllocation,
+    seedData,
     rootLayoutPage,
     settingsPage,
     movementsPage,
@@ -683,19 +641,25 @@ test.describe('clear all data', () => {
 
     test.slow();
 
-    await createDefaultData();
-    await createAccount(secondAccountName);
-    await createJar(secondJarName);
-    await createTransaction({ description: 'Cleared transaction' });
-    await createTransfer({
-      description: 'Cleared transfer',
-      originAccountName: defaultData.accounts[0],
-      destinationAccountName: secondAccountName,
-    });
-    await createAllocation({
-      description: 'Cleared allocation',
-      originJarName: defaultData.jars[0],
-      destinationJarName: secondJarName,
+    await seedData({
+      ...defaultData,
+      accounts: [defaultData.accounts[0], secondAccountName],
+      jars: [defaultData.jars[0], secondJarName],
+      transactions: [{ description: 'Cleared transaction' }],
+      transfers: [
+        {
+          description: 'Cleared transfer',
+          originAccountName: defaultData.accounts[0],
+          destinationAccountName: secondAccountName,
+        },
+      ],
+      allocations: [
+        {
+          description: 'Cleared allocation',
+          originJarName: defaultData.jars[0],
+          destinationJarName: secondJarName,
+        },
+      ],
     });
 
     // Cancelling the confirmation leaves all data in place.

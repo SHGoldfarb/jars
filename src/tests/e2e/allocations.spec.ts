@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test } from './setup';
+import { DEFAULT_MOVEMENT_DATE, test } from './setup';
 import { runInOrder } from 'src/lib/utils';
 
 // Pin locale/timezone so the expected rendered strings below are deterministic
@@ -7,21 +7,19 @@ import { runInOrder } from 'src/lib/utils';
 test.use({ locale: 'en-US', timezoneId: 'UTC' });
 
 test('can create an allocation, focus flowing from one field to the next', async ({
-  createJar,
+  seedData,
   rootLayoutPage,
   movementsPage,
   allocationFormPage,
   page,
 }) => {
-  test.slow();
   const originName = 'Holidays';
   const destinationName = 'Emergency';
   const description = 'Trip savings';
   const amount = '150000';
   const date = '2026-05-20T15:20';
 
-  await createJar(originName);
-  await createJar(destinationName);
+  await seedData({ jars: [originName, destinationName] });
 
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.createAllocationButton.click();
@@ -59,7 +57,7 @@ test('can create an allocation, focus flowing from one field to the next', async
 });
 
 test('allocation form defaults, jar options and validation', async ({
-  createJar,
+  seedData,
   deleteJar,
   rootLayoutPage,
   movementsPage,
@@ -72,10 +70,7 @@ test('allocation form defaults, jar options and validation', async ({
   const archivedName = 'Archived jar';
   const description = 'Zero allocation';
 
-  await createJar(originName);
-  await createJar(destinationName);
-  await createJar(archivedName);
-  await deleteJar(archivedName);
+  await seedData({ jars: [originName, destinationName, { name: archivedName, archived: true }] });
 
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.createAllocationButton.click();
@@ -141,8 +136,8 @@ test('allocation form defaults, jar options and validation', async ({
 });
 
 test('can edit an allocation', async ({
-  createJar,
-  createAllocation,
+  seedData,
+  rootLayoutPage,
   movementsPage,
   allocationFormPage,
   page,
@@ -153,7 +148,8 @@ test('can edit an allocation', async ({
   const initialDestinationName = 'Initial destination jar';
   const initialDescription = 'Initial allocation';
   const initialAmount = '150000';
-  const initialDate = '2026-06-15T10:00';
+  // In the current month, so the list opens on it.
+  const initialDate = DEFAULT_MOVEMENT_DATE;
 
   // New data (every field will change)
   const newOriginName = 'New origin jar';
@@ -162,21 +158,21 @@ test('can edit an allocation', async ({
   const newAmount = '275000';
   const newDate = '2026-07-11T08:45';
 
-  await createJar(initialOriginName);
-  await createJar(initialDestinationName);
-  await createJar(newOriginName);
-  await createJar(newDestinationName);
-
-  await createAllocation({
-    amount: initialAmount,
-    date: initialDate,
-    description: initialDescription,
-    originJarName: initialOriginName,
-    destinationJarName: initialDestinationName,
+  await seedData({
+    jars: [initialOriginName, initialDestinationName, newOriginName, newDestinationName],
+    allocations: [
+      {
+        amount: initialAmount,
+        date: initialDate,
+        description: initialDescription,
+        originJarName: initialOriginName,
+        destinationJarName: initialDestinationName,
+      },
+    ],
   });
 
-  // Verify the initial allocation exists, then open its edit form
-  await expect(movementsPage.createAllocationButton).toBeVisible();
+  // Open the initial allocation's edit form
+  await rootLayoutPage.navButton('Movements').click();
   await movementsPage.getMovement(initialDescription).click();
 
   // The form is populated with the allocation's current values
@@ -206,27 +202,22 @@ test('can edit an allocation', async ({
 });
 
 test('can delete an allocation', async ({
-  createJar,
-  createAllocation,
+  seedData,
+  rootLayoutPage,
   movementsPage,
   allocationFormPage,
 }) => {
-  test.slow();
   const originName = 'Deletable origin jar';
   const destinationName = 'Deletable destination jar';
   const description = 'Allocation to delete';
 
-  await createJar(originName);
-  await createJar(destinationName);
-
-  await createAllocation({
-    description,
-    originJarName: originName,
-    destinationJarName: destinationName,
+  await seedData({
+    jars: [originName, destinationName],
+    allocations: [{ description, originJarName: originName, destinationJarName: destinationName }],
   });
 
   // Verify the allocation exists, then open its edit form
-  await expect(movementsPage.createAllocationButton).toBeVisible();
+  await rootLayoutPage.navButton('Movements').click();
   await expect(movementsPage.getMovement(description)).toBeVisible();
   await movementsPage.getMovement(description).click();
 
@@ -238,34 +229,27 @@ test('can delete an allocation', async ({
 });
 
 test('after editing an allocation, it automatically restores archived jars if their balance is no longer zero', async ({
-  createJar,
-  createAllocation,
-  deleteJar,
+  seedData,
   rootLayoutPage,
   movementsPage,
   allocationFormPage,
   jarsPage,
 }) => {
-  test.slow();
   const originName = 'Restorable origin jar';
   const destinationName = 'Restorable destination jar';
   const description = 'Allocation that revives its jars';
 
-  await createJar(originName);
-  await createJar(destinationName);
-
-  // A zero amount keeps both jar balances at zero, so they can still be archived.
-  await createAllocation({
-    amount: '0',
-    description,
-    originJarName: originName,
-    destinationJarName: destinationName,
+  // Archived, as deleting them leaves them. A zero amount keeps both jar balances at zero, which
+  // deleting them requires.
+  await seedData({
+    jars: [
+      { name: originName, archived: true },
+      { name: destinationName, archived: true },
+    ],
+    allocations: [
+      { amount: '0', description, originJarName: originName, destinationJarName: destinationName },
+    ],
   });
-
-  await expect(movementsPage.createAllocationButton).toBeVisible();
-
-  await deleteJar(originName);
-  await deleteJar(destinationName);
 
   // Ensure they no longer exist
   await rootLayoutPage.navButton('Jars').click();
@@ -287,16 +271,14 @@ test('after editing an allocation, it automatically restores archived jars if th
 });
 
 test('allocation form jar selectors are ordered alphabetically', async ({
-  createJar,
+  seedData,
   rootLayoutPage,
   movementsPage,
   allocationFormPage,
 }) => {
-  // Created out of alphabetical order, so the order the selectors offer cannot be the
-  // creation order.
-  const jarNames = ['Travel', 'Emergency', 'Rent'];
-
-  await runInOrder(jarNames.map((jarName) => () => createJar(jarName)));
+  // Seeded out of alphabetical order, so the order the selectors offer cannot be the seeded
+  // order.
+  await seedData({ jars: ['Travel', 'Emergency', 'Rent'] });
 
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.createAllocationButton.click();

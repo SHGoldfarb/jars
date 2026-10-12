@@ -1,8 +1,5 @@
 import { expect } from '@playwright/test';
-import { DEFAULT_MOVEMENT_DATE, defaultData, test } from './setup';
-import { runInOrder } from 'src/lib/utils';
-import { formatCurrencyAmount } from 'src/presentation/formatters/currencyFormatter';
-import { currency } from 'src/services/shared';
+import { defaultData, test } from './setup';
 
 test('can create jar', async ({ rootLayoutPage, jarsPage, jarFormPage }) => {
   const jarName = 'Test Jar';
@@ -18,11 +15,12 @@ test('can create jar', async ({ rootLayoutPage, jarsPage, jarFormPage }) => {
   await jarsPage.expectJarToExist(jarName);
 });
 
-test('can delete jar', async ({ jarsPage, jarFormPage, createJar }) => {
+test('can delete jar', async ({ rootLayoutPage, jarsPage, jarFormPage, seedData }) => {
   const name = 'Jar to delete';
 
-  await createJar(name);
+  await seedData({ jars: [name] });
 
+  await rootLayoutPage.navButton('Jars').click();
   await jarsPage.clickJar(name);
   await jarFormPage.deleteButton.click();
 
@@ -33,12 +31,13 @@ test('can delete jar', async ({ jarsPage, jarFormPage, createJar }) => {
   await jarsPage.expectJarToNotExist(name);
 });
 
-test('can edit jar', async ({ jarsPage, jarFormPage, createJar }) => {
+test('can edit jar', async ({ rootLayoutPage, jarsPage, jarFormPage, seedData }) => {
   const initialName = 'Jar to be renamed';
   const newName = 'Renamed jar';
 
-  await createJar(initialName);
+  await seedData({ jars: [initialName] });
 
+  await rootLayoutPage.navButton('Jars').click();
   await jarsPage.clickJar(initialName);
 
   // Name input should be pre-filled with the current name
@@ -56,121 +55,78 @@ test('can edit jar', async ({ jarsPage, jarFormPage, createJar }) => {
   await jarsPage.expectJarToNotExist(initialName);
 });
 
-test('jars show balance', async ({
-  createDefaultData,
-  createTransaction,
-  deleteTransaction,
-  rootLayoutPage,
-  jarsPage,
-  createJar,
-}) => {
-  test.slow();
+test('jars show balance', async ({ seedData, rootLayoutPage, jarsPage }) => {
   const jarName = defaultData.jars[0];
-  const expenseCategoryName = defaultData.expenseCategories[0];
-  const incomeCategoryName = defaultData.incomeCategories[0];
-  const accountName = defaultData.accounts[0];
-  const date = DEFAULT_MOVEMENT_DATE;
   const secondJarName = 'Savings Jar';
-  const incomeTransactionAmount = 10000;
-  const expenseTransactionAmount = 3000;
 
-  await createDefaultData();
-  await createJar(secondJarName);
-  // Income transaction should add to jar balance
-  await createTransaction({
-    amount: incomeTransactionAmount.toString(),
-    date,
-    description: 'income transaction',
-    type: 'Income',
-    accountName,
-    jarName,
-    categoryName: incomeCategoryName,
-  });
-  // Expense transaction should substract from jar balance
-  await createTransaction({
-    amount: expenseTransactionAmount.toString(),
-    date,
-    description: 'expense transaction',
-    type: 'Expense',
-    accountName,
-    jarName,
-    categoryName: expenseCategoryName,
-  });
-  // Deleted transaction should not count
-  const deletedTransactionDescription = 'deleted transaction';
-  await createTransaction({
-    amount: '12345',
-    date,
-    description: deletedTransactionDescription,
-    type: 'Expense',
-    accountName,
-    jarName,
-    categoryName: expenseCategoryName,
-  });
-  await deleteTransaction(deletedTransactionDescription);
-  // Transaction belonging to another jar shouldn't count
-  await createTransaction({
-    amount: '12345',
-    date,
-    description: 'different jar',
-    type: 'Expense',
-    accountName,
-    jarName: secondJarName,
-    categoryName: expenseCategoryName,
+  await seedData({
+    ...defaultData,
+    jars: [jarName, secondJarName],
+    transactions: [
+      // Income transaction should add to jar balance
+      { amount: '10000', description: 'income transaction', type: 'Income', jarName },
+      // Expense transaction should substract from jar balance
+      { amount: '3000', description: 'expense transaction', type: 'Expense', jarName },
+      // Deleted transaction should not count
+      {
+        amount: '12345',
+        description: 'deleted transaction',
+        type: 'Expense',
+        jarName,
+        archived: true,
+      },
+      // Transaction belonging to another jar shouldn't count
+      {
+        amount: '12345',
+        description: 'different jar',
+        type: 'Expense',
+        jarName: secondJarName,
+      },
+    ],
   });
 
   await rootLayoutPage.navButton('Jars').click();
 
-  await expect(jarsPage.getJar(jarName)).toContainText(
-    formatCurrencyAmount(currency.new(incomeTransactionAmount - expenseTransactionAmount))
-  );
+  // Expected string is hardcoded for the hardcoded amounts above: 10000 income - 3000 expense.
+  await expect(jarsPage.getJar(jarName)).toContainText('$7,000');
 });
 
 test('delete button is disabled for jars with non zero balance', async ({
-  createTransaction,
-  createDefaultData,
+  seedData,
   rootLayoutPage,
   jarsPage,
   jarFormPage,
 }) => {
-  test.slow();
-  await createDefaultData();
-  await createTransaction();
+  await seedData({ ...defaultData, transactions: [{ description: 'Gives the jar a balance' }] });
   await rootLayoutPage.navButton('Jars').click();
   await jarsPage.clickJar(defaultData.jars[0]);
   await expect(jarFormPage.deleteButton).toBeDisabled();
 });
 
-test('allocations move balance between jars', async ({
-  createDefaultData,
-  createJar,
-  createTransaction,
-  createAllocation,
-  rootLayoutPage,
-  jarsPage,
-}) => {
-  test.slow();
+test('allocations move balance between jars', async ({ seedData, rootLayoutPage, jarsPage }) => {
   const originJarName = defaultData.jars[0];
   const destinationJarName = 'Savings jar';
 
-  await createDefaultData();
-  await createJar(destinationJarName);
-
   // Fund the origin jar, then move part of it to the destination jar
-  await createTransaction({
-    amount: '10000',
-    date: '2026-06-30T09:00',
-    description: 'income transaction',
-    type: 'Income',
-    accountName: defaultData.accounts[0],
-    jarName: originJarName,
-    categoryName: defaultData.incomeCategories[0],
-  });
-  await createAllocation({
-    amount: '4000',
-    description: 'jar to jar allocation',
-    originJarName,
-    destinationJarName,
+  await seedData({
+    ...defaultData,
+    jars: [originJarName, destinationJarName],
+    transactions: [
+      {
+        amount: '10000',
+        description: 'income transaction',
+        type: 'Income',
+        jarName: originJarName,
+      },
+    ],
+    allocations: [
+      {
+        amount: '4000',
+        description: 'jar to jar allocation',
+        originJarName,
+        destinationJarName,
+      },
+    ],
   });
 
   await rootLayoutPage.navButton('Jars').click();
@@ -181,23 +137,24 @@ test('allocations move balance between jars', async ({
 });
 
 test('delete button is disabled for a jar whose balance comes from an allocation', async ({
-  createJar,
-  createAllocation,
+  seedData,
   rootLayoutPage,
   jarsPage,
   jarFormPage,
 }) => {
-  test.slow();
   const originJarName = 'Allocation origin jar';
   const destinationJarName = 'Allocation destination jar';
 
-  await createJar(originJarName);
-  await createJar(destinationJarName);
-  await createAllocation({
-    amount: '4000',
-    description: 'allocation giving a jar a balance',
-    originJarName,
-    destinationJarName,
+  await seedData({
+    jars: [originJarName, destinationJarName],
+    allocations: [
+      {
+        amount: '4000',
+        description: 'allocation giving a jar a balance',
+        originJarName,
+        destinationJarName,
+      },
+    ],
   });
 
   await rootLayoutPage.navButton('Jars').click();
@@ -206,11 +163,10 @@ test('delete button is disabled for a jar whose balance comes from an allocation
   await expect(jarFormPage.deleteButton).toBeDisabled();
 });
 
-test('shows jars, listed alphabetically', async ({ jarsPage, createJar }) => {
-  // Created out of alphabetical order, so the order shown cannot be the creation order.
-  const jarNames = ['Travel', 'Emergency', 'Rent'];
+test('shows jars, listed alphabetically', async ({ rootLayoutPage, jarsPage, seedData }) => {
+  // Seeded out of alphabetical order, so the order shown cannot be the seeded order.
+  await seedData({ jars: ['Travel', 'Emergency', 'Rent'] });
 
-  await runInOrder(jarNames.map((jarName) => () => createJar(jarName)));
-
+  await rootLayoutPage.navButton('Jars').click();
   await jarsPage.expectJarsInOrder(['Emergency', 'Rent', 'Travel']);
 });
