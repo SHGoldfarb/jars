@@ -2,43 +2,6 @@ import { expect } from '@playwright/test';
 import { test } from './setup';
 import { runInOrder } from 'src/lib/utils';
 
-test('shows categories', async ({ categoriesPage, createCategory }) => {
-  test.slow();
-  const incomeCategoryNames = ['Salary', 'Investments'];
-  const expenseCategoryNames = ['Groceries', 'Rent'];
-
-  // Create categories
-  await runInOrder([
-    ...incomeCategoryNames.map((categoryName) => () => createCategory('Income', categoryName)),
-    ...expenseCategoryNames.map((categoryName) => () => createCategory('Expense', categoryName)),
-  ]);
-
-  // Test that they are visible in the correct tab
-  await categoriesPage.incomeTabButton.click();
-  await runInOrder(
-    incomeCategoryNames.map(
-      (categoryName) => () => categoriesPage.expectCategoryToExist(categoryName)
-    )
-  );
-  await runInOrder(
-    expenseCategoryNames.map(
-      (categoryName) => () => categoriesPage.expectCategoryToNotExist(categoryName)
-    )
-  );
-
-  await categoriesPage.expensesTabButton.click();
-  await runInOrder(
-    expenseCategoryNames.map(
-      (categoryName) => () => categoriesPage.expectCategoryToExist(categoryName)
-    )
-  );
-  await runInOrder(
-    incomeCategoryNames.map(
-      (categoryName) => () => categoriesPage.expectCategoryToNotExist(categoryName)
-    )
-  );
-});
-
 (['Income', 'Expense'] as const).forEach((kind) => {
   const otherKind = kind === 'Income' ? 'Expense' : 'Income';
 
@@ -120,7 +83,10 @@ test('shows categories', async ({ categoriesPage, createCategory }) => {
   });
 });
 
-test('categories are listed alphabetically', async ({ categoriesPage, createCategory }) => {
+test('shows categories in the tab of their kind, listed alphabetically', async ({
+  categoriesPage,
+  createCategory,
+}) => {
   test.slow();
   // Created out of alphabetical order, so the order shown cannot be the creation order.
   const incomeCategoryNames = ['Salary', 'Bonus', 'Dividends'];

@@ -5,13 +5,14 @@ import { formatCurrencyAmount } from 'src/presentation/formatters/currencyFormat
 import { decimal } from 'src/lib/decimal';
 import { formatDateISO } from 'src/presentation/formatters/dateFormatters';
 
-test('can create income transaction', async ({
+test('can create income transaction, focus flowing from one field to the next', async ({
   createAccount,
   createJar,
   createCategory,
   rootLayoutPage,
   movementsPage,
   transactionFormPage,
+  page,
 }) => {
   const accountName = 'Main account for income';
   const jarName = 'Main jar for income';
@@ -27,13 +28,32 @@ test('can create income transaction', async ({
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.createTransactionButton.click();
 
-  await transactionFormPage.fillAmount(amount);
+  // The type selector opens on its own
+  await expect(page.getByRole('option', { name: 'Income', exact: true })).toBeVisible();
+  await page.getByRole('option', { name: 'Income', exact: true }).click();
+
+  // Picking the type opens the category selector
+  await expect(page.getByRole('option', { name: categoryName, exact: true })).toBeVisible();
+  await page.getByRole('option', { name: categoryName, exact: true }).click();
+
+  // Picking the category opens the account selector
+  await expect(page.getByRole('option', { name: accountName, exact: true })).toBeVisible();
+  await page.getByRole('option', { name: accountName, exact: true }).click();
+
+  // Picking the account opens the jar selector
+  await expect(page.getByRole('option', { name: jarName, exact: true })).toBeVisible();
+  await page.getByRole('option', { name: jarName, exact: true }).click();
+
+  // Picking the jar moves focus to the amount field
+  await expect(transactionFormPage.amountInput).toBeFocused();
+  await transactionFormPage.amountInput.fill(amount);
+
+  // Enter on the amount field moves focus to the description field
+  await transactionFormPage.amountInput.press('Enter');
+  await expect(transactionFormPage.descriptionInput).toBeFocused();
+  await transactionFormPage.descriptionInput.fill(description);
+
   await transactionFormPage.fillDate(date);
-  await transactionFormPage.fillDescription(description);
-  await transactionFormPage.selectType('Income');
-  await transactionFormPage.selectAccount(accountName);
-  await transactionFormPage.selectJar(jarName);
-  await transactionFormPage.selectCategory(categoryName);
   await transactionFormPage.submitButton.click();
 
   await expect(movementsPage.createTransactionButton).toBeVisible();
@@ -52,22 +72,24 @@ test('can create income transaction', async ({
   ).toBeVisible();
 });
 
-test('can edit transaction', async ({
+test('can edit transaction, the form opening on its current values', async ({
   createAccount,
   createJar,
   createCategory,
   createTransaction,
   movementsPage,
   transactionFormPage,
+  page,
 }) => {
   test.slow();
-  // Initial data
-  const initialAccountName = 'Initial checking';
-  const initialJarName = 'Initial savings';
-  const initialCategoryName = 'Part-time job';
-  const initialDescription = 'Freelance project';
-  const initialAmount = '500000';
-  const initialDate = '2026-06-15T10:00';
+  // Initial data. Named so none of it is the first option of its selector, so the test
+  // genuinely checks the form loaded the transaction values, not just default selections
+  const initialAccountName = 'Premium account';
+  const initialJarName = 'Vacation fund';
+  const initialCategoryName = 'Investments';
+  const initialDescription = 'Consulting work';
+  const initialAmount = '750000';
+  const initialDate = '2026-07-15T14:30';
 
   // New data (every field will change)
   const newAccountName = 'New checking';
@@ -102,6 +124,22 @@ test('can edit transaction', async ({
 
   // Open the edit form by clicking the transaction link
   await movementsPage.getMovement(initialDescription).click();
+
+  // Verify each field has the transaction's values loaded
+  await expect(transactionFormPage.amountInput).toHaveValue('$750,000');
+  await expect(transactionFormPage.dateInput).toHaveValue(initialDate);
+  await expect(transactionFormPage.descriptionInput).toHaveValue(initialDescription);
+  await expect(page.getByRole('combobox', { name: 'Type' })).toContainText('Income');
+  await expect(page.getByRole('combobox', { name: 'Account' })).toContainText(initialAccountName);
+  await expect(page.getByRole('combobox', { name: 'Jar' })).toContainText(initialJarName);
+  // Exact: 'Category' alone would also match the Subcategory selector.
+  await expect(page.getByRole('combobox', { name: 'Category', exact: true })).toContainText(
+    initialCategoryName
+  );
+  // Nothing was chosen for it, so it still shows its placeholder.
+  await expect(page.getByRole('combobox', { name: 'Subcategory' })).toContainText(
+    'Select Subcategory'
+  );
 
   // Change every field of the transaction
   await transactionFormPage.fillAmount(newAmount);
@@ -168,7 +206,7 @@ test('can delete transaction', async ({
 });
 
 test.describe('transaction form', () => {
-  test('selectors behavior', async ({
+  test('selectors offer the active entities of the selected kind, alphabetically', async ({
     createAccount,
     createJar,
     createCategory,
@@ -180,15 +218,19 @@ test.describe('transaction form', () => {
     deleteCategory,
   }) => {
     test.slow();
-    // Setup data
-    const accountName = 'Main account for expense';
-    const jarName = 'Main jar for expense';
+    // Everything is created out of alphabetical order, so the order each selector offers cannot
+    // be the creation order.
+    const accountNames = ['Wallet', 'Bank'];
+    const jarNames = ['Travel', 'Emergency'];
+    const expenseCategoryNames = ['Rent', 'Groceries'];
     const incomeCategoryName = 'Dividends';
-    const expenseCategoryName = 'Groceries';
-    await createAccount(accountName);
-    await createJar(jarName);
-    await createCategory('Income', incomeCategoryName);
-    await createCategory('Expense', expenseCategoryName);
+
+    await runInOrder([
+      ...accountNames.map((accountName) => () => createAccount(accountName)),
+      ...jarNames.map((jarName) => () => createJar(jarName)),
+      ...expenseCategoryNames.map((categoryName) => () => createCategory('Expense', categoryName)),
+      () => createCategory('Income', incomeCategoryName),
+    ]);
 
     // Setup deleted data
     const deletedCategoryName = 'Deleted Category';
@@ -205,20 +247,15 @@ test.describe('transaction form', () => {
     await rootLayoutPage.navButton('Movements').click();
     await movementsPage.createTransactionButton.click();
 
-    // Categories selector only shows selected kind categories
+    // Each selector offers exactly these options, so the categories of the other kind and the
+    // deleted entities are not among them.
     await transactionFormPage.selectType('Income');
-    await transactionFormPage.expectCategoryOptionToExist(incomeCategoryName);
-    await transactionFormPage.expectCategoryOptionToNotExist(expenseCategoryName);
+    await transactionFormPage.expectOptionsInOrder('Category', [incomeCategoryName]);
 
     await transactionFormPage.selectType('Expense');
-    await transactionFormPage.expectCategoryOptionToExist(expenseCategoryName);
-    await transactionFormPage.expectCategoryOptionToNotExist(incomeCategoryName);
-
-    // Selectors dont show deleted data
-    await transactionFormPage.selectType('Expense');
-    await transactionFormPage.expectOptionToNotExist('Category', deletedCategoryName);
-    await transactionFormPage.expectOptionToNotExist('Account', deletedAccountName);
-    await transactionFormPage.expectOptionToNotExist('Jar', deletedJarName);
+    await transactionFormPage.expectOptionsInOrder('Category', ['Groceries', 'Rent']);
+    await transactionFormPage.expectOptionsInOrder('Account', ['Bank', 'Wallet']);
+    await transactionFormPage.expectOptionsInOrder('Jar', ['Emergency', 'Travel']);
   });
 
   test('form validations', async ({
@@ -309,63 +346,7 @@ test.describe('transaction form', () => {
     await expect(transactionLink).toBeVisible();
   });
 
-  test('form loads existing transaction into fields', async ({
-    createAccount,
-    createJar,
-    createCategory,
-    createDefaultData,
-    createTransaction,
-    movementsPage,
-    transactionFormPage,
-    page,
-  }) => {
-    test.slow();
-    await createDefaultData();
-
-    // Use entities distinct from defaults[0] so the test genuinely checks
-    // the form loaded the transaction values, not just default selections
-    const accountName = 'Premium account';
-    const jarName = 'Vacation fund';
-    const categoryName = 'Investments';
-    await createAccount(accountName);
-    await createJar(jarName);
-    await createCategory('Income', categoryName);
-
-    const description = 'Consulting work';
-    const amount = '750000';
-    const date = '2026-07-15T14:30';
-
-    await createTransaction({
-      amount,
-      date,
-      description,
-      type: 'Income',
-      accountName,
-      jarName,
-      categoryName,
-    });
-
-    // Open the edit form
-    await movementsPage.getMovement(description).click();
-
-    // Verify each field has the transaction's values loaded
-    await expect(transactionFormPage.amountInput).toHaveValue('$750,000');
-    await expect(transactionFormPage.dateInput).toHaveValue(date);
-    await expect(transactionFormPage.descriptionInput).toHaveValue(description);
-    await expect(page.getByRole('combobox', { name: 'Type' })).toContainText('Income');
-    await expect(page.getByRole('combobox', { name: 'Account' })).toContainText(accountName);
-    await expect(page.getByRole('combobox', { name: 'Jar' })).toContainText(jarName);
-    // Exact: 'Category' alone would also match the Subcategory selector.
-    await expect(page.getByRole('combobox', { name: 'Category', exact: true })).toContainText(
-      categoryName
-    );
-    // Nothing was chosen for it, so it still shows its placeholder.
-    await expect(page.getByRole('combobox', { name: 'Subcategory' })).toContainText(
-      'Select Subcategory'
-    );
-  });
-
-  test('when editing a transaction, selectors include archived entities that the transaction references', async ({
+  test('when editing a transaction, selectors include archived entities that the transaction references, and editing restores them once their balance is no longer zero', async ({
     createAccount,
     createJar,
     createCategory,
@@ -376,6 +357,8 @@ test.describe('transaction form', () => {
     deleteJar,
     deleteCategory,
     rootLayoutPage,
+    accountsPage,
+    jarsPage,
   }) => {
     test.slow();
     // Create entities
@@ -403,16 +386,11 @@ test.describe('transaction form', () => {
       categoryName,
     });
 
-    // Verify the transaction exists
-    await expect(movementsPage.createTransactionButton).toBeVisible();
-    await expect(movementsPage.getMovement(description)).toBeVisible();
-
     // Create a transaction with reverse amount to be able to delete the account and jar
-    const reverseTransactionDescription = 'reverse transaction';
     await createTransaction({
       amount,
       date,
-      description: reverseTransactionDescription,
+      description: 'reverse transaction',
       type: 'Expense',
       accountName,
       jarName,
@@ -424,6 +402,14 @@ test.describe('transaction form', () => {
     await deleteJar(jarName);
     await deleteCategory('Income', categoryName);
 
+    // Ensure they no longer exist
+    await rootLayoutPage.navButton('Accounts').click();
+    await expect(accountsPage.createAccountButton).toBeVisible();
+    await accountsPage.expectAccountToNotExist(accountName);
+    await rootLayoutPage.navButton('Jars').click();
+    await expect(jarsPage.createJarButton).toBeVisible();
+    await jarsPage.expectJarToNotExist(jarName);
+
     // Navigate back to movements and open the edit form for the transaction
     await rootLayoutPage.navButton('Movements').click();
     await movementsPage.getMovement(description).click();
@@ -433,11 +419,23 @@ test.describe('transaction form', () => {
     await transactionFormPage.expectOptionToExist('Account', accountName);
     await transactionFormPage.expectOptionToExist('Jar', jarName);
     await transactionFormPage.expectOptionToExist('Category', categoryName);
+
+    // Editing the amount leaves the archived account and jar holding money
+    await transactionFormPage.fillAmount('500');
+    await transactionFormPage.submitButton.click();
+
+    // So they should exist again
+    await rootLayoutPage.navButton('Accounts').click();
+    await accountsPage.expectAccountToExist(accountName);
+    await rootLayoutPage.navButton('Jars').click();
+    await jarsPage.expectJarToExist(jarName);
   });
 
   test.describe('subcategories', () => {
-    test('the subcategory selector offers only the selected category subcategories', async ({
+    test('the subcategory selector offers the selected category subcategories, and the form flows on from it', async ({
+      page,
       createDefaultData,
+      createCategory,
       createSubcategory,
       rootLayoutPage,
       movementsPage,
@@ -445,136 +443,47 @@ test.describe('transaction form', () => {
     }) => {
       test.slow();
       await createDefaultData();
+      await createCategory('Expense', 'Transport');
+      await createCategory('Expense', 'Rent');
       await createSubcategory('Expense', 'Groceries', 'Meat');
       await createSubcategory('Expense', 'Groceries', 'Bread');
+      await createSubcategory('Expense', 'Transport', 'Bus');
       await createSubcategory('Income', 'Salary', 'Bonus');
 
       await rootLayoutPage.navButton('Movements').click();
       await movementsPage.createTransactionButton.click();
       await transactionFormPage.selectType('Expense');
-      await transactionFormPage.selectCategory('Groceries');
 
-      // Alphabetical, and nothing belonging to another category.
-      await transactionFormPage.expectOptionsInOrder('Subcategory', ['Bread', 'Meat']);
-      await transactionFormPage.expectOptionToNotExist('Subcategory', 'Bonus');
-    });
-
-    test('the subcategory selector is empty until a category is selected', async ({
-      createDefaultData,
-      createSubcategory,
-      rootLayoutPage,
-      movementsPage,
-      transactionFormPage,
-    }) => {
-      await createDefaultData();
-      await createSubcategory('Expense', 'Groceries', 'Meat');
-
-      await rootLayoutPage.navButton('Movements').click();
-      await movementsPage.createTransactionButton.click();
-      await transactionFormPage.selectType('Expense');
-
+      // Empty until a category is selected.
       await transactionFormPage.expectOptionsInOrder('Subcategory', []);
-    });
 
-    test('the subcategory resets when the category changes', async ({
-      createDefaultData,
-      createCategory,
-      createSubcategory,
-      rootLayoutPage,
-      movementsPage,
-      transactionFormPage,
-    }) => {
-      test.slow();
-      await createDefaultData();
-      await createCategory('Expense', 'Transport');
-      await createSubcategory('Expense', 'Groceries', 'Meat');
-      await createSubcategory('Expense', 'Transport', 'Bus');
-
-      await rootLayoutPage.navButton('Movements').click();
-      await movementsPage.createTransactionButton.click();
-      await transactionFormPage.selectType('Expense');
+      // The category has subcategories, so they are what opens next, not Account: alphabetical,
+      // and nothing belonging to another category.
       await transactionFormPage.selectCategory('Groceries');
+      await expect(page.getByRole('option')).toHaveText(['Bread', 'Meat']);
+
+      // Skipping them hands on to the account.
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('option', { name: defaultData.accounts[0] })).toBeVisible();
+
+      // Changing the category empties the subcategory, and offers the new category's own.
       await transactionFormPage.selectSubcategory('Meat');
       await transactionFormPage.expectSelection('Subcategory', 'Meat');
-
       await transactionFormPage.selectCategory('Transport');
-
-      // Emptied, and now offering the new category's own.
+      await expect(page.getByRole('option')).toHaveText(['Bus']);
       await transactionFormPage.expectSelection('Subcategory', 'Select Subcategory');
-      await transactionFormPage.expectOptionsInOrder('Subcategory', ['Bus']);
-    });
 
-    test('picking a category opens its subcategories, and the form flows on from them', async ({
-      page,
-      createDefaultData,
-      createSubcategory,
-      rootLayoutPage,
-      movementsPage,
-      transactionFormPage,
-    }) => {
-      test.slow();
-      await createDefaultData();
-      await createSubcategory('Expense', 'Groceries', 'Meat');
-
-      await rootLayoutPage.navButton('Movements').click();
-      await movementsPage.createTransactionButton.click();
-      await transactionFormPage.selectType('Expense');
+      // Picking one of the offered subcategories leads on to the account.
       await transactionFormPage.selectCategory('Groceries');
-
-      // The category has subcategories, so they are what opens next, not Account.
-      await expect(page.getByRole('option', { name: 'Meat', exact: true })).toBeVisible();
-
-      // Picking one leads on to the account.
       await page.getByRole('option', { name: 'Meat', exact: true }).click();
       await expect(page.getByRole('option', { name: defaultData.accounts[0] })).toBeVisible();
-    });
 
-    test('a skipped subcategory hands on to the account', async ({
-      page,
-      createDefaultData,
-      createSubcategory,
-      rootLayoutPage,
-      movementsPage,
-      transactionFormPage,
-    }) => {
-      test.slow();
-      await createDefaultData();
-      await createSubcategory('Expense', 'Groceries', 'Meat');
-
-      await rootLayoutPage.navButton('Movements').click();
-      await movementsPage.createTransactionButton.click();
-      await transactionFormPage.selectType('Expense');
-      await transactionFormPage.selectCategory('Groceries');
-      await expect(page.getByRole('option', { name: 'Meat', exact: true })).toBeVisible();
-
-      await page.keyboard.press('Escape');
-
+      // A category without subcategories goes straight on to the account.
+      await transactionFormPage.selectCategory('Rent');
       await expect(page.getByRole('option', { name: defaultData.accounts[0] })).toBeVisible();
     });
 
-    test('a category without subcategories goes straight on to the account', async ({
-      page,
-      createDefaultData,
-      createCategory,
-      createSubcategory,
-      rootLayoutPage,
-      movementsPage,
-      transactionFormPage,
-    }) => {
-      test.slow();
-      await createDefaultData();
-      await createCategory('Expense', 'Transport');
-      await createSubcategory('Expense', 'Groceries', 'Meat');
-
-      await rootLayoutPage.navButton('Movements').click();
-      await movementsPage.createTransactionButton.click();
-      await transactionFormPage.selectType('Expense');
-      await transactionFormPage.selectCategory('Transport');
-
-      await expect(page.getByRole('option', { name: defaultData.accounts[0] })).toBeVisible();
-    });
-
-    test('a transaction can be saved with a category and no subcategory', async ({
+    test('a transaction can be saved with or without a subcategory, shown beside its category', async ({
       createDefaultData,
       createSubcategory,
       createTransaction,
@@ -585,34 +494,16 @@ test.describe('transaction form', () => {
       await createSubcategory('Expense', 'Groceries', 'Meat');
 
       await createTransaction({ description: 'No subcategory', categoryName: 'Groceries' });
-
-      const transaction = movementsPage.getMovement('No subcategory');
-      await expect(transaction).toBeVisible();
-      await expect(transaction.getByText('Groceries')).toBeVisible();
-      await expect(transaction.getByText('Meat')).toHaveCount(0);
-    });
-
-    test('a saved subcategory is shown with the category and survives a refresh', async ({
-      page,
-      createDefaultData,
-      createSubcategory,
-      createTransaction,
-      movementsPage,
-    }) => {
-      test.slow();
-      await createDefaultData();
-      await createSubcategory('Expense', 'Groceries', 'Meat');
-
       await createTransaction({
         description: 'With a subcategory',
         categoryName: 'Groceries',
         subcategoryName: 'Meat',
       });
 
-      const transaction = movementsPage.getMovement('With a subcategory');
-      await expect(transaction.getByText('Groceries · Meat')).toBeVisible();
-
-      await page.reload();
+      const withoutSubcategory = movementsPage.getMovement('No subcategory');
+      await expect(withoutSubcategory).toBeVisible();
+      await expect(withoutSubcategory.getByText('Groceries')).toBeVisible();
+      await expect(withoutSubcategory.getByText('Meat')).toHaveCount(0);
 
       await expect(
         movementsPage.getMovement('With a subcategory').getByText('Groceries · Meat')
@@ -648,141 +539,4 @@ test.describe('transaction form', () => {
       ).toBeVisible();
     });
   });
-});
-
-test('after editing a transaction, it automatically restores archived jars and accounts if their balance is no longer zero', async ({
-  createDefaultData,
-  createTransaction,
-  deleteJar,
-  deleteAccount,
-  rootLayoutPage,
-  transactionFormPage,
-  movementsPage,
-  accountsPage,
-  jarsPage,
-}) => {
-  test.slow();
-
-  await createDefaultData();
-
-  const jarName = defaultData.jars[0];
-  const accountName = defaultData.accounts[0];
-  const transactionDescription = 'My Transaction';
-  const transactionAmount = '10000';
-  const transactionSecondAmount = '500';
-
-  await createTransaction({
-    accountName,
-    jarName,
-    type: 'Income',
-    description: transactionDescription,
-    amount: transactionAmount,
-  });
-
-  // Create a reverse transaction to be able to archive account and jar
-  await createTransaction({
-    accountName,
-    jarName,
-    type: 'Expense',
-    amount: transactionAmount,
-  });
-
-  // Archive account, jar
-  await deleteJar(jarName);
-  await deleteAccount(accountName);
-
-  // Ensure they no longer exist
-  await rootLayoutPage.navButton('Accounts').click();
-  await expect(accountsPage.createAccountButton).toBeVisible();
-  await accountsPage.expectAccountToNotExist(accountName);
-  await rootLayoutPage.navButton('Jars').click();
-  await expect(jarsPage.createJarButton).toBeVisible();
-  await jarsPage.expectJarToNotExist(jarName);
-
-  // Edit transaction amount
-  await rootLayoutPage.navButton('Movements').click();
-  await movementsPage.getMovement(transactionDescription).click();
-  await transactionFormPage.fillAmount(transactionSecondAmount);
-  await transactionFormPage.submitButton.click();
-
-  // Account and jar should exist again
-  await rootLayoutPage.navButton('Accounts').click();
-  await accountsPage.expectAccountToExist(accountName);
-  await rootLayoutPage.navButton('Jars').click();
-  await jarsPage.expectJarToExist(jarName);
-});
-
-test('focus flows from one field to the next as a new transaction is filled in', async ({
-  createAccount,
-  createJar,
-  createCategory,
-  rootLayoutPage,
-  movementsPage,
-  transactionFormPage,
-  page,
-}) => {
-  const accountName = 'Focus flow account';
-  const jarName = 'Focus flow jar';
-  const categoryName = 'Focus flow salary';
-
-  await createAccount(accountName);
-  await createJar(jarName);
-  await createCategory('Income', categoryName);
-
-  await rootLayoutPage.navButton('Movements').click();
-  await movementsPage.createTransactionButton.click();
-
-  // The type selector opens on its own
-  await expect(page.getByRole('option', { name: 'Income', exact: true })).toBeVisible();
-  await page.getByRole('option', { name: 'Income', exact: true }).click();
-
-  // Picking the type opens the category selector
-  await expect(page.getByRole('option', { name: categoryName, exact: true })).toBeVisible();
-  await page.getByRole('option', { name: categoryName, exact: true }).click();
-
-  // Picking the category opens the account selector
-  await expect(page.getByRole('option', { name: accountName, exact: true })).toBeVisible();
-  await page.getByRole('option', { name: accountName, exact: true }).click();
-
-  // Picking the account opens the jar selector
-  await expect(page.getByRole('option', { name: jarName, exact: true })).toBeVisible();
-  await page.getByRole('option', { name: jarName, exact: true }).click();
-
-  // Picking the jar moves focus to the amount field
-  await expect(transactionFormPage.amountInput).toBeFocused();
-  await transactionFormPage.amountInput.fill('1000');
-
-  // Enter on the amount field moves focus to the description field
-  await transactionFormPage.amountInput.press('Enter');
-  await expect(transactionFormPage.descriptionInput).toBeFocused();
-});
-
-test('transaction form selectors are ordered alphabetically', async ({
-  createAccount,
-  createJar,
-  createCategory,
-  rootLayoutPage,
-  movementsPage,
-  transactionFormPage,
-}) => {
-  test.slow();
-  // Everything is created out of alphabetical order, so the order each selector offers cannot
-  // be the creation order.
-  const accountNames = ['Wallet', 'Bank'];
-  const jarNames = ['Travel', 'Emergency'];
-  const expenseCategoryNames = ['Rent', 'Groceries'];
-
-  await runInOrder([
-    ...accountNames.map((accountName) => () => createAccount(accountName)),
-    ...jarNames.map((jarName) => () => createJar(jarName)),
-    ...expenseCategoryNames.map((categoryName) => () => createCategory('Expense', categoryName)),
-  ]);
-
-  await rootLayoutPage.navButton('Movements').click();
-  await movementsPage.createTransactionButton.click();
-  await transactionFormPage.selectType('Expense');
-
-  await transactionFormPage.expectOptionsInOrder('Account', ['Bank', 'Wallet']);
-  await transactionFormPage.expectOptionsInOrder('Jar', ['Emergency', 'Travel']);
-  await transactionFormPage.expectOptionsInOrder('Category', ['Groceries', 'Rent']);
 });

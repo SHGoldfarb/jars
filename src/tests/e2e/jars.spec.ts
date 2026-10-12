@@ -18,16 +18,6 @@ test('can create jar', async ({ rootLayoutPage, jarsPage, jarFormPage }) => {
   await jarsPage.expectJarToExist(jarName);
 });
 
-test('shows jars', async ({ jarsPage, createJar }) => {
-  const jarNames = ['Holidays', 'Groceries'];
-
-  // Create jars
-  await runInOrder(jarNames.map((jarName) => () => createJar(jarName)));
-
-  // Test that they are visible
-  await runInOrder(jarNames.map((jarName) => () => jarsPage.expectJarToExist(jarName)));
-});
-
 test('can delete jar', async ({ jarsPage, jarFormPage, createJar }) => {
   const name = 'Jar to delete';
 
@@ -216,7 +206,7 @@ test('delete button is disabled for a jar whose balance comes from an allocation
   await expect(jarFormPage.deleteButton).toBeDisabled();
 });
 
-test('jars are listed alphabetically', async ({ jarsPage, createJar }) => {
+test('shows jars, listed alphabetically', async ({ jarsPage, createJar }) => {
   // Created out of alphabetical order, so the order shown cannot be the creation order.
   const jarNames = ['Travel', 'Emergency', 'Rent'];
 

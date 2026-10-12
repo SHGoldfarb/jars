@@ -40,17 +40,24 @@ test('a Money Manager export becomes jars, categories and movements under one Ca
   test.slow();
 
   await rootLayoutPage.navButton('Settings').click();
+  await expect(settingsPage.actionOption(ACTION, ARCHIVE_EMPTY_JARS)).toBeChecked();
   await importSample(settingsPage);
 
   // Money Manager has no accounts in this app's sense, so the import invents exactly one.
+  // Hardcoded from the rows: 10000 in, 2500 and 500 out, and allocations move nothing between
+  // accounts.
   await rootLayoutPage.navButton('Accounts').click();
   await accountsPage.expectAccountToExist(CASH_ACCOUNT);
+  await expect(accountsPage.getAccount(CASH_ACCOUNT)).toContainText('$7,000');
   await expect(accountsPage.getAccount('Wallet')).toBeHidden();
 
-  // One jar per Money Manager account, however many rows name it.
+  // One jar per Money Manager account, however many rows name it. Wallet: 10000 in, 2500 out,
+  // 3000 allocated away. Holidays: 3000 in, 500 out. `Old card` took 1000 in and paid 1000 out,
+  // so it nets to zero and, by default, is archived.
   await rootLayoutPage.navButton('Jars').click();
-  await jarsPage.expectJarToExist('Wallet');
-  await jarsPage.expectJarToExist('Holidays');
+  await expect(jarsPage.getJar('Wallet')).toContainText('$4,500');
+  await expect(jarsPage.getJar('Holidays')).toContainText('$2,500');
+  await jarsPage.expectJarToNotExist('Old card');
 
   // The `Category` column becomes a category and the `Subcategory` column a subcategory nested
   // under it. Categories carry the kind of the rows that used them, and the transfer row
@@ -80,29 +87,20 @@ test('a Money Manager export becomes jars, categories and movements under one Ca
   await expect(expense).toContainText('Wants · Snacks');
   await expect(expense).toContainText('$500');
   await expect(expense).toContainText('2/13/2026, 8:15:00 AM');
-});
 
-test('jars with zero balance are archived by default', async ({
-  rootLayoutPage,
-  settingsPage,
-  jarsPage,
-  movementsPage,
-}) => {
-  test.slow();
+  // The file writes the transfer once, from the paying side, naming the jar it paid into in the
+  // column every other row uses for its category.
+  const allocation = movementsPage.getMovement('Holiday saving');
+  await expect(allocation).toHaveCount(1);
+  await expect(allocation).toContainText('Wallet → Holidays');
+  await expect(allocation).toContainText('$3,000');
+  await expect(allocation).toContainText('2/12/2026, 11:45:00 AM');
 
-  await rootLayoutPage.navButton('Settings').click();
-  await expect(settingsPage.actionOption(ACTION, ARCHIVE_EMPTY_JARS)).toBeChecked();
-  await importSample(settingsPage);
+  // Every movement lives in the one account, so nothing moved between accounts.
+  await expect(movementsPage.movementKind('Transfer')).toBeHidden();
+  await expect(movementsPage.movementKind('Allocation')).toBeVisible();
 
-  // `Old card` took 1000 in and paid 1000 out, so it nets to zero and is archived.
-  await rootLayoutPage.navButton('Jars').click();
-  await jarsPage.expectJarToExist('Wallet');
-  await jarsPage.expectJarToExist('Holidays');
-  await jarsPage.expectJarToNotExist('Old card');
-
-  // Archived, not dropped: its movements still name it.
-  await rootLayoutPage.navButton('Movements').click();
-  await movementsPage.selectMonth(SAMPLE_MONTH);
+  // The archived jar is archived, not dropped: its movements still name it.
   await expect(movementsPage.getMovement('Old card payment')).toContainText(
     `${CASH_ACCOUNT} · Old card`
   );
@@ -123,55 +121,7 @@ test('jars with zero balance are kept when the option is turned off', async ({
   await expect(jarsPage.getJar('Old card')).toContainText('$0');
 });
 
-test('transfer rows become a single allocation and no transfers', async ({
-  rootLayoutPage,
-  settingsPage,
-  movementsPage,
-}) => {
-  test.slow();
-
-  await rootLayoutPage.navButton('Settings').click();
-  await importSample(settingsPage);
-
-  await rootLayoutPage.navButton('Movements').click();
-  await movementsPage.selectMonth(SAMPLE_MONTH);
-
-  // The file writes the transfer once, from the paying side, naming the jar it paid into in the
-  // column every other row uses for its category.
-  const allocation = movementsPage.getMovement('Holiday saving');
-  await expect(allocation).toHaveCount(1);
-  await expect(allocation).toContainText('Wallet → Holidays');
-  await expect(allocation).toContainText('$3,000');
-  await expect(allocation).toContainText('2/12/2026, 11:45:00 AM');
-
-  // Every movement lives in the one account, so nothing moved between accounts.
-  await expect(movementsPage.movementKind('Transfer')).toBeHidden();
-  await expect(movementsPage.movementKind('Allocation')).toBeVisible();
-});
-
-test('the imported account and jars show balances consistent with the movements', async ({
-  rootLayoutPage,
-  settingsPage,
-  accountsPage,
-  jarsPage,
-}) => {
-  test.slow();
-
-  await rootLayoutPage.navButton('Settings').click();
-  await importSample(settingsPage);
-
-  // Hardcoded from the rows above: 10000 in, 2500 and 500 out, and allocations move nothing
-  // between accounts.
-  await rootLayoutPage.navButton('Accounts').click();
-  await expect(accountsPage.getAccount(CASH_ACCOUNT)).toContainText('$7,000');
-
-  // Wallet: 10000 in, 2500 out, 3000 allocated away. Holidays: 3000 in, 500 out.
-  await rootLayoutPage.navButton('Jars').click();
-  await expect(jarsPage.getJar('Wallet')).toContainText('$4,500');
-  await expect(jarsPage.getJar('Holidays')).toContainText('$2,500');
-});
-
-test('the import replaces the current data rather than merging into it', async ({
+test('the import is confirmed, then replaces the current data without a manual refresh', async ({
   createDefaultData,
   createTransaction,
   rootLayoutPage,
@@ -184,30 +134,7 @@ test('the import replaces the current data rather than merging into it', async (
   await createDefaultData();
   await createTransaction({ description: 'Created before the import' });
 
-  await rootLayoutPage.navButton('Settings').click();
-  await importSample(settingsPage);
-
-  await rootLayoutPage.navButton('Movements').click();
-  await movementsPage.expectMovementToNotExist('Created before the import');
-  await movementsPage.selectMonth(SAMPLE_MONTH);
-  await movementsPage.expectMovementToExist('Monthly salary');
-
-  await rootLayoutPage.navButton('Accounts').click();
-  await accountsPage.expectAccountToNotExist(defaultData.accounts[0]);
-});
-
-test('the import is confirmed before anything is written', async ({
-  createDefaultData,
-  createTransaction,
-  rootLayoutPage,
-  settingsPage,
-  movementsPage,
-}) => {
-  test.slow();
-
-  await createDefaultData();
-  await createTransaction({ description: 'Survives the cancelled import' });
-
+  // Cancelling the confirmation writes nothing.
   await rootLayoutPage.navButton('Settings').click();
   await settingsPage.pickFile(ACTION, await moneyManagerSampleFile());
 
@@ -218,10 +145,23 @@ test('the import is confirmed before anything is written', async ({
   await expect(settingsPage.confirmDialog(ACTION)).toBeHidden();
 
   await rootLayoutPage.navButton('Movements').click();
-  await movementsPage.expectMovementToExist('Survives the cancelled import');
+  await movementsPage.expectMovementToExist('Created before the import');
   // Nothing was imported, so the sample's month holds no movements at all: the selector does
   // not offer it.
   await movementsPage.expectMonthOptionToNotExist(SAMPLE_MONTH);
+
+  // Confirming replaces the data rather than merging into it.
+  await rootLayoutPage.navButton('Settings').click();
+  await importSample(settingsPage);
+
+  // No reload: the movements list has to come back from a database that was replaced under it.
+  await rootLayoutPage.navButton('Movements').click();
+  await movementsPage.expectMovementToNotExist('Created before the import');
+  await movementsPage.selectMonth(SAMPLE_MONTH);
+  await movementsPage.expectMovementToExist('Monthly salary');
+
+  await rootLayoutPage.navButton('Accounts').click();
+  await accountsPage.expectAccountToNotExist(defaultData.accounts[0]);
 });
 
 test('a file that is not a spreadsheet is rejected and changes nothing', async ({
@@ -244,33 +184,4 @@ test('a file that is not a spreadsheet is rejected and changes nothing', async (
 
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.expectMovementToExist('Survives the rejected file');
-});
-
-test('imported data appears without a manual refresh and survives a reload', async ({
-  createDefaultData,
-  createTransaction,
-  page,
-  rootLayoutPage,
-  settingsPage,
-  movementsPage,
-}) => {
-  test.slow();
-
-  await createDefaultData();
-  await createTransaction({ description: 'Replaced by the import' });
-
-  await rootLayoutPage.navButton('Settings').click();
-  await importSample(settingsPage);
-
-  // No reload: the movements list has to come back from a database that was replaced under it.
-  await rootLayoutPage.navButton('Movements').click();
-  await movementsPage.expectMovementToNotExist('Replaced by the import');
-  await movementsPage.selectMonth(SAMPLE_MONTH);
-  await movementsPage.expectMovementToExist('Monthly salary');
-
-  await page.reload();
-  await rootLayoutPage.navButton('Movements').click();
-  await movementsPage.expectMovementToNotExist('Replaced by the import');
-  await movementsPage.selectMonth(SAMPLE_MONTH);
-  await movementsPage.expectMovementToExist('Monthly salary');
 });

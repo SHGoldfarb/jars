@@ -6,7 +6,7 @@ import { runInOrder } from 'src/lib/utils';
 // and can be asserted as literals rather than recomputed from app code.
 test.use({ locale: 'en-US', timezoneId: 'UTC' });
 
-test('can create a transfer', async ({
+test('can create a transfer, focus flowing from one field to the next', async ({
   createAccount,
   rootLayoutPage,
   movementsPage,
@@ -26,11 +26,24 @@ test('can create a transfer', async ({
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.createTransferButton.click();
 
+  // The origin account selector opens on its own
+  await expect(page.getByRole('option', { name: originName, exact: true })).toBeVisible();
+  await page.getByRole('option', { name: originName, exact: true }).click();
+
+  // Picking the origin account opens the destination account selector
+  await expect(page.getByRole('option', { name: destinationName, exact: true })).toBeVisible();
+  await page.getByRole('option', { name: destinationName, exact: true }).click();
+
+  // Picking the destination account moves focus to the amount field
+  await expect(transferFormPage.amountInput).toBeFocused();
+  await transferFormPage.amountInput.fill(amount);
+
+  // Enter on the amount field moves focus to the description field
+  await transferFormPage.amountInput.press('Enter');
+  await expect(transferFormPage.descriptionInput).toBeFocused();
+  await transferFormPage.descriptionInput.fill(description);
+
   await transferFormPage.fillDate(date);
-  await transferFormPage.selectOriginAccount(originName);
-  await transferFormPage.selectDestinationAccount(destinationName);
-  await transferFormPage.fillAmount(amount);
-  await transferFormPage.fillDescription(description);
   await transferFormPage.submitButton.click();
 
   // Wait for the movements page to load
@@ -211,78 +224,7 @@ test('can delete a transfer', async ({
   await expect(movementsPage.getMovement(description)).toBeHidden();
 });
 
-test('when editing a transfer, selectors include archived accounts that the transfer references', async ({
-  createAccount,
-  createTransfer,
-  deleteAccount,
-  rootLayoutPage,
-  movementsPage,
-  transferFormPage,
-}) => {
-  test.slow();
-  const originName = 'Archived origin account';
-  const destinationName = 'Archived destination account';
-  const description = 'Transfer between archived accounts';
-
-  await createAccount(originName);
-  await createAccount(destinationName);
-
-  // A zero amount keeps both account balances at zero, so they can still be archived.
-  await createTransfer({
-    amount: '0',
-    description,
-    originAccountName: originName,
-    destinationAccountName: destinationName,
-  });
-
-  await expect(movementsPage.createTransferButton).toBeVisible();
-
-  await deleteAccount(originName);
-  await deleteAccount(destinationName);
-
-  // Open the edit form for the transfer that references the archived accounts
-  await rootLayoutPage.navButton('Movements').click();
-  await movementsPage.getMovement(description).click();
-
-  // The archived accounts are still offered because the transfer references them
-  await transferFormPage.expectOptionToExist('Origin account', originName);
-  await transferFormPage.expectOptionToExist('Destination account', destinationName);
-});
-
-test('focus flows from one field to the next as a new transfer is filled in', async ({
-  createAccount,
-  rootLayoutPage,
-  movementsPage,
-  transferFormPage,
-  page,
-}) => {
-  const originName = 'Focus flow origin';
-  const destinationName = 'Focus flow destination';
-
-  await createAccount(originName);
-  await createAccount(destinationName);
-
-  await rootLayoutPage.navButton('Movements').click();
-  await movementsPage.createTransferButton.click();
-
-  // The origin account selector opens on its own
-  await expect(page.getByRole('option', { name: originName, exact: true })).toBeVisible();
-  await page.getByRole('option', { name: originName, exact: true }).click();
-
-  // Picking the origin account opens the destination account selector
-  await expect(page.getByRole('option', { name: destinationName, exact: true })).toBeVisible();
-  await page.getByRole('option', { name: destinationName, exact: true }).click();
-
-  // Picking the destination account moves focus to the amount field
-  await expect(transferFormPage.amountInput).toBeFocused();
-  await transferFormPage.amountInput.fill('1000');
-
-  // Enter on the amount field moves focus to the description field
-  await transferFormPage.amountInput.press('Enter');
-  await expect(transferFormPage.descriptionInput).toBeFocused();
-});
-
-test('after editing a transfer, it automatically restores archived accounts if their balance is no longer zero', async ({
+test('when editing a transfer, selectors include archived accounts that the transfer references, and editing restores them once their balance is no longer zero', async ({
   createAccount,
   createTransfer,
   deleteAccount,
@@ -292,9 +234,9 @@ test('after editing a transfer, it automatically restores archived accounts if t
   accountsPage,
 }) => {
   test.slow();
-  const originName = 'Restorable origin account';
-  const destinationName = 'Restorable destination account';
-  const description = 'Transfer that revives its accounts';
+  const originName = 'Archived origin account';
+  const destinationName = 'Archived destination account';
+  const description = 'Transfer between archived accounts';
 
   await createAccount(originName);
   await createAccount(destinationName);
@@ -318,9 +260,15 @@ test('after editing a transfer, it automatically restores archived accounts if t
   await accountsPage.expectAccountToNotExist(originName);
   await accountsPage.expectAccountToNotExist(destinationName);
 
-  // Giving the transfer a non-zero amount leaves both archived accounts holding money
+  // Open the edit form for the transfer that references the archived accounts
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.getMovement(description).click();
+
+  // The archived accounts are still offered because the transfer references them
+  await transferFormPage.expectOptionToExist('Origin account', originName);
+  await transferFormPage.expectOptionToExist('Destination account', destinationName);
+
+  // Giving the transfer a non-zero amount leaves both archived accounts holding money
   await transferFormPage.fillAmount('5000');
   await transferFormPage.submitButton.click();
 

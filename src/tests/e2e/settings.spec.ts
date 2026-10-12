@@ -1,8 +1,9 @@
+import { readFile } from 'node:fs/promises';
 import { expect } from '@playwright/test';
 import * as z from 'zod';
 import { test, defaultData } from './setup';
 import { runInOrder } from 'src/lib/utils';
-import type { SettingsActionName, SettingsPage } from './pages/settings.page';
+import type { SettingsActionName } from './pages/settings.page';
 
 const actionNames: SettingsActionName[] = [
   'Create backup',
@@ -32,23 +33,17 @@ const warnings: [SettingsActionName, string][] = [
   ['Clear all data', 'All current data is permanently lost and cannot be recovered.'],
 ];
 
-test('settings is reachable from the main navigation', async ({ rootLayoutPage, settingsPage }) => {
-  await rootLayoutPage.navButton('Settings').click();
-
-  await runInOrder(
-    actionNames.map((name) => async () => {
-      await expect(settingsPage.actionTrigger(name)).toBeVisible();
-    })
-  );
-});
-
-test('each action explains itself, and the destructive ones warn', async ({
+test('settings is reachable from the main navigation, and each action explains itself', async ({
   rootLayoutPage,
   settingsPage,
 }) => {
   await rootLayoutPage.navButton('Settings').click();
 
   await runInOrder([
+    ...actionNames.map((name) => async () => {
+      await expect(settingsPage.actionTrigger(name)).toBeVisible();
+    }),
+    // The destructive ones also warn.
     ...descriptions.map(([name, description]) => async () => {
       await expect(settingsPage.actionDescription(name)).toHaveText(description);
     }),
@@ -67,7 +62,8 @@ const todayInUTC = () => {
 };
 
 test.describe('create backup', () => {
-  test.use({ timezoneId: 'UTC' });
+  // The locale too: the movements month label below is rendered by the browser.
+  test.use({ locale: 'en-US', timezoneId: 'UTC' });
 
   const NamedRecord = z.object({ id: z.string(), name: z.string() });
 
@@ -102,30 +98,13 @@ test.describe('create backup', () => {
     }),
   });
 
-  test('create backup downloads a JSON file named for today', async ({
-    createDefaultData,
-    createTransaction,
-    rootLayoutPage,
-    settingsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransaction();
-
-    await rootLayoutPage.navButton('Settings').click();
-    const download = await settingsPage.downloadFromAction('Create backup');
-
-    expect(download.suggestedFilename()).toMatch(/^jars-backup-\d{4}-\d{2}-\d{2}\.json$/);
-    expect(download.suggestedFilename()).toBe(`jars-backup-${todayInUTC()}.json`);
-  });
-
-  test('the backup contains the full database state', async ({
+  test('create backup downloads a JSON file named for today with the full database state', async ({
     createDefaultData,
     createSubcategory,
     createTransaction,
     rootLayoutPage,
     settingsPage,
+    movementsPage,
   }) => {
     test.slow();
 
@@ -144,9 +123,12 @@ test.describe('create backup', () => {
     });
 
     await rootLayoutPage.navButton('Settings').click();
-    const backup = BackupFile.parse(
-      JSON.parse(await settingsPage.downloadContentsFromAction('Create backup'))
-    );
+    const download = await settingsPage.downloadFromAction('Create backup');
+
+    expect(download.suggestedFilename()).toMatch(/^jars-backup-\d{4}-\d{2}-\d{2}\.json$/);
+    expect(download.suggestedFilename()).toBe(`jars-backup-${todayInUTC()}.json`);
+
+    const backup = BackupFile.parse(JSON.parse(await readFile(await download.path(), 'utf8')));
 
     expect(backup.schemaVersion).toBe(4);
     expect(backup.data.accounts.map(({ name }) => name)).toEqual(['Wallet']);
@@ -177,31 +159,23 @@ test.describe('create backup', () => {
     expect(backup.data.subcategories.map(({ name }) => name)).toEqual(['Fruit']);
     expect(backup.data.subcategories[0].categoryId).toBe(transaction.categoryId);
     expect(transaction.subcategoryId).toBe(backup.data.subcategories[0].id);
-  });
 
-  test('creating a backup leaves the data untouched', async ({
-    createDefaultData,
-    createTransaction,
-    rootLayoutPage,
-    settingsPage,
-    movementsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransaction({ description: 'Survives the backup' });
-
-    await rootLayoutPage.navButton('Settings').click();
-    await settingsPage.downloadFromAction('Create backup');
-
+    // Creating the backup leaves the data untouched.
     await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.expectMovementToExist('Survives the backup');
+    await movementsPage.selectMonth('February 2026');
+    await movementsPage.expectMovementToExist('Backed up transaction');
   });
 });
 
 const jsonFile = (contents: string) => ({
   name: 'jars-backup.json',
   mimeType: 'application/json',
+  buffer: Buffer.from(contents),
+});
+
+const csvFile = (contents: string) => ({
+  name: 'jars-export.csv',
+  mimeType: 'text/csv',
   buffer: Buffer.from(contents),
 });
 
@@ -315,9 +289,10 @@ test.describe('load from backup', () => {
     await expect(jarsPage.getJar(secondJarName)).toContainText('$2,000');
   });
 
-  test('restoring replaces the current data rather than merging into it', async ({
+  test('the restore is confirmed, then replaces the current data without a manual refresh', async ({
     createDefaultData,
     createTransaction,
+    deleteTransaction,
     rootLayoutPage,
     settingsPage,
     movementsPage,
@@ -330,89 +305,10 @@ test.describe('load from backup', () => {
     await rootLayoutPage.navButton('Settings').click();
     const backup = await settingsPage.downloadContentsFromAction('Create backup');
 
+    await deleteTransaction('In the backup');
     await createTransaction({ description: 'Created after the backup' });
 
-    await rootLayoutPage.navButton('Settings').click();
-    await settingsPage.pickFileAndConfirm('Load from backup', jsonFile(backup));
-    await expect(settingsPage.statusMessage).toHaveText('Backup restored.');
-
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.expectMovementToExist('In the backup');
-    await movementsPage.expectMovementToNotExist('Created after the backup');
-  });
-
-  test('restored data appears without a manual refresh', async ({
-    createDefaultData,
-    createTransaction,
-    deleteTransaction,
-    rootLayoutPage,
-    settingsPage,
-    movementsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransaction({ description: 'Restored without a refresh' });
-
-    await rootLayoutPage.navButton('Settings').click();
-    const backup = await settingsPage.downloadContentsFromAction('Create backup');
-
-    await deleteTransaction('Restored without a refresh');
-
-    await rootLayoutPage.navButton('Settings').click();
-    await settingsPage.pickFileAndConfirm('Load from backup', jsonFile(backup));
-    await expect(settingsPage.statusMessage).toHaveText('Backup restored.');
-
-    // No reload: the movements list has to come back from a database that was replaced under it.
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.expectMovementToExist('Restored without a refresh');
-  });
-
-  test('a restored database survives a reload', async ({
-    createDefaultData,
-    createTransaction,
-    deleteTransaction,
-    page,
-    rootLayoutPage,
-    settingsPage,
-    movementsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransaction({ description: 'Restored and reloaded' });
-
-    await rootLayoutPage.navButton('Settings').click();
-    const backup = await settingsPage.downloadContentsFromAction('Create backup');
-
-    await deleteTransaction('Restored and reloaded');
-
-    await rootLayoutPage.navButton('Settings').click();
-    await settingsPage.pickFileAndConfirm('Load from backup', jsonFile(backup));
-    await expect(settingsPage.statusMessage).toHaveText('Backup restored.');
-
-    await page.reload();
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.expectMovementToExist('Restored and reloaded');
-  });
-
-  test('the restore is confirmed before anything is written', async ({
-    createDefaultData,
-    createTransaction,
-    rootLayoutPage,
-    settingsPage,
-    movementsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransaction({ description: 'In the backup' });
-
-    await rootLayoutPage.navButton('Settings').click();
-    const backup = await settingsPage.downloadContentsFromAction('Create backup');
-
-    await createTransaction({ description: 'Created after the backup' });
-
+    // Cancelling the confirmation writes nothing.
     await rootLayoutPage.navButton('Settings').click();
     await settingsPage.pickFile('Load from backup', jsonFile(backup));
 
@@ -423,8 +319,18 @@ test.describe('load from backup', () => {
     await expect(settingsPage.confirmDialog('Load from backup')).toBeHidden();
 
     await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.expectMovementToExist('In the backup');
+    await movementsPage.expectMovementToNotExist('In the backup');
     await movementsPage.expectMovementToExist('Created after the backup');
+
+    // Confirming replaces the data rather than merging into it.
+    await rootLayoutPage.navButton('Settings').click();
+    await settingsPage.pickFileAndConfirm('Load from backup', jsonFile(backup));
+    await expect(settingsPage.statusMessage).toHaveText('Backup restored.');
+
+    // No reload: the movements list has to come back from a database that was replaced under it.
+    await rootLayoutPage.navButton('Movements').click();
+    await movementsPage.expectMovementToExist('In the backup');
+    await movementsPage.expectMovementToNotExist('Created after the backup');
   });
 
   const rejectedFiles: [string, string, string][] = [
@@ -450,39 +356,45 @@ test.describe('load from backup', () => {
     ],
   ];
 
-  rejectedFiles.forEach(([caseName, contents, expectedError]) => {
-    test(`${caseName} is rejected with an explanation and changes nothing`, async ({
-      createDefaultData,
-      createTransaction,
-      rootLayoutPage,
-      settingsPage,
-      movementsPage,
-    }) => {
-      test.slow();
+  test('files that are not valid backups are rejected with an explanation and change nothing', async ({
+    createDefaultData,
+    createTransaction,
+    rootLayoutPage,
+    settingsPage,
+    movementsPage,
+  }) => {
+    test.slow();
 
-      await createDefaultData();
-      await createTransaction({ description: 'Survives the rejected file' });
+    await createDefaultData();
+    await createTransaction({ description: 'Survives the rejected files' });
 
-      await rootLayoutPage.navButton('Settings').click();
-      await settingsPage.pickFileAndConfirm('Load from backup', jsonFile(contents));
-      await expect(settingsPage.statusMessage).toHaveText(expectedError);
+    await rootLayoutPage.navButton('Settings').click();
+    const exportedCsv = await settingsPage.downloadContentsFromAction('Export to CSV');
 
-      await rootLayoutPage.navButton('Movements').click();
-      await movementsPage.expectMovementToExist('Survives the rejected file');
-    });
+    // Each error differs from the one before it, so a stale message cannot pass for the next.
+    await runInOrder([
+      ...rejectedFiles.map(([caseName, contents, expectedError]) => async () => {
+        await test.step(caseName, async () => {
+          await settingsPage.pickFileAndConfirm('Load from backup', jsonFile(contents));
+          await expect(settingsPage.statusMessage).toHaveText(expectedError);
+        });
+      }),
+      async () => {
+        await test.step('an exported CSV', async () => {
+          await settingsPage.pickFileAndConfirm('Load from backup', csvFile(exportedCsv));
+          await expect(settingsPage.statusMessage).toHaveText('The file is not valid JSON.');
+        });
+      },
+    ]);
+
+    await rootLayoutPage.navButton('Movements').click();
+    await movementsPage.expectMovementToExist('Survives the rejected files');
   });
 });
 
-// TODO: most of these can be merged into a single test that exports and checks
-// for all those cases.
 test.describe('export to CSV', () => {
-  test.use({ timezoneId: 'UTC' });
-
-  const csvFile = (contents: string) => ({
-    name: 'jars-export.csv',
-    mimeType: 'text/csv',
-    buffer: Buffer.from(contents),
-  });
+  // The locale too: the movements month label below is rendered by the browser.
+  test.use({ locale: 'en-US', timezoneId: 'UTC' });
 
   // The header the file must be written with, spelled out here so a change to the columns has
   // to be mirrored deliberately.
@@ -529,12 +441,7 @@ test.describe('export to CSV', () => {
       },
     });
 
-  const restore = async (settingsPage: SettingsPage, contents: string) => {
-    await settingsPage.pickFileAndConfirm('Load from backup', jsonFile(contents));
-    await expect(settingsPage.statusMessage).toHaveText('Backup restored.');
-  };
-
-  test('export to CSV downloads a file named for today', async ({
+  test('exporting an empty database downloads a file named for today with nothing but the header', async ({
     rootLayoutPage,
     settingsPage,
   }) => {
@@ -543,40 +450,41 @@ test.describe('export to CSV', () => {
 
     expect(download.suggestedFilename()).toMatch(/^jars-export-\d{4}-\d{2}-\d{2}\.csv$/);
     expect(download.suggestedFilename()).toBe(`jars-export-${todayInUTC()}.csv`);
-  });
 
-  test('an empty database exports a file with nothing but the header', async ({
-    rootLayoutPage,
-    settingsPage,
-  }) => {
-    await rootLayoutPage.navButton('Settings').click();
-    const contents = await settingsPage.downloadContentsFromAction('Export to CSV');
-
-    expect(csvLines(contents)).toEqual([header, '']);
+    expect(csvLines(await readFile(await download.path(), 'utf8'))).toEqual([header, '']);
   });
 
   test('every movement is exported with its kind, its values and named references', async ({
     createDefaultData,
     createAccount,
     createJar,
+    createSubcategory,
     createTransaction,
     createTransfer,
     createAllocation,
     rootLayoutPage,
     settingsPage,
+    movementsPage,
   }) => {
     test.slow();
 
     const secondAccountName = 'Savings';
     const secondJarName = 'Holidays';
+    const expense = {
+      type: 'Expense',
+      accountName: defaultData.accounts[0],
+      jarName: defaultData.jars[0],
+      categoryName: defaultData.expenseCategories[0],
+    } as const;
 
     await createDefaultData();
     await createAccount(secondAccountName);
     await createJar(secondJarName);
+    await createSubcategory('Expense', defaultData.expenseCategories[0], 'Fruit');
     // Distinct dates, so the order the file is written in is the newest-first order of the
     // movements list rather than an accident of how the kinds are gathered.
     await createTransaction({
-      amount: '10000',
+      amount: '20000',
       date: '2026-02-10T09:00',
       description: 'Exported income',
       type: 'Income',
@@ -599,96 +507,60 @@ test.describe('export to CSV', () => {
       originJarName: defaultData.jars[0],
       destinationJarName: secondJarName,
     });
+    await createTransaction({
+      ...expense,
+      amount: '1234.56',
+      date: '2026-02-09T09:00',
+      description: 'With a subcategory',
+      subcategoryName: 'Fruit',
+    });
+    await createTransaction({
+      ...expense,
+      amount: '6000',
+      date: '2026-02-08T09:00',
+      description: 'Without a subcategory',
+    });
+    // A description is a single-line field, so a line break cannot be typed into one; the
+    // restored-backup test below reaches that case instead.
+    await createTransaction({
+      ...expense,
+      amount: '1000',
+      date: '2026-02-07T09:00',
+      description: 'Lunch, "the good one"',
+    });
 
     await rootLayoutPage.navButton('Settings').click();
     const contents = await settingsPage.downloadContentsFromAction('Export to CSV');
 
     // Hardcoded for the hardcoded amounts and dates above: a plain decimal number beside its
-    // currency, a `YYYY-MM-DD HH:mm` date, and every reference by name.
+    // currency, a `YYYY-MM-DD HH:mm` date, and every reference by name. The subcategory fills
+    // its own column, a transaction without one leaves it empty, and a value holding separators
+    // or quotes is quoted.
     expect(csvLines(contents)).toEqual([
       header,
       'Allocation,2026-02-12 11:45,Exported allocation,3000.50,CLP,,,,,,,Monthly expenses,Holidays',
       'Transfer,2026-02-11 10:30,Exported transfer,2000,CLP,,,,,Wallet,Savings,,',
-      'Income,2026-02-10 09:00,Exported income,10000,CLP,Wallet,Salary,,Monthly expenses,,,,',
+      'Income,2026-02-10 09:00,Exported income,20000,CLP,Wallet,Salary,,Monthly expenses,,,,',
+      'Expense,2026-02-09 09:00,With a subcategory,1234.56,CLP,Wallet,Groceries,Fruit,Monthly expenses,,,,',
+      'Expense,2026-02-08 09:00,Without a subcategory,6000,CLP,Wallet,Groceries,,Monthly expenses,,,,',
+      'Expense,2026-02-07 09:00,"Lunch, ""the good one""",1000,CLP,Wallet,Groceries,,' +
+        'Monthly expenses,,,,',
       '',
     ]);
-  });
 
-  test("a transaction's subcategory is exported beside its category", async ({
-    createDefaultData,
-    createSubcategory,
-    createTransaction,
-    rootLayoutPage,
-    settingsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createSubcategory('Expense', defaultData.expenseCategories[0], 'Fruit');
-    await createTransaction({
-      amount: '5000',
-      date: '2026-02-10T09:00',
-      description: 'With a subcategory',
-      type: 'Expense',
-      accountName: defaultData.accounts[0],
-      jarName: defaultData.jars[0],
-      categoryName: defaultData.expenseCategories[0],
-      subcategoryName: 'Fruit',
-    });
-    await createTransaction({
-      amount: '6000',
-      date: '2026-02-09T09:00',
-      description: 'Without a subcategory',
-      type: 'Expense',
-      accountName: defaultData.accounts[0],
-      jarName: defaultData.jars[0],
-      categoryName: defaultData.expenseCategories[0],
-    });
-
-    await rootLayoutPage.navButton('Settings').click();
-    const contents = await settingsPage.downloadContentsFromAction('Export to CSV');
-
-    // The subcategory fills its own column, and a transaction without one leaves it empty.
-    expect(csvLines(contents)).toEqual([
-      header,
-      'Expense,2026-02-10 09:00,With a subcategory,5000,CLP,Wallet,Groceries,Fruit,Monthly expenses,,,,',
-      'Expense,2026-02-09 09:00,Without a subcategory,6000,CLP,Wallet,Groceries,,Monthly expenses,,,,',
-      '',
-    ]);
-  });
-
-  test('no internal representation reaches the file', async ({
-    createDefaultData,
-    createTransaction,
-    rootLayoutPage,
-    settingsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransaction({
-      // Typed as an English amount: the point is the decimal separator.
-      amount: '1234.56',
-      date: '2026-02-10T09:00',
-      description: 'Exported transaction',
-      type: 'Expense',
-      accountName: defaultData.accounts[0],
-      jarName: defaultData.jars[0],
-      categoryName: defaultData.expenseCategories[0],
-    });
-
-    await rootLayoutPage.navButton('Settings').click();
-    const contents = await settingsPage.downloadContentsFromAction('Export to CSV');
-
-    expect(contents).toContain('2026-02-10 09:00');
-    expect(contents).toContain('1234.56');
-    // No stored timestamp, no stored decimal, and no id of anything.
-    expect(contents).not.toContain('2026-02-10T09:00:00.000Z');
+    // No internal representation reaches the file: no stored timestamp, no stored decimal, and
+    // no id of anything.
+    expect(contents).not.toContain('.000Z');
     expect(contents).not.toContain('decimalPlaces');
     expect(contents).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/);
+
+    // Exporting leaves the data untouched.
+    await rootLayoutPage.navButton('Movements').click();
+    await movementsPage.selectMonth('February 2026');
+    await movementsPage.expectMovementToExist('Exported income');
   });
 
-  test('an account, jar or category no movement references is absent, archived or not', async ({
+  test('only the accounts, jars and categories movements reference are named, archived or not', async ({
     createDefaultData,
     createJar,
     createCategory,
@@ -714,6 +586,7 @@ test.describe('export to CSV', () => {
       categoryName: defaultData.expenseCategories[0],
     });
 
+    // An account, jar or category no movement references is absent...
     await rootLayoutPage.navButton('Settings').click();
     const contents = await settingsPage.downloadContentsFromAction('Export to CSV');
 
@@ -722,99 +595,19 @@ test.describe('export to CSV', () => {
 
     await deleteJar(unusedJarName);
     await deleteCategory('Expense', unusedCategoryName);
+    await deleteCategory('Expense', defaultData.expenseCategories[0]);
 
     await rootLayoutPage.navButton('Settings').click();
     const contentsAfterArchiving = await settingsPage.downloadContentsFromAction('Export to CSV');
 
+    // ...archived or not, while a movement that references an archived one still names it.
     expect(contentsAfterArchiving).not.toContain(unusedJarName);
     expect(contentsAfterArchiving).not.toContain(unusedCategoryName);
+    expect(contentsAfterArchiving).toContain(`Exported transaction,`);
+    expect(contentsAfterArchiving).toContain(`,${defaultData.expenseCategories[0]},`);
   });
 
-  test('a movement that references an archived entity still names it', async ({
-    createDefaultData,
-    createTransaction,
-    deleteCategory,
-    rootLayoutPage,
-    settingsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransaction({
-      description: 'Exported transaction',
-      type: 'Expense',
-      accountName: defaultData.accounts[0],
-      jarName: defaultData.jars[0],
-      categoryName: defaultData.expenseCategories[0],
-    });
-    await deleteCategory('Expense', defaultData.expenseCategories[0]);
-
-    await rootLayoutPage.navButton('Settings').click();
-    const contents = await settingsPage.downloadContentsFromAction('Export to CSV');
-
-    expect(contents).toContain(`Exported transaction,`);
-    expect(contents).toContain(`,${defaultData.expenseCategories[0]},`);
-  });
-
-  test('values containing separators or quotes are escaped', async ({
-    createDefaultData,
-    createTransaction,
-    rootLayoutPage,
-    settingsPage,
-  }) => {
-    test.slow();
-
-    // A description is a single-line field, so a line break cannot be typed into one; the
-    // test below reaches that case through a restored backup instead.
-    const description = 'Lunch, "the good one"';
-
-    await createDefaultData();
-    await createTransaction({
-      amount: '1000',
-      date: '2026-02-10T09:00',
-      description,
-      type: 'Expense',
-      accountName: defaultData.accounts[0],
-      jarName: defaultData.jars[0],
-      categoryName: defaultData.expenseCategories[0],
-    });
-
-    await rootLayoutPage.navButton('Settings').click();
-    const contents = await settingsPage.downloadContentsFromAction('Export to CSV');
-
-    expect(csvLines(contents)).toEqual([
-      header,
-      'Expense,2026-02-10 09:00,"Lunch, ""the good one""",1000,CLP,Wallet,Groceries,,' +
-        'Monthly expenses,,,,',
-      '',
-    ]);
-  });
-
-  test('a value containing a line break is escaped', async ({ rootLayoutPage, settingsPage }) => {
-    await rootLayoutPage.navButton('Settings').click();
-    await restore(
-      settingsPage,
-      backupWith([
-        {
-          description: 'Lunch\nwith friends',
-          amountDecimal: { value: '1000', decimalPlaces: 0 },
-        },
-      ])
-    );
-
-    const contents = await settingsPage.downloadContentsFromAction('Export to CSV');
-
-    // Quoted, and the break inside it does not end the record: splitting the file on its record
-    // separator still yields one row.
-    expect(csvLines(contents)).toEqual([
-      header,
-      'Expense,2026-02-10 09:00,"Lunch\nwith friends",1000,CLP,Wallet,Groceries,,' +
-        'Monthly expenses,,,,',
-      '',
-    ]);
-  });
-
-  test('amounts are written exactly as they are stored', async ({
+  test('values a form cannot produce are written exactly as they are stored', async ({
     rootLayoutPage,
     settingsPage,
   }) => {
@@ -837,92 +630,41 @@ test.describe('export to CSV', () => {
         '1000000000000000.1',
       ],
     ];
+    const lineBreakTransaction = {
+      description: 'Lunch\nwith friends',
+      amountDecimal: { value: '1000', decimalPlaces: 0 },
+    };
 
     await rootLayoutPage.navButton('Settings').click();
-    await restore(
-      settingsPage,
-      backupWith(amounts.map(([description, amountDecimal]) => ({ description, amountDecimal })))
+    await settingsPage.pickFileAndConfirm(
+      'Load from backup',
+      jsonFile(
+        backupWith([
+          ...amounts.map(([description, amountDecimal]) => ({ description, amountDecimal })),
+          lineBreakTransaction,
+        ])
+      )
     );
+    await expect(settingsPage.statusMessage).toHaveText('Backup restored.');
 
     const contents = await settingsPage.downloadContentsFromAction('Export to CSV');
 
     amounts.forEach(([description, , written]) => {
       expect(contents).toContain(`,${description},${written},CLP,`);
     });
-  });
 
-  test('an exported CSV is not accepted by load from backup', async ({
-    createDefaultData,
-    createTransaction,
-    rootLayoutPage,
-    settingsPage,
-    movementsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransaction({ description: 'Survives the rejected export' });
-
-    await rootLayoutPage.navButton('Settings').click();
-    const contents = await settingsPage.downloadContentsFromAction('Export to CSV');
-
-    await settingsPage.pickFileAndConfirm('Load from backup', csvFile(contents));
-    await expect(settingsPage.statusMessage).toHaveText('The file is not valid JSON.');
-
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.expectMovementToExist('Survives the rejected export');
-  });
-
-  test('exporting leaves the data untouched', async ({
-    createDefaultData,
-    createTransaction,
-    rootLayoutPage,
-    settingsPage,
-    movementsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransaction({ description: 'Survives the export' });
-
-    await rootLayoutPage.navButton('Settings').click();
-    await settingsPage.downloadFromAction('Export to CSV');
-
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.expectMovementToExist('Survives the export');
+    // A line break is quoted, and does not end the record: splitting the file on its record
+    // separator still yields one row per movement.
+    expect(csvLines(contents)).toContain(
+      'Expense,2026-02-10 09:00,"Lunch\nwith friends",1000,CLP,Wallet,Groceries,,' +
+        'Monthly expenses,,,,'
+    );
+    expect(csvLines(contents)).toHaveLength(amounts.length + 3);
   });
 });
 
 test.describe('clear all data', () => {
-  test('cancelling the confirmation leaves all data in place', async ({
-    createDefaultData,
-    createTransaction,
-    rootLayoutPage,
-    settingsPage,
-    movementsPage,
-    accountsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransaction({ description: 'Survives the cancelled clear' });
-
-    await rootLayoutPage.navButton('Settings').click();
-    await settingsPage.actionButton('Clear all data').click();
-
-    await expect(settingsPage.confirmDialog('Clear all data')).toContainText(
-      'All current data is permanently lost and cannot be recovered.'
-    );
-    await settingsPage.cancelButton('Clear all data').click();
-    await expect(settingsPage.confirmDialog('Clear all data')).toBeHidden();
-
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.expectMovementToExist('Survives the cancelled clear');
-    await rootLayoutPage.navButton('Accounts').click();
-    await accountsPage.expectAccountToExist(defaultData.accounts[0]);
-  });
-
-  test('confirming the clear empties the database', async ({
+  test('the clear is confirmed, then empties the database without a manual refresh', async ({
     createDefaultData,
     createAccount,
     createJar,
@@ -956,6 +698,22 @@ test.describe('clear all data', () => {
       destinationJarName: secondJarName,
     });
 
+    // Cancelling the confirmation leaves all data in place.
+    await rootLayoutPage.navButton('Settings').click();
+    await settingsPage.actionButton('Clear all data').click();
+
+    await expect(settingsPage.confirmDialog('Clear all data')).toContainText(
+      'All current data is permanently lost and cannot be recovered.'
+    );
+    await settingsPage.cancelButton('Clear all data').click();
+    await expect(settingsPage.confirmDialog('Clear all data')).toBeHidden();
+
+    await rootLayoutPage.navButton('Movements').click();
+    await movementsPage.expectMovementToExist('Cleared transaction');
+    await rootLayoutPage.navButton('Accounts').click();
+    await accountsPage.expectAccountToExist(defaultData.accounts[0]);
+
+    // Confirming empties it.
     await rootLayoutPage.navButton('Settings').click();
     await settingsPage.clickActionAndConfirm('Clear all data');
     await expect(settingsPage.statusMessage).toHaveText('All data cleared.');
@@ -979,30 +737,5 @@ test.describe('clear all data', () => {
     await categoriesPage.expectCategoryToNotExist(defaultData.incomeCategories[0]);
     await categoriesPage.expensesTabButton.click();
     await categoriesPage.expectCategoryToNotExist(defaultData.expenseCategories[0]);
-  });
-
-  test('the cleared database stays empty across a reload', async ({
-    createDefaultData,
-    createTransaction,
-    page,
-    rootLayoutPage,
-    settingsPage,
-    movementsPage,
-    accountsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransaction({ description: 'Cleared before the reload' });
-
-    await rootLayoutPage.navButton('Settings').click();
-    await settingsPage.clickActionAndConfirm('Clear all data');
-    await expect(settingsPage.statusMessage).toHaveText('All data cleared.');
-
-    await page.reload();
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.expectMovementToNotExist('Cleared before the reload');
-    await rootLayoutPage.navButton('Accounts').click();
-    await accountsPage.expectAccountToNotExist(defaultData.accounts[0]);
   });
 });

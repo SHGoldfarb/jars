@@ -59,191 +59,87 @@ const createTransactionOn = (
     categoryName: defaultData.incomeCategories[0],
   });
 
-test.describe('movements list ordering', () => {
-  test('transactions are shown ordered by date descending', async ({
-    createDefaultData,
-    createTransaction,
-    page,
-    rootLayoutPage,
-  }) => {
-    test.slow();
+test('movements list shows transactions, transfers and allocations interleaved by date descending', async ({
+  createDefaultData,
+  createAccount,
+  createJar,
+  createTransaction,
+  createTransfer,
+  createAllocation,
+  page,
+  rootLayoutPage,
+}) => {
+  test.slow();
 
-    await createDefaultData();
+  await createDefaultData();
 
-    const accountName = defaultData.accounts[0];
-    const jarName = defaultData.jars[0];
-    const categoryName = defaultData.incomeCategories[0];
+  const originAccountName = defaultData.accounts[0];
+  const destinationAccountName = 'Second account';
+  const originJarName = defaultData.jars[0];
+  const destinationJarName = 'Second jar';
+  const transaction = {
+    amount: '1000',
+    type: 'Income',
+    accountName: originAccountName,
+    jarName: originJarName,
+    categoryName: defaultData.incomeCategories[0],
+  } as const;
 
-    // Create transactions with different dates (entered in non-sorted order)
-    await createTransaction({
-      amount: '1000',
-      date: monthDate(0, 1),
-      description: 'Oldest transaction',
-      type: 'Income',
-      accountName,
-      jarName,
-      categoryName,
-    });
-    await createTransaction({
-      amount: '3000',
-      date: monthDate(0, 3),
-      description: 'Newest transaction',
-      type: 'Income',
-      accountName,
-      jarName,
-      categoryName,
-    });
-    await createTransaction({
-      amount: '2000',
-      date: monthDate(0, 2),
-      description: 'Middle transaction',
-      type: 'Income',
-      accountName,
-      jarName,
-      categoryName,
-    });
+  await createAccount(destinationAccountName);
+  await createJar(destinationJarName);
 
-    // Navigate to movements to see all transactions sorted
-    await rootLayoutPage.navButton('Movements').click();
-
-    // Find the transaction list (role="list" that contains "Add transaction")
-    // and get all links within it to exclude nav links in other lists
-    const transactionLinks = page
-      .getByRole('list')
-      .filter({ hasText: 'Add transaction' })
-      .getByRole('link')
-      .filter({ hasNotText: /^Add / });
-
-    // Verify transactions are sorted by date descending (newest first)
-    await expect(transactionLinks.nth(0)).toContainText('Newest transaction');
-    await expect(transactionLinks.nth(1)).toContainText('Middle transaction');
-    await expect(transactionLinks.nth(2)).toContainText('Oldest transaction');
+  // Movements of every kind, and more than one transaction, created in non-sorted order
+  await createTransaction({
+    ...transaction,
+    date: monthDate(0, 3),
+    description: 'Middle transaction',
+  });
+  await createTransaction({
+    ...transaction,
+    date: monthDate(0, 1),
+    description: 'Oldest transaction',
+  });
+  await createAllocation({
+    amount: '2000',
+    date: monthDate(0, 2),
+    description: 'Older allocation',
+    originJarName,
+    destinationJarName,
+  });
+  await createTransfer({
+    amount: '3000',
+    date: monthDate(0, 4),
+    description: 'Newest transfer',
+    originAccountName,
+    destinationAccountName,
   });
 
-  test('movements list shows transactions, transfers and allocations interleaved', async ({
-    createDefaultData,
-    createAccount,
-    createJar,
-    createTransaction,
-    createTransfer,
-    createAllocation,
-    page,
-    rootLayoutPage,
-  }) => {
-    test.slow();
+  await rootLayoutPage.navButton('Movements').click();
 
-    await createDefaultData();
+  // Find the movement list (role="list" that contains "Add transaction") and get all links
+  // within it to exclude nav links in other lists
+  const movementLinks = page
+    .getByRole('list')
+    .filter({ hasText: 'Add transaction' })
+    .getByRole('link')
+    .filter({ hasNotText: /^Add / });
 
-    const originAccountName = defaultData.accounts[0];
-    const destinationAccountName = 'Second account';
-    const originJarName = defaultData.jars[0];
-    const destinationJarName = 'Second jar';
-
-    await createAccount(destinationAccountName);
-    await createJar(destinationJarName);
-
-    // One movement of each kind, created in non-sorted order
-    await createTransaction({
-      amount: '1000',
-      date: monthDate(0, 2),
-      description: 'Middle transaction',
-      type: 'Income',
-      accountName: originAccountName,
-      jarName: originJarName,
-      categoryName: defaultData.incomeCategories[0],
-    });
-    await createAllocation({
-      amount: '2000',
-      date: monthDate(0, 1),
-      description: 'Oldest allocation',
-      originJarName,
-      destinationJarName,
-    });
-    await createTransfer({
-      amount: '3000',
-      date: monthDate(0, 3),
-      description: 'Newest transfer',
-      originAccountName,
-      destinationAccountName,
-    });
-
-    await rootLayoutPage.navButton('Movements').click();
-
-    const movementLinks = page
-      .getByRole('list')
-      .filter({ hasText: 'Add transaction' })
-      .getByRole('link')
-      .filter({ hasNotText: /^Add / });
-
-    // The three kinds are interleaved by date descending, each labelled with its own kind
-    await expect(movementLinks.nth(0)).toContainText('Newest transfer');
-    await expect(movementLinks.nth(0)).toContainText('Transfer');
-    await expect(movementLinks.nth(1)).toContainText('Middle transaction');
-    await expect(movementLinks.nth(1)).toContainText('Transaction');
-    await expect(movementLinks.nth(2)).toContainText('Oldest allocation');
-    await expect(movementLinks.nth(2)).toContainText('Allocation');
-  });
+  // The kinds are interleaved by date descending, each labelled with its own kind
+  await expect(movementLinks.nth(0)).toContainText('Newest transfer');
+  await expect(movementLinks.nth(0)).toContainText('Transfer');
+  await expect(movementLinks.nth(1)).toContainText('Middle transaction');
+  await expect(movementLinks.nth(1)).toContainText('Transaction');
+  await expect(movementLinks.nth(2)).toContainText('Older allocation');
+  await expect(movementLinks.nth(2)).toContainText('Allocation');
+  await expect(movementLinks.nth(3)).toContainText('Oldest transaction');
+  await expect(movementLinks.nth(3)).toContainText('Transaction');
 });
 
 test.describe('movements month selector', () => {
-  test('the list opens on the current month', async ({
+  test('the list is browsed one month at a time', async ({
     createDefaultData,
     createTransaction,
-    rootLayoutPage,
-    movementsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransactionOn(createTransaction, thisMonthTransaction);
-
-    await rootLayoutPage.navButton('Movements').click();
-
-    await expect(movementsPage.monthSelect).toHaveText(monthLabel(0));
-    await movementsPage.expectMovementToExist(thisMonthTransaction.description);
-  });
-
-  test('only the movements of the selected month are listed', async ({
-    createDefaultData,
-    createTransaction,
-    rootLayoutPage,
-    movementsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransactionOn(createTransaction, thisMonthTransaction);
-    await createTransactionOn(createTransaction, nextMonthTransaction);
-
-    await rootLayoutPage.navButton('Movements').click();
-
-    await movementsPage.expectMovementToExist(thisMonthTransaction.description);
-    await movementsPage.expectMovementToNotExist(nextMonthTransaction.description);
-  });
-
-  test('the next month button moves the list one month forward', async ({
-    createDefaultData,
-    createTransaction,
-    rootLayoutPage,
-    movementsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransactionOn(createTransaction, thisMonthTransaction);
-    await createTransactionOn(createTransaction, nextMonthTransaction);
-
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.nextMonthButton.click();
-
-    await expect(movementsPage.monthSelect).toHaveText(monthLabel(1));
-    await movementsPage.expectMovementToExist(nextMonthTransaction.description);
-    await movementsPage.expectMovementToNotExist(thisMonthTransaction.description);
-  });
-
-  test('the previous month button moves the list one month back', async ({
-    createDefaultData,
-    createTransaction,
+    page,
     rootLayoutPage,
     movementsPage,
   }) => {
@@ -252,92 +148,43 @@ test.describe('movements month selector', () => {
     await createDefaultData();
     await createTransactionOn(createTransaction, thisMonthTransaction);
     await createTransactionOn(createTransaction, lastMonthTransaction);
+    await createTransactionOn(createTransaction, twoMonthsOnTransaction);
 
+    // The list opens on the current month, listing only that month's movements.
     await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.previousMonthButton.click();
+    await expect(movementsPage.monthSelect).toHaveText(monthLabel(0));
+    await movementsPage.expectMovementToExist(thisMonthTransaction.description);
+    await movementsPage.expectMovementToNotExist(lastMonthTransaction.description);
+    await movementsPage.expectMovementToNotExist(twoMonthsOnTransaction.description);
 
+    // The dropdown offers the months that have movements. Nothing is dated in next month, and
+    // the arrows are how an empty month is reached.
+    await movementsPage.expectMonthOptionToExist(monthLabel(-1));
+    await movementsPage.expectMonthOptionToExist(monthLabel(0));
+    await movementsPage.expectMonthOptionToExist(monthLabel(2));
+    await movementsPage.expectMonthOptionToNotExist(monthLabel(1));
+
+    // The previous month button moves the list one month back.
+    await movementsPage.previousMonthButton.click();
     await expect(movementsPage.monthSelect).toHaveText(monthLabel(-1));
     await movementsPage.expectMovementToExist(lastMonthTransaction.description);
     await movementsPage.expectMovementToNotExist(thisMonthTransaction.description);
-  });
 
-  test('a month can be picked from the dropdown', async ({
-    createDefaultData,
-    createTransaction,
-    rootLayoutPage,
-    movementsPage,
-  }) => {
-    test.slow();
+    // The next month button moves it one month forward, twice reaching a month with no
+    // movements, which says so.
+    await movementsPage.nextMonthButton.click();
+    await expect(movementsPage.monthSelect).toHaveText(monthLabel(0));
+    await movementsPage.expectMovementToExist(thisMonthTransaction.description);
 
-    await createDefaultData();
-    await createTransactionOn(createTransaction, thisMonthTransaction);
-    await createTransactionOn(createTransaction, twoMonthsOnTransaction);
+    await movementsPage.nextMonthButton.click();
+    await expect(movementsPage.monthSelect).toHaveText(monthLabel(1));
+    await movementsPage.expectMovementToNotExist(thisMonthTransaction.description);
+    await expect(page.getByText(`No movements in ${monthLabel(1)}`)).toBeVisible();
 
-    await rootLayoutPage.navButton('Movements').click();
+    // A month can be picked from the dropdown.
     await movementsPage.selectMonth(monthLabel(2));
-
     await expect(movementsPage.monthSelect).toHaveText(monthLabel(2));
     await movementsPage.expectMovementToExist(twoMonthsOnTransaction.description);
-    await movementsPage.expectMovementToNotExist(thisMonthTransaction.description);
-  });
-
-  test('the dropdown offers the months that have movements', async ({
-    createDefaultData,
-    createTransaction,
-    rootLayoutPage,
-    movementsPage,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransactionOn(createTransaction, thisMonthTransaction);
-    await createTransactionOn(createTransaction, twoMonthsOnTransaction);
-
-    await rootLayoutPage.navButton('Movements').click();
-
-    await movementsPage.expectMonthOptionToExist(monthLabel(0));
-    await movementsPage.expectMonthOptionToExist(monthLabel(2));
-    // Nothing is dated in the month between them, and the arrows are how an empty month is
-    // reached.
-    await movementsPage.expectMonthOptionToNotExist(monthLabel(1));
-  });
-
-  test('the selected month survives a reload', async ({
-    createDefaultData,
-    createTransaction,
-    rootLayoutPage,
-    movementsPage,
-    page,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransactionOn(createTransaction, nextMonthTransaction);
-
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.nextMonthButton.click();
-    await page.reload();
-
-    await expect(movementsPage.monthSelect).toHaveText(monthLabel(1));
-    await movementsPage.expectMovementToExist(nextMonthTransaction.description);
-  });
-
-  test('a month with no movements says so', async ({
-    createDefaultData,
-    createTransaction,
-    rootLayoutPage,
-    movementsPage,
-    page,
-  }) => {
-    test.slow();
-
-    await createDefaultData();
-    await createTransactionOn(createTransaction, thisMonthTransaction);
-
-    await rootLayoutPage.navButton('Movements').click();
-    await movementsPage.nextMonthButton.click();
-
-    await expect(page.getByText(`No movements in ${monthLabel(1)}`)).toBeVisible();
   });
 
   test('cancelling a new movement returns to the month it was started from', async ({

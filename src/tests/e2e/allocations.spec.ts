@@ -6,11 +6,12 @@ import { runInOrder } from 'src/lib/utils';
 // and can be asserted as literals rather than recomputed from app code.
 test.use({ locale: 'en-US', timezoneId: 'UTC' });
 
-test('can create an allocation', async ({
+test('can create an allocation, focus flowing from one field to the next', async ({
   createJar,
   rootLayoutPage,
   movementsPage,
   allocationFormPage,
+  page,
 }) => {
   test.slow();
   const originName = 'Holidays';
@@ -25,11 +26,24 @@ test('can create an allocation', async ({
   await rootLayoutPage.navButton('Movements').click();
   await movementsPage.createAllocationButton.click();
 
+  // The origin jar selector opens on its own
+  await expect(page.getByRole('option', { name: originName, exact: true })).toBeVisible();
+  await page.getByRole('option', { name: originName, exact: true }).click();
+
+  // Picking the origin jar opens the destination jar selector
+  await expect(page.getByRole('option', { name: destinationName, exact: true })).toBeVisible();
+  await page.getByRole('option', { name: destinationName, exact: true }).click();
+
+  // Picking the destination jar moves focus to the amount field
+  await expect(allocationFormPage.amountInput).toBeFocused();
+  await allocationFormPage.amountInput.fill(amount);
+
+  // Enter on the amount field moves focus to the description field
+  await allocationFormPage.amountInput.press('Enter');
+  await expect(allocationFormPage.descriptionInput).toBeFocused();
+  await allocationFormPage.descriptionInput.fill(description);
+
   await allocationFormPage.fillDate(date);
-  await allocationFormPage.selectOriginJar(originName);
-  await allocationFormPage.selectDestinationJar(destinationName);
-  await allocationFormPage.fillAmount(amount);
-  await allocationFormPage.fillDescription(description);
   await allocationFormPage.submitButton.click();
 
   // Wait for the movements page to load
@@ -221,39 +235,6 @@ test('can delete an allocation', async ({
   // Verify the allocation no longer exists on the movements page
   await expect(movementsPage.createAllocationButton).toBeVisible();
   await expect(movementsPage.getMovement(description)).toBeHidden();
-});
-
-test('focus flows from one field to the next as a new allocation is filled in', async ({
-  createJar,
-  rootLayoutPage,
-  movementsPage,
-  allocationFormPage,
-  page,
-}) => {
-  const originName = 'Focus flow origin';
-  const destinationName = 'Focus flow destination';
-
-  await createJar(originName);
-  await createJar(destinationName);
-
-  await rootLayoutPage.navButton('Movements').click();
-  await movementsPage.createAllocationButton.click();
-
-  // The origin jar selector opens on its own
-  await expect(page.getByRole('option', { name: originName, exact: true })).toBeVisible();
-  await page.getByRole('option', { name: originName, exact: true }).click();
-
-  // Picking the origin jar opens the destination jar selector
-  await expect(page.getByRole('option', { name: destinationName, exact: true })).toBeVisible();
-  await page.getByRole('option', { name: destinationName, exact: true }).click();
-
-  // Picking the destination jar moves focus to the amount field
-  await expect(allocationFormPage.amountInput).toBeFocused();
-  await allocationFormPage.amountInput.fill('1000');
-
-  // Enter on the amount field moves focus to the description field
-  await allocationFormPage.amountInput.press('Enter');
-  await expect(allocationFormPage.descriptionInput).toBeFocused();
 });
 
 test('after editing an allocation, it automatically restores archived jars if their balance is no longer zero', async ({

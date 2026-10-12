@@ -15,25 +15,6 @@ test('can create a subcategory', async ({ categoriesPage, categoryFormPage, crea
   await categoriesPage.expectRowsInOrder('Expense', ['Groceries', 'Fruit']);
 });
 
-test('a subcategory is listed under its parent', async ({
-  categoriesPage,
-  createCategory,
-  createSubcategory,
-}) => {
-  test.slow();
-  await createCategory('Expense', 'Groceries');
-  await createCategory('Expense', 'Transport');
-  await createCategory('Income', 'Salary');
-  await createSubcategory('Expense', 'Groceries', 'Fruit');
-
-  // Only under its own category, and only in the kind that category lives in.
-  await categoriesPage.expensesTabButton.click();
-  await categoriesPage.expectRowsInOrder('Expense', ['Groceries', 'Fruit', 'Transport']);
-
-  await categoriesPage.incomeTabButton.click();
-  await categoriesPage.expectSubcategoryToNotExist('Fruit');
-});
-
 test('can edit a subcategory', async ({
   categoriesPage,
   categoryFormPage,
@@ -74,7 +55,7 @@ test('can delete a subcategory', async ({
   await categoriesPage.expectCategoryToExist('Groceries');
 });
 
-test('subcategories are listed alphabetically within their category', async ({
+test('subcategories are listed under their parent, alphabetically', async ({
   categoriesPage,
   createCategory,
   createSubcategory,
@@ -83,11 +64,13 @@ test('subcategories are listed alphabetically within their category', async ({
   // Created out of alphabetical order, so the order shown cannot be the creation order.
   await createCategory('Expense', 'Transport');
   await createCategory('Expense', 'Groceries');
+  await createCategory('Income', 'Salary');
   await createSubcategory('Expense', 'Groceries', 'Meat');
   await createSubcategory('Expense', 'Groceries', 'Bread');
   await createSubcategory('Expense', 'Transport', 'Taxi');
   await createSubcategory('Expense', 'Transport', 'Bus');
 
+  // Only under its own category, and only in the kind that category lives in.
   await categoriesPage.expensesTabButton.click();
   await categoriesPage.expectRowsInOrder('Expense', [
     'Groceries',
@@ -97,6 +80,9 @@ test('subcategories are listed alphabetically within their category', async ({
     'Bus',
     'Taxi',
   ]);
+
+  await categoriesPage.incomeTabButton.click();
+  await categoriesPage.expectRowsInOrder('Income', ['Salary']);
 });
 
 test('deleting a category takes its subcategories with it', async ({
