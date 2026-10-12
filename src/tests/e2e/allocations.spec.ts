@@ -64,7 +64,6 @@ test('allocation form defaults, jar options and validation', async ({
   allocationFormPage,
   page,
 }) => {
-  test.slow();
   const originName = 'Origin jar name';
   const destinationName = 'Destination jar name';
   const archivedName = 'Archived jar';
@@ -142,7 +141,6 @@ test('can edit an allocation', async ({
   allocationFormPage,
   page,
 }) => {
-  test.slow();
   // Initial data
   const initialOriginName = 'Initial origin jar';
   const initialDestinationName = 'Initial destination jar';

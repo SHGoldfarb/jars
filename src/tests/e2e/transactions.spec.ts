@@ -75,7 +75,6 @@ test('can edit transaction, the form opening on its current values', async ({
   transactionFormPage,
   page,
 }) => {
-  test.slow();
   // Initial data. Named so none of it is the first option of its selector, so the test
   // genuinely checks the form loaded the transaction values, not just default selections
   const initialAccountName = 'Premium account';
@@ -313,7 +312,6 @@ test.describe('transaction form', () => {
     accountsPage,
     jarsPage,
   }) => {
-    test.slow();
     const accountName = 'Archived checking account';
     const jarName = 'Archived vacation fund';
     const categoryName = 'Old freelance income';
@@ -379,6 +377,7 @@ test.describe('transaction form', () => {
       movementsPage,
       transactionFormPage,
     }) => {
+      test.slow();
       await seedData({
         ...defaultData,
         expenseCategories: [...defaultData.expenseCategories, 'Transport', 'Rent'],

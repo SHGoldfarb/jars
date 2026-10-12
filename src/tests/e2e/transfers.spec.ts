@@ -62,6 +62,7 @@ test('transfer form defaults, account options and validation', async ({
   transferFormPage,
   page,
 }) => {
+  test.slow();
   const originName = 'Origin acc';
   const destinationName = 'Destination acc';
   const archivedName = 'Archived account';
@@ -129,7 +130,6 @@ test('can edit a transfer', async ({
   transferFormPage,
   page,
 }) => {
-  test.slow();
   // Initial data
   const initialOriginName = 'Initial origin';
   const initialDestinationName = 'Initial destination';

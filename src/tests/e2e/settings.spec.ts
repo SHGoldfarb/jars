@@ -105,8 +105,6 @@ test.describe('create backup', () => {
     settingsPage,
     movementsPage,
   }) => {
-    test.slow();
-
     await seedData({
       ...defaultData,
       subcategories: [{ categoryName: defaultData.expenseCategories[0], name: 'Fruit' }],
@@ -229,8 +227,6 @@ test.describe('load from backup', () => {
     accountsPage,
     jarsPage,
   }) => {
-    test.slow();
-
     const secondAccountName = 'Savings';
     const secondJarName = 'Holidays';
 
@@ -292,8 +288,6 @@ test.describe('load from backup', () => {
     settingsPage,
     movementsPage,
   }) => {
-    test.slow();
-
     await seedData({ ...defaultData, transactions: [{ description: 'In the backup' }] });
 
     await rootLayoutPage.navButton('Settings').click();
@@ -537,8 +531,6 @@ test.describe('export to CSV', () => {
     rootLayoutPage,
     settingsPage,
   }) => {
-    test.slow();
-
     const unusedJarName = 'Unused jar';
     const unusedCategoryName = 'Unused category';
 
@@ -638,8 +630,6 @@ test.describe('clear all data', () => {
   }) => {
     const secondAccountName = 'Savings';
     const secondJarName = 'Holidays';
-
-    test.slow();
 
     await seedData({
       ...defaultData,

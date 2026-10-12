@@ -37,8 +37,6 @@ test('a Money Manager export becomes jars, categories and movements under one Ca
   categoriesPage,
   movementsPage,
 }) => {
-  test.slow();
-
   await rootLayoutPage.navButton('Settings').click();
   await expect(settingsPage.actionOption(ACTION, ARCHIVE_EMPTY_JARS)).toBeChecked();
   await importSample(settingsPage);
@@ -111,8 +109,6 @@ test('jars with zero balance are kept when the option is turned off', async ({
   settingsPage,
   jarsPage,
 }) => {
-  test.slow();
-
   await rootLayoutPage.navButton('Settings').click();
   await settingsPage.actionOption(ACTION, ARCHIVE_EMPTY_JARS).uncheck();
   await importSample(settingsPage);
@@ -128,8 +124,6 @@ test('the import is confirmed, then replaces the current data without a manual r
   movementsPage,
   accountsPage,
 }) => {
-  test.slow();
-
   await seedData({ ...defaultData, transactions: [{ description: 'Created before the import' }] });
 
   // Cancelling the confirmation writes nothing.
@@ -168,8 +162,6 @@ test('a file that is not a spreadsheet is rejected and changes nothing', async (
   settingsPage,
   movementsPage,
 }) => {
-  test.slow();
-
   await seedData({ ...defaultData, transactions: [{ description: 'Survives the rejected file' }] });
 
   await rootLayoutPage.navButton('Settings').click();

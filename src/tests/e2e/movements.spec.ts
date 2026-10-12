@@ -109,8 +109,6 @@ test.describe('movements month selector', () => {
     rootLayoutPage,
     movementsPage,
   }) => {
-    test.slow();
-
     await seedData({
       ...defaultData,
       transactions: [thisMonthTransaction, lastMonthTransaction, twoMonthsOnTransaction],
