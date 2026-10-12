@@ -95,14 +95,12 @@ test('transfer form defaults, account options and validation', async ({
   await transferFormPage.expectOptionToNotExist('Origin account', destinationName);
   await transferFormPage.expectOptionToExist('Origin account', originName);
 
-  // The amount must be a number, and it must not be negative
+  // The amount only takes digits, so letters and a minus sign never reach it
   await transferFormPage.fillAmount('asdf');
-  await transferFormPage.submitButton.click();
-  await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
+  await expect(transferFormPage.amountInput).toHaveValue('');
 
   await transferFormPage.fillAmount('-1');
-  await transferFormPage.submitButton.click();
-  await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
+  await expect(transferFormPage.amountInput).toHaveValue('$1');
 
   // Zero is accepted, so the form submits and the transfer shows up on the movements page
   await transferFormPage.fillAmount('0');
@@ -159,7 +157,7 @@ test('can edit a transfer', async ({
   await expect(transferFormPage.dateInput).toHaveValue(initialDate);
   await expect(transferFormPage.originAccountSelect).toContainText(initialOriginName);
   await expect(transferFormPage.destinationAccountSelect).toContainText(initialDestinationName);
-  await expect(transferFormPage.amountInput).toHaveValue(initialAmount);
+  await expect(transferFormPage.amountInput).toHaveValue('$150.000');
   await expect(transferFormPage.descriptionInput).toHaveValue(initialDescription);
 
   // Change every field of the transfer

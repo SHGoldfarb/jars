@@ -25,6 +25,14 @@ interface FormFieldDate<TValues> {
   label: string;
 }
 
+// How a text input shows a value other than the one the form holds. The form keeps the raw value
+// - what its schema parses - and the input shows `format` of it; whatever the user types goes
+// back through `parse` before it reaches the form.
+interface FormFieldMask {
+  format: (value: string) => string;
+  parse: (input: string) => string;
+}
+
 interface FormFieldText<TValues> {
   kind: 'text';
   name: FormFieldName<TValues>;
@@ -32,6 +40,7 @@ interface FormFieldText<TValues> {
   placeholder?: string;
   inputMode?: 'decimal';
   required?: boolean;
+  mask?: FormFieldMask;
 }
 
 interface FormFieldSelect<TValues> {
@@ -174,4 +183,11 @@ export const formSpec = {
   nextTextField,
 };
 
-export type { FormFieldOption, FormFieldReader, FormFieldSpec, FormValues, StringValued };
+export type {
+  FormFieldMask,
+  FormFieldOption,
+  FormFieldReader,
+  FormFieldSpec,
+  FormValues,
+  StringValued,
+};

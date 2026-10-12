@@ -132,7 +132,8 @@ test.describe('create backup', () => {
     await createDefaultData();
     await createSubcategory('Expense', defaultData.expenseCategories[0], 'Fruit');
     await createTransaction({
-      amount: '1234.56',
+      // Typed as a Chilean amount: the comma is the decimal separator.
+      amount: '1234,56',
       date: '2026-02-10T09:00',
       description: 'Backed up transaction',
       type: 'Expense',
@@ -591,7 +592,8 @@ test.describe('export to CSV', () => {
       destinationAccountName: secondAccountName,
     });
     await createAllocation({
-      amount: '3000.50',
+      // Typed as a Chilean amount: the comma is the decimal separator.
+      amount: '3000,50',
       date: '2026-02-12T11:45',
       description: 'Exported allocation',
       originJarName: defaultData.jars[0],
@@ -665,7 +667,8 @@ test.describe('export to CSV', () => {
 
     await createDefaultData();
     await createTransaction({
-      amount: '1234.56',
+      // Typed as a Chilean amount: the comma is the decimal separator.
+      amount: '1234,56',
       date: '2026-02-10T09:00',
       description: 'Exported transaction',
       type: 'Expense',

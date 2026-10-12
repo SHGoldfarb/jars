@@ -4,6 +4,7 @@ import { useTransactionFormCategories } from 'src/hooks/useTransactionFormCatego
 import { useTransactionFormJars } from 'src/hooks/useTransactionFormJars';
 import { useTransactionFormSubcategories } from 'src/hooks/useTransactionFormSubcategories';
 import type { FormFieldOption, FormFieldSpec } from 'src/lib/formSpec';
+import { clpInputMask } from 'src/presentation/formatters/currencyInputMask';
 import { transactionForm, type TransactionFormValues } from 'src/services/transaction-form';
 
 const toOptions = (entities: { id: string; name: string }[]): FormFieldOption[] =>
@@ -73,7 +74,14 @@ export const useTransactionFormSpec = () => {
       placeholder: 'Select jar',
       options: toOptions(jars),
     },
-    { kind: 'text', name: 'amount', label: 'Amount', placeholder: '10000', inputMode: 'decimal' },
+    {
+      kind: 'text',
+      name: 'amount',
+      label: 'Amount',
+      placeholder: clpInputMask.format('10000'),
+      inputMode: 'decimal',
+      mask: clpInputMask,
+    },
     { kind: 'text', name: 'description', label: 'Description' },
   ];
 

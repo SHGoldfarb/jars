@@ -1,5 +1,6 @@
 import { useMovementFormEndpoints } from 'src/hooks/useMovementFormEndpoints';
 import type { FormFieldSpec } from 'src/lib/formSpec';
+import { clpInputMask } from 'src/presentation/formatters/currencyInputMask';
 import type { MovementFormUi, MovementFormValues } from 'src/services/movement-form';
 
 // The form's whole shape: the ordered fields - which the generic form also derives its focus
@@ -34,7 +35,14 @@ export const useMovementFormSpec = (
       placeholder: `Select destination ${noun}`,
       options: (read) => endpointOptions(read('originId')),
     },
-    { kind: 'text', name: 'amount', label: 'Amount', placeholder: '10000', inputMode: 'decimal' },
+    {
+      kind: 'text',
+      name: 'amount',
+      label: 'Amount',
+      placeholder: clpInputMask.format('10000'),
+      inputMode: 'decimal',
+      mask: clpInputMask,
+    },
     { kind: 'text', name: 'description', label: 'Description' },
   ];
 

@@ -96,14 +96,12 @@ test('allocation form defaults, jar options and validation', async ({
   await allocationFormPage.expectOptionToNotExist('Origin jar', destinationName);
   await allocationFormPage.expectOptionToExist('Origin jar', originName);
 
-  // The amount must be a number, and it must not be negative
+  // The amount only takes digits, so letters and a minus sign never reach it
   await allocationFormPage.fillAmount('asdf');
-  await allocationFormPage.submitButton.click();
-  await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
+  await expect(allocationFormPage.amountInput).toHaveValue('');
 
   await allocationFormPage.fillAmount('-1');
-  await allocationFormPage.submitButton.click();
-  await expect(page.getByText('Amount must be a non-negative number')).toBeVisible();
+  await expect(allocationFormPage.amountInput).toHaveValue('$1');
 
   // Zero is accepted, so the form submits and the allocation shows up on the movements page
   await allocationFormPage.fillAmount('0');
@@ -171,7 +169,7 @@ test('can edit an allocation', async ({
   await expect(allocationFormPage.dateInput).toHaveValue(initialDate);
   await expect(allocationFormPage.originJarSelect).toContainText(initialOriginName);
   await expect(allocationFormPage.destinationJarSelect).toContainText(initialDestinationName);
-  await expect(allocationFormPage.amountInput).toHaveValue(initialAmount);
+  await expect(allocationFormPage.amountInput).toHaveValue('$150.000');
   await expect(allocationFormPage.descriptionInput).toHaveValue(initialDescription);
 
   // Change every field of the allocation
