@@ -40,7 +40,7 @@ test('can create an allocation', async ({
   const allocationLink = movementsPage.getMovement(description);
   await expect(allocationLink).toBeVisible();
   await expect(allocationLink.getByText(`${originName} → ${destinationName}`)).toBeVisible();
-  await expect(allocationLink.getByText('$150.000')).toBeVisible();
+  await expect(allocationLink.getByText('$150,000')).toBeVisible();
   await expect(allocationLink.getByText('5/20/2026, 3:20:00 PM')).toBeVisible();
 });
 
@@ -169,7 +169,7 @@ test('can edit an allocation', async ({
   await expect(allocationFormPage.dateInput).toHaveValue(initialDate);
   await expect(allocationFormPage.originJarSelect).toContainText(initialOriginName);
   await expect(allocationFormPage.destinationJarSelect).toContainText(initialDestinationName);
-  await expect(allocationFormPage.amountInput).toHaveValue('$150.000');
+  await expect(allocationFormPage.amountInput).toHaveValue('$150,000');
   await expect(allocationFormPage.descriptionInput).toHaveValue(initialDescription);
 
   // Change every field of the allocation
@@ -186,7 +186,7 @@ test('can edit an allocation', async ({
   const allocationLink = movementsPage.getMovement(newDescription);
   await expect(allocationLink).toBeVisible();
   await expect(allocationLink.getByText(`${newOriginName} → ${newDestinationName}`)).toBeVisible();
-  await expect(allocationLink.getByText('$275.000')).toBeVisible();
+  await expect(allocationLink.getByText('$275,000')).toBeVisible();
   await expect(allocationLink.getByText('7/11/2026, 8:45:00 AM')).toBeVisible();
   await expect(page.getByText(initialDescription)).toBeHidden();
 });

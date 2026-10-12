@@ -40,7 +40,7 @@ test('can create a transfer', async ({
   // hardcoded inputs above (amount '150000' -> CLP, date '2026-05-20T15:20' -> UTC).
   await expect(page.getByText(description)).toBeVisible();
   await expect(page.getByText(`${originName} → ${destinationName}`)).toBeVisible();
-  await expect(page.getByText('$150.000')).toBeVisible();
+  await expect(page.getByText('$150,000')).toBeVisible();
   await expect(page.getByText('5/20/2026, 3:20:00 PM')).toBeVisible();
 });
 
@@ -157,7 +157,7 @@ test('can edit a transfer', async ({
   await expect(transferFormPage.dateInput).toHaveValue(initialDate);
   await expect(transferFormPage.originAccountSelect).toContainText(initialOriginName);
   await expect(transferFormPage.destinationAccountSelect).toContainText(initialDestinationName);
-  await expect(transferFormPage.amountInput).toHaveValue('$150.000');
+  await expect(transferFormPage.amountInput).toHaveValue('$150,000');
   await expect(transferFormPage.descriptionInput).toHaveValue(initialDescription);
 
   // Change every field of the transfer
@@ -174,7 +174,7 @@ test('can edit a transfer', async ({
   const transferLink = movementsPage.getMovement(newDescription);
   await expect(transferLink).toBeVisible();
   await expect(transferLink.getByText(`${newOriginName} → ${newDestinationName}`)).toBeVisible();
-  await expect(transferLink.getByText('$275.000')).toBeVisible();
+  await expect(transferLink.getByText('$275,000')).toBeVisible();
   await expect(transferLink.getByText('7/11/2026, 8:45:00 AM')).toBeVisible();
   await expect(page.getByText(initialDescription)).toBeHidden();
 });

@@ -186,8 +186,8 @@ test('allocations move balance between jars', async ({
   await rootLayoutPage.navButton('Jars').click();
 
   // Expected balances are hardcoded for the hardcoded amounts above (10000 - 4000, 0 + 4000)
-  await expect(jarsPage.getJar(originJarName)).toContainText('$6.000');
-  await expect(jarsPage.getJar(destinationJarName)).toContainText('$4.000');
+  await expect(jarsPage.getJar(originJarName)).toContainText('$6,000');
+  await expect(jarsPage.getJar(destinationJarName)).toContainText('$4,000');
 });
 
 test('delete button is disabled for a jar whose balance comes from an allocation', async ({

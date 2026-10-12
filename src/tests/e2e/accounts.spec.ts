@@ -163,7 +163,7 @@ test('accounts show balance', async ({
 
   // Expected string is hardcoded for the hardcoded amounts above:
   // 10000 income - 3000 expense - 5000 transferred out + 2000 transferred in -> CLP.
-  await expect(accountsPage.getAccount(accountName)).toContainText('$4.000');
+  await expect(accountsPage.getAccount(accountName)).toContainText('$4,000');
 });
 
 test('delete button is disabled for accounts with non zero balance', async ({

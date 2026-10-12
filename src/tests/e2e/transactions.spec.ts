@@ -266,20 +266,20 @@ test.describe('transaction form', () => {
     await page.keyboard.press('Escape');
     await transactionFormPage.amountInput.click();
     await transactionFormPage.amountInput.pressSequentially('1234567');
-    await expect(transactionFormPage.amountInput).toHaveValue('$1.234.567');
+    await expect(transactionFormPage.amountInput).toHaveValue('$1,234,567');
 
-    // A comma starts the decimals.
-    await transactionFormPage.amountInput.pressSequentially(',5');
-    await expect(transactionFormPage.amountInput).toHaveValue('$1.234.567,5');
+    // A point starts the decimals.
+    await transactionFormPage.amountInput.pressSequentially('.5');
+    await expect(transactionFormPage.amountInput).toHaveValue('$1,234,567.5');
 
     // A digit typed in the middle lands where the caret is, and the caret stays right after it
     // even though the group separators move around it. Ten steps back from the end of
-    // "$1.234.567,5" puts the caret right after the "1".
+    // "$1,234,567.5" puts the caret right after the "1".
     for (let step = 0; step < 10; step++) {
       await transactionFormPage.amountInput.press('ArrowLeft');
     }
     await transactionFormPage.amountInput.pressSequentially('89');
-    await expect(transactionFormPage.amountInput).toHaveValue('$189.234.567,5');
+    await expect(transactionFormPage.amountInput).toHaveValue('$189,234,567.5');
   });
 
   test('accepts a zero amount', async ({
@@ -349,7 +349,7 @@ test.describe('transaction form', () => {
     await movementsPage.getMovement(description).click();
 
     // Verify each field has the transaction's values loaded
-    await expect(transactionFormPage.amountInput).toHaveValue('$750.000');
+    await expect(transactionFormPage.amountInput).toHaveValue('$750,000');
     await expect(transactionFormPage.dateInput).toHaveValue(date);
     await expect(transactionFormPage.descriptionInput).toHaveValue(description);
     await expect(page.getByRole('combobox', { name: 'Type' })).toContainText('Income');

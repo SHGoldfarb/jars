@@ -132,8 +132,8 @@ test.describe('create backup', () => {
     await createDefaultData();
     await createSubcategory('Expense', defaultData.expenseCategories[0], 'Fruit');
     await createTransaction({
-      // Typed as a Chilean amount: the comma is the decimal separator.
-      amount: '1234,56',
+      // Typed as an English amount: the point is the decimal separator.
+      amount: '1234.56',
       date: '2026-02-10T09:00',
       description: 'Backed up transaction',
       type: 'Expense',
@@ -306,13 +306,13 @@ test.describe('load from backup', () => {
     // Expected strings are hardcoded for the hardcoded amounts above:
     // 10000 income - 5000 transferred out, and the 5000 that arrived in the second account.
     await rootLayoutPage.navButton('Accounts').click();
-    await expect(accountsPage.getAccount(defaultData.accounts[0])).toContainText('$5.000');
-    await expect(accountsPage.getAccount(secondAccountName)).toContainText('$5.000');
+    await expect(accountsPage.getAccount(defaultData.accounts[0])).toContainText('$5,000');
+    await expect(accountsPage.getAccount(secondAccountName)).toContainText('$5,000');
 
     // 10000 income - 2000 allocated away, and the 2000 that arrived in the second jar.
     await rootLayoutPage.navButton('Jars').click();
-    await expect(jarsPage.getJar(defaultData.jars[0])).toContainText('$8.000');
-    await expect(jarsPage.getJar(secondJarName)).toContainText('$2.000');
+    await expect(jarsPage.getJar(defaultData.jars[0])).toContainText('$8,000');
+    await expect(jarsPage.getJar(secondJarName)).toContainText('$2,000');
   });
 
   test('restoring replaces the current data rather than merging into it', async ({
@@ -592,8 +592,8 @@ test.describe('export to CSV', () => {
       destinationAccountName: secondAccountName,
     });
     await createAllocation({
-      // Typed as a Chilean amount: the comma is the decimal separator.
-      amount: '3000,50',
+      // Typed as an English amount: the point is the decimal separator.
+      amount: '3000.50',
       date: '2026-02-12T11:45',
       description: 'Exported allocation',
       originJarName: defaultData.jars[0],
@@ -667,8 +667,8 @@ test.describe('export to CSV', () => {
 
     await createDefaultData();
     await createTransaction({
-      // Typed as a Chilean amount: the comma is the decimal separator.
-      amount: '1234,56',
+      // Typed as an English amount: the point is the decimal separator.
+      amount: '1234.56',
       date: '2026-02-10T09:00',
       description: 'Exported transaction',
       type: 'Expense',

@@ -69,7 +69,7 @@ test('a Money Manager export becomes jars, categories and movements under one Ca
   const income = movementsPage.getMovement('Monthly salary');
   await expect(income).toContainText(`${CASH_ACCOUNT} · Wallet`);
   await expect(income).toContainText('Salary');
-  await expect(income).toContainText('$10.000');
+  await expect(income).toContainText('$10,000');
   await expect(income).toContainText('2/10/2026, 9:00:00 AM');
 
   // The snacks cost 0.53 USD and the file converts that to 500 CLP: the converted amount is the
@@ -141,7 +141,7 @@ test('transfer rows become a single allocation and no transfers', async ({
   const allocation = movementsPage.getMovement('Holiday saving');
   await expect(allocation).toHaveCount(1);
   await expect(allocation).toContainText('Wallet → Holidays');
-  await expect(allocation).toContainText('$3.000');
+  await expect(allocation).toContainText('$3,000');
   await expect(allocation).toContainText('2/12/2026, 11:45:00 AM');
 
   // Every movement lives in the one account, so nothing moved between accounts.
@@ -163,12 +163,12 @@ test('the imported account and jars show balances consistent with the movements'
   // Hardcoded from the rows above: 10000 in, 2500 and 500 out, and allocations move nothing
   // between accounts.
   await rootLayoutPage.navButton('Accounts').click();
-  await expect(accountsPage.getAccount(CASH_ACCOUNT)).toContainText('$7.000');
+  await expect(accountsPage.getAccount(CASH_ACCOUNT)).toContainText('$7,000');
 
   // Wallet: 10000 in, 2500 out, 3000 allocated away. Holidays: 3000 in, 500 out.
   await rootLayoutPage.navButton('Jars').click();
-  await expect(jarsPage.getJar('Wallet')).toContainText('$4.500');
-  await expect(jarsPage.getJar('Holidays')).toContainText('$2.500');
+  await expect(jarsPage.getJar('Wallet')).toContainText('$4,500');
+  await expect(jarsPage.getJar('Holidays')).toContainText('$2,500');
 });
 
 test('the import replaces the current data rather than merging into it', async ({
