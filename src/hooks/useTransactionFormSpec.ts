@@ -1,6 +1,7 @@
 import { useTransactionEditCurrentTransaction } from 'src/hooks/useTransactionEditCurrentTransaction';
 import { useTransactionFormAccounts } from 'src/hooks/useTransactionFormAccounts';
 import { useTransactionFormCategories } from 'src/hooks/useTransactionFormCategories';
+import { useTransactionFormDescriptions } from 'src/hooks/useTransactionFormDescriptions';
 import { useTransactionFormJars } from 'src/hooks/useTransactionFormJars';
 import { useTransactionFormSubcategories } from 'src/hooks/useTransactionFormSubcategories';
 import type { FormFieldOption, FormFieldSpec } from 'src/lib/formSpec';
@@ -21,6 +22,7 @@ export const useTransactionFormSpec = () => {
   const incomeCategories = useTransactionFormCategories('income', transaction?.id);
   const expenseCategories = useTransactionFormCategories('expense', transaction?.id);
   const subcategoriesByCategoryId = useTransactionFormSubcategories(transaction?.id);
+  const descriptions = useTransactionFormDescriptions();
 
   const fields: FormFieldSpec<TransactionFormValues>[] = [
     { kind: 'date', name: 'date', label: 'Date' },
@@ -82,7 +84,7 @@ export const useTransactionFormSpec = () => {
       inputMode: 'decimal',
       mask: clpInputMask,
     },
-    { kind: 'text', name: 'description', label: 'Description' },
+    { kind: 'text', name: 'description', label: 'Description', suggestions: descriptions },
   ];
 
   return {

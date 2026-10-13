@@ -160,6 +160,7 @@ test('can edit an allocation', async ({
 
   await seedData({
     jars: [initialOriginName, initialDestinationName, newOriginName, newDestinationName],
+    accounts: ['Wallet', 'Bank'],
     allocations: [
       {
         amount: initialAmount,
@@ -167,6 +168,26 @@ test('can edit an allocation', async ({
         description: initialDescription,
         originJarName: initialOriginName,
         destinationJarName: initialDestinationName,
+      },
+      // Only here for the description suggestions, so dated in a month the list does not open on.
+      ...[
+        { description: 'Top up', date: '2026-03-01T10:00' },
+        { description: 'Rebalance', date: '2026-03-05T10:00' },
+        { description: 'Top up', date: '2026-03-09T10:00' },
+        { description: '', date: '2026-03-10T10:00' },
+        { description: 'Deleted allocation', date: '2026-03-11T10:00', archived: true },
+      ].map((allocation) => ({
+        ...allocation,
+        originJarName: initialOriginName,
+        destinationJarName: initialDestinationName,
+      })),
+    ],
+    transfers: [
+      {
+        description: 'Savings move',
+        date: '2026-03-12T10:00',
+        originAccountName: 'Wallet',
+        destinationAccountName: 'Bank',
       },
     ],
   });
@@ -181,6 +202,14 @@ test('can edit an allocation', async ({
   await expect(allocationFormPage.destinationJarSelect).toContainText(initialDestinationName);
   await expect(allocationFormPage.amountInput).toHaveValue('$150,000');
   await expect(allocationFormPage.descriptionInput).toHaveValue(initialDescription);
+
+  // The description field suggests every allocation description once, the latest first. Deleted
+  // allocations, blank descriptions and other movements' descriptions are not among them.
+  await allocationFormPage.expectDescriptionSuggestions([
+    initialDescription,
+    'Top up',
+    'Rebalance',
+  ]);
 
   // Change every field of the allocation
   await allocationFormPage.fillDate(newDate);

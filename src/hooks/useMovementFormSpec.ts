@@ -1,3 +1,4 @@
+import { useMovementFormDescriptions } from 'src/hooks/useMovementFormDescriptions';
 import { useMovementFormEndpoints } from 'src/hooks/useMovementFormEndpoints';
 import type { FormFieldSpec } from 'src/lib/formSpec';
 import { clpInputMask } from 'src/presentation/formatters/currencyInputMask';
@@ -10,6 +11,7 @@ export const useMovementFormSpec = (
   movementId: string | undefined
 ) => {
   const endpoints = useMovementFormEndpoints(movementForm, movementId);
+  const descriptions = useMovementFormDescriptions(movementForm);
   const noun = movementForm.endpointNoun.singular;
 
   // An endpoint cannot be both ends of the same movement, so each selector drops whatever the
@@ -43,7 +45,7 @@ export const useMovementFormSpec = (
       inputMode: 'decimal',
       mask: clpInputMask,
     },
-    { kind: 'text', name: 'description', label: 'Description' },
+    { kind: 'text', name: 'description', label: 'Description', suggestions: descriptions },
   ];
 
   return {

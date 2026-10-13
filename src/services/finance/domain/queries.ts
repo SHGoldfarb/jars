@@ -115,6 +115,16 @@ const listTransfers = (transfers: Transfer[], params: MovementListParams) =>
 const listAllocations = (allocations: Allocation[], params: MovementListParams) =>
   listMovementsOfType(allocations, params);
 
+// The descriptions movements of one kind already carry, for a form to suggest: each once, the
+// most recently dated first, leaving out the deleted movements and the ones without one.
+const listMovementDescriptions = (movements: Movement[]): string[] => [
+  ...new Set(
+    listMovementsOfType(movements, {})
+      .map(({ description }) => description)
+      .filter((description) => description !== '')
+  ),
+];
+
 export type MovementListEntry =
   | ({ movementType: 'transaction' } & Transaction)
   | ({ movementType: 'transfer' } & Transfer)
@@ -191,5 +201,6 @@ export const financeDomainQueries = {
   movements: {
     list: listMovements,
     months: listMovementMonths,
+    descriptions: listMovementDescriptions,
   },
 };

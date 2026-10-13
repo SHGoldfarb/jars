@@ -74,6 +74,8 @@ export const createFinanceQueries = (deps: FinanceRepositories) => {
         includeArchived?: boolean;
         orderBy?: { dateISO?: 'asc' | 'desc' }[];
       }) => financeDomainQueries.transactions.list(await deps.transactions.list(), params ?? {}),
+      descriptions: async () =>
+        financeDomainQueries.movements.descriptions(await deps.transactions.list()),
       getById: (transactionId: string) => deps.transactions.getById(transactionId),
       lastOperationId: () => deps.transactions.getLastOperationId(),
     },
@@ -82,6 +84,8 @@ export const createFinanceQueries = (deps: FinanceRepositories) => {
         includeArchived?: boolean;
         orderBy?: { dateISO?: 'asc' | 'desc' }[];
       }) => financeDomainQueries.transfers.list(await deps.transfers.list(), params ?? {}),
+      descriptions: async () =>
+        financeDomainQueries.movements.descriptions(await deps.transfers.list()),
       getById: (transactionId: string) => deps.transfers.getById(transactionId),
       lastOperationId: () => deps.transfers.getLastOperationId(),
     },
@@ -90,6 +94,8 @@ export const createFinanceQueries = (deps: FinanceRepositories) => {
         includeArchived?: boolean;
         orderBy?: { dateISO?: 'asc' | 'desc' }[];
       }) => financeDomainQueries.allocations.list(await deps.allocations.list(), params ?? {}),
+      descriptions: async () =>
+        financeDomainQueries.movements.descriptions(await deps.allocations.list()),
       getById: (allocationId: string) => deps.allocations.getById(allocationId),
       lastOperationId: () => deps.allocations.getLastOperationId(),
     },

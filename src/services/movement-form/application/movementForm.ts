@@ -20,6 +20,7 @@ interface MovementFormUi {
   toDraft: (values: ParsedMovementFormValues) => MovementDraft;
   queries: {
     getEndpointsForSelector: (movementId: string | undefined) => Promise<MovementEndpointOption[]>;
+    getDescriptionSuggestions: () => Promise<string[]>;
   };
 }
 

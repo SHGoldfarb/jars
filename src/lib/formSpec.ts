@@ -41,6 +41,9 @@ interface FormFieldText<TValues> {
   inputMode?: 'decimal';
   required?: boolean;
   mask?: FormFieldMask;
+  // Values the input offers to complete what is typed, in place of the browser's own history of
+  // the field.
+  suggestions?: string[];
 }
 
 interface FormFieldSelect<TValues> {

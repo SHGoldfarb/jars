@@ -42,6 +42,8 @@ export const FormField = <TValues,>({
     }
   };
 
+  const suggestionsId = `${field.name}-suggestions`;
+
   return (
     <FormFieldWrapper field={field} label={spec.label}>
       {spec.kind === 'date' ? (
@@ -76,9 +78,18 @@ export const FormField = <TValues,>({
           inputMode={spec.inputMode}
           placeholder={spec.placeholder}
           required={spec.required}
+          list={spec.suggestions ? suggestionsId : undefined}
+          autoComplete={spec.suggestions ? 'off' : undefined}
           {...formUtils.inputProps(field)}
           onKeyDown={handleKeyDown}
         />
+      ) : null}
+      {spec.kind === 'text' && !spec.mask && spec.suggestions ? (
+        <datalist id={suggestionsId}>
+          {spec.suggestions.map((suggestion) => (
+            <option key={suggestion} value={suggestion} />
+          ))}
+        </datalist>
       ) : null}
       {spec.kind === 'select' ? (
         <FormFieldSelect

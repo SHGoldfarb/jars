@@ -33,6 +33,7 @@ interface MovementKind<TMovement extends MovementLike, TUnsaved> {
   getEndpointBalance: (endpointId: string) => Promise<CurrencyAmount>;
   restoreEndpoint: (endpointId: string) => Promise<void>;
   getMovementById: (movementId: string) => Promise<TMovement>;
+  listDescriptions: () => Promise<string[]>;
   updateMovement: (movement: TMovement) => Promise<void>;
   endpointsOf: (movement: TMovement) => MovementEndpoints;
   toUnsaved: (draft: MovementDraft) => TUnsaved;
@@ -47,6 +48,7 @@ export const transferKind: MovementKind<Transfer, TransferUnsaved> = {
     await financeCommands.accounts.restore({ accountId });
   },
   getMovementById: (transferId) => financeQueries.transfers.getById(transferId),
+  listDescriptions: () => financeQueries.transfers.descriptions(),
   updateMovement: async (transfer) => {
     await financeCommands.transfers.update(transfer);
   },
@@ -72,6 +74,7 @@ export const allocationKind: MovementKind<Allocation, AllocationUnsaved> = {
     await financeCommands.jars.restore({ jarId });
   },
   getMovementById: (allocationId) => financeQueries.allocations.getById(allocationId),
+  listDescriptions: () => financeQueries.allocations.descriptions(),
   updateMovement: async (allocation) => {
     await financeCommands.allocations.update(allocation);
   },

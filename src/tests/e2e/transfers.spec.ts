@@ -147,6 +147,7 @@ test('can edit a transfer', async ({
 
   await seedData({
     accounts: [initialOriginName, initialDestinationName, newOriginName, newDestinationName],
+    jars: ['Monthly expenses', 'Travel'],
     transfers: [
       {
         amount: initialAmount,
@@ -154,6 +155,26 @@ test('can edit a transfer', async ({
         description: initialDescription,
         originAccountName: initialOriginName,
         destinationAccountName: initialDestinationName,
+      },
+      // Only here for the description suggestions, so dated in a month the list does not open on.
+      ...[
+        { description: 'Top up', date: '2026-03-01T10:00' },
+        { description: 'Rebalance', date: '2026-03-05T10:00' },
+        { description: 'Top up', date: '2026-03-09T10:00' },
+        { description: '', date: '2026-03-10T10:00' },
+        { description: 'Deleted transfer', date: '2026-03-11T10:00', archived: true },
+      ].map((transfer) => ({
+        ...transfer,
+        originAccountName: initialOriginName,
+        destinationAccountName: initialDestinationName,
+      })),
+    ],
+    allocations: [
+      {
+        description: 'Holiday fund',
+        date: '2026-03-12T10:00',
+        originJarName: 'Monthly expenses',
+        destinationJarName: 'Travel',
       },
     ],
   });
@@ -168,6 +189,10 @@ test('can edit a transfer', async ({
   await expect(transferFormPage.destinationAccountSelect).toContainText(initialDestinationName);
   await expect(transferFormPage.amountInput).toHaveValue('$150,000');
   await expect(transferFormPage.descriptionInput).toHaveValue(initialDescription);
+
+  // The description field suggests every transfer description once, the latest first. Deleted
+  // transfers, blank descriptions and other movements' descriptions are not among them.
+  await transferFormPage.expectDescriptionSuggestions([initialDescription, 'Top up', 'Rebalance']);
 
   // Change every field of the transfer
   await transferFormPage.fillDate(newDate);

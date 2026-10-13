@@ -108,6 +108,36 @@ test('can edit transaction, the form opening on its current values', async ({
         jarName: initialJarName,
         categoryName: initialCategoryName,
       },
+      // Only here for the description suggestions, so dated in a month the list does not open on.
+      ...[
+        { description: 'Coffee', date: '2026-03-01T10:00' },
+        { description: 'Rent', date: '2026-03-05T10:00' },
+        { description: 'Coffee', date: '2026-03-09T10:00' },
+        { description: '', date: '2026-03-10T10:00' },
+        { description: 'Deleted purchase', date: '2026-03-11T10:00', archived: true },
+      ].map((transaction) => ({
+        ...transaction,
+        type: 'Income' as const,
+        accountName: initialAccountName,
+        jarName: initialJarName,
+        categoryName: initialCategoryName,
+      })),
+    ],
+    transfers: [
+      {
+        description: 'Savings move',
+        date: '2026-03-12T10:00',
+        originAccountName: initialAccountName,
+        destinationAccountName: newAccountName,
+      },
+    ],
+    allocations: [
+      {
+        description: 'Holiday fund',
+        date: '2026-03-12T10:00',
+        originJarName: initialJarName,
+        destinationJarName: newJarName,
+      },
     ],
   });
 
@@ -133,6 +163,10 @@ test('can edit transaction, the form opening on its current values', async ({
   await expect(page.getByRole('combobox', { name: 'Subcategory' })).toContainText(
     'Select Subcategory'
   );
+
+  // The description field suggests every transaction description once, the latest first. Deleted
+  // transactions, blank descriptions and other movements' descriptions are not among them.
+  await transactionFormPage.expectDescriptionSuggestions([initialDescription, 'Coffee', 'Rent']);
 
   // Change every field of the transaction
   await transactionFormPage.fillAmount(newAmount);

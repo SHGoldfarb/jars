@@ -124,6 +124,21 @@ export const transactionFormPageConstructor = (page: Page) => {
     await descriptionInput.fill(description);
   };
 
+  // What the description field offers to complete, in the order it offers it. The browser's
+  // suggestion popup is outside the page, so this reads the list the input points it at.
+  const expectDescriptionSuggestions = async (suggestions: string[]) => {
+    await closeDropdowns();
+    await expect
+      .poll(() =>
+        descriptionInput.evaluate((input) =>
+          input instanceof HTMLInputElement
+            ? Array.from(input.list?.options ?? [], ({ value }) => value)
+            : []
+        )
+      )
+      .toEqual(suggestions);
+  };
+
   const fillDate = async (date: string) => {
     await closeDropdowns();
     await dateInput.fill(date);
@@ -156,6 +171,7 @@ export const transactionFormPageConstructor = (page: Page) => {
     fillAmount,
     fillDescription,
     fillDate,
+    expectDescriptionSuggestions,
     deleteButton,
     cancelButton,
   };

@@ -23,4 +23,8 @@ export const createMovementFormQueries = <TMovement extends MovementLike, TUnsav
     }
     return endpoints;
   },
+
+  // Gets what the description field suggests: the descriptions movements of this kind already
+  // carry, and only of this kind.
+  getDescriptionSuggestions: (): Promise<string[]> => kind.listDescriptions(),
 });
