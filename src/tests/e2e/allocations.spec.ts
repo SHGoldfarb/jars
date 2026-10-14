@@ -205,7 +205,7 @@ test('can edit an allocation', async ({
 
   // The description field suggests every allocation description once, the latest first. Deleted
   // allocations, blank descriptions and other movements' descriptions are not among them.
-  await allocationFormPage.expectDescriptionSuggestions([
+  await allocationFormPage.expectDescriptionSuggestions('', [
     initialDescription,
     'Top up',
     'Rebalance',

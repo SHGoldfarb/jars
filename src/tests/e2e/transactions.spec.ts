@@ -166,7 +166,15 @@ test('can edit transaction, the form opening on its current values', async ({
 
   // The description field suggests every transaction description once, the latest first. Deleted
   // transactions, blank descriptions and other movements' descriptions are not among them.
-  await transactionFormPage.expectDescriptionSuggestions([initialDescription, 'Coffee', 'Rent']);
+  await transactionFormPage.expectDescriptionSuggestions('', [
+    initialDescription,
+    'Coffee',
+    'Rent',
+  ]);
+  // What is typed narrows them, ignoring case, and picking one fills it in.
+  await transactionFormPage.expectDescriptionSuggestions('cof', ['Coffee']);
+  await transactionFormPage.pickDescriptionSuggestion('cof', 'Coffee');
+  await expect(transactionFormPage.descriptionInput).toHaveValue('Coffee');
 
   // Change every field of the transaction
   await transactionFormPage.fillAmount(newAmount);

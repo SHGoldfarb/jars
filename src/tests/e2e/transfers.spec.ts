@@ -192,7 +192,11 @@ test('can edit a transfer', async ({
 
   // The description field suggests every transfer description once, the latest first. Deleted
   // transfers, blank descriptions and other movements' descriptions are not among them.
-  await transferFormPage.expectDescriptionSuggestions([initialDescription, 'Top up', 'Rebalance']);
+  await transferFormPage.expectDescriptionSuggestions('', [
+    initialDescription,
+    'Top up',
+    'Rebalance',
+  ]);
 
   // Change every field of the transfer
   await transferFormPage.fillDate(newDate);

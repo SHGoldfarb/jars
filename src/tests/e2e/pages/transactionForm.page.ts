@@ -124,19 +124,21 @@ export const transactionFormPageConstructor = (page: Page) => {
     await descriptionInput.fill(description);
   };
 
-  // What the description field offers to complete, in the order it offers it. The browser's
-  // suggestion popup is outside the page, so this reads the list the input points it at.
-  const expectDescriptionSuggestions = async (suggestions: string[]) => {
+  // What the description field offers to complete once `typed` is in it, in the order it offers
+  // it. Leaves `typed` in the field.
+  const expectDescriptionSuggestions = async (typed: string, suggestions: string[]) => {
     await closeDropdowns();
-    await expect
-      .poll(() =>
-        descriptionInput.evaluate((input) =>
-          input instanceof HTMLInputElement
-            ? Array.from(input.list?.options ?? [], ({ value }) => value)
-            : []
-        )
-      )
-      .toEqual(suggestions);
+    await descriptionInput.fill(typed);
+    await descriptionInput.click();
+    await expect(page.getByRole('listbox').getByRole('option')).toHaveText(suggestions);
+    await page.keyboard.press('Escape');
+  };
+
+  const pickDescriptionSuggestion = async (typed: string, suggestion: string) => {
+    await closeDropdowns();
+    await descriptionInput.fill(typed);
+    await descriptionInput.click();
+    await page.getByRole('listbox').getByRole('option', { name: suggestion }).click();
   };
 
   const fillDate = async (date: string) => {
@@ -172,6 +174,7 @@ export const transactionFormPageConstructor = (page: Page) => {
     fillDescription,
     fillDate,
     expectDescriptionSuggestions,
+    pickDescriptionSuggestion,
     deleteButton,
     cancelButton,
   };
