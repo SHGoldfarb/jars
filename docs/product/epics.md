@@ -278,13 +278,14 @@ Categories can have subcategories, managed from the Categories screen and select
 - [x] A transaction's subcategory is shown wherever its category is shown, and can be changed by editing the transaction
 - [x] Subcategories and their assignment to transactions persist across page refreshes
 
-## Epic 10 — Statistics
-
-View incomes/expenses breakdown, evolution, etc.
+## Epic 10 - Bookmarks
 
 ### Acceptance criteria
 
-WIP
+- [ ] An existing movement can be saved as a bookmark
+- [ ] Button to open bookmarks menu from the movements page
+- [ ] Selecting a bookmark opens the correct movement form (allocation, transfer or transaction) with all fields pre-filled
+  - [ ] The date field is the only one that is not taken from the bookmark - it gets the default value.
 
 ## Small features backlog
 
@@ -301,7 +302,7 @@ WIP
 - switch between dark/light modes
 - multi currency
 - localization (language, currebcy format, date format)
-- Bookmarks (favorites - auto populate)
 - Auto recurring transactions
 - Custom category, jar and account selectors
 - Search bar
+- Statistics: income/expense breakdown
