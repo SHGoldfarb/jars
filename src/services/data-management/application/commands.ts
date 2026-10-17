@@ -1,4 +1,5 @@
 import { csv } from 'src/lib/csv';
+import { sha256Hex } from 'src/lib/hash';
 import { xlsx, type XlsxCell } from 'src/lib/xlsx';
 import { financeCommands, financeQueries, DB_SCHEMA_VERSION } from 'src/services/finance';
 import { Backup, backupFileName, parseBackupFile } from '../domain/backup';
@@ -13,6 +14,12 @@ export interface MoneyManagerImportOptions {
 export interface DataFile {
   fileName: string;
   contents: string;
+}
+
+// The fingerprint identifies the backed-up data, not the file: it leaves out `createdAtISO`, so
+// two backups of unchanged data share it however far apart they were taken.
+export interface BackupFile extends DataFile {
+  fingerprint: string;
 }
 
 // A workbook that cannot be opened is a rejected file like any other, so the reader's throw is
@@ -31,7 +38,7 @@ const createDataManagementCommands = (deps: {
   financeWrites: typeof financeCommands;
 }) => ({
   // Reads and formats; writes nothing.
-  createBackup: async (): Promise<DataFile> => {
+  createBackup: async (): Promise<BackupFile> => {
     const takenAt = new Date();
     const backup: Backup = {
       schemaVersion: DB_SCHEMA_VERSION,
@@ -39,7 +46,11 @@ const createDataManagementCommands = (deps: {
       data: await deps.finance.database.snapshot(),
     };
 
-    return { fileName: backupFileName(takenAt), contents: JSON.stringify(backup, null, 2) };
+    return {
+      fileName: backupFileName(takenAt),
+      contents: JSON.stringify(backup, null, 2),
+      fingerprint: await sha256Hex(JSON.stringify(backup.data)),
+    };
   },
 
   // Reads and formats; writes nothing.
