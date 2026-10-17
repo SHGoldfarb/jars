@@ -289,6 +289,21 @@ Categories can have subcategories, managed from the Categories screen and select
   - [x] The date field is the only one that is not taken from the bookmark - it gets the default value.
 - [x] A bookmark can be deleted from the bookmarks menu
 
+## Epic 11 — Google Drive backup
+
+### Acceptance criteria
+
+- [ ] "Setup backup to Google Drive" button in settings page
+- [ ] Backs up every time that the app opens if last backup was more than 24 hours and the current snapshot is different than the last snapshot
+- [ ] "jars" folder in the google drive visible to the user
+- [ ] backup files are the same than the json backup
+- [ ] If the auth expires, a prompt to reconnect is shown in the settings page
+
+### Out of scope
+
+- Restore from Google Drive backup.
+- Encrypting backups
+
 ## Small features backlog
 
 - [x] Better UI on month selector: arrows currently change position depending of the length of the month name, makes it difficult to move multiple times.
@@ -303,7 +318,7 @@ Categories can have subcategories, managed from the Categories screen and select
 - Sync support (open in desktop browser and keep synced with phone)
 - switch between dark/light modes
 - multi currency
-- localization (language, currebcy format, date format)
+- localization (language, currency format, date format)
 - Auto recurring transactions
 - Custom category, jar and account selectors
 - Search bar
