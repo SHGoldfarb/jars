@@ -70,3 +70,58 @@ export const createFolder = (
     },
     CreatedFile
   );
+
+const DRIVE_UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
+
+// A `multipart/related` body: the file's metadata as JSON, then its contents. The boundary is
+// random, so the contents can't contain it by chance.
+const multipartBody = ({
+  boundary,
+  metadata,
+  contents,
+  mimeType,
+}: {
+  boundary: string;
+  metadata: object;
+  contents: string;
+  mimeType: string;
+}) =>
+  [
+    `--${boundary}`,
+    'Content-Type: application/json; charset=UTF-8',
+    '',
+    JSON.stringify(metadata),
+    `--${boundary}`,
+    `Content-Type: ${mimeType}`,
+    '',
+    contents,
+    `--${boundary}--`,
+    '',
+  ].join('\r\n');
+
+// Always a new file, even when one with the same name is already in the folder: Drive allows
+// duplicate names, and nothing is ever overwritten. A folder that no longer exists is `notFound`.
+export const uploadFile = (
+  accessToken: string,
+  file: { folderId: string; fileName: string; contents: string; mimeType: string }
+): Promise<DriveResult<{ id: string }>> => {
+  const boundary = `jars-${crypto.randomUUID()}`;
+
+  return driveRequest(
+    `${DRIVE_UPLOAD_API}/files?uploadType=multipart&fields=id`,
+    {
+      method: 'POST',
+      headers: {
+        ...authorization(accessToken),
+        'Content-Type': `multipart/related; boundary=${boundary}`,
+      },
+      body: multipartBody({
+        boundary,
+        metadata: { name: file.fileName, parents: [file.folderId] },
+        contents: file.contents,
+        mimeType: file.mimeType,
+      }),
+    },
+    CreatedFile
+  );
+};
