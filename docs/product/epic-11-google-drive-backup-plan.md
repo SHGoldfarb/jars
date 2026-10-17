@@ -56,6 +56,13 @@ popup. So the Drive card starts loading `https://accounts.google.com/gsi/client`
 and keeps its button disabled until the script is ready. The script never loads at boot, so users
 who don't use the feature never load it, and a normal app open never contacts Google.
 
+Because nothing may be awaited before the popup opens, two things follow:
+
+- The commands can't read the stored account email from IndexedDB to use as the popup's hint. The
+  card already holds it in the status it read on mount, so it passes the hint in.
+- A command can't open a second popup partway through, after it has awaited a request. A token
+  Drive rejects is discarded, and the next click asks for a fresh one.
+
 ### 3. Scope `drive.file`, with a `jars` folder the app creates
 
 AC `298` wants a folder the user can see, so we use `drive.file` and not `drive.appdata` (a hidden
@@ -150,7 +157,8 @@ There's no stored `needsReconnect`. Expired auth is the normal case (decision 1)
 grant is handled by the popup itself, which shows the consent screen again. Click results are
 returned as values, the same way `data-management` does it (`CommandResult`):
 
-- `cancelled` (the user closed the popup) → no message, and the prompt stays.
+- `cancelled` (the user closed the popup, declined, unticked the Drive permission, or the browser
+  blocked the popup) → no message, and the prompt stays. The next click asks for consent again.
 - `unavailable` (offline, or a `5xx`) → "Couldn't reach Google Drive. Try again when you're
   online.", and the prompt stays.
 - `ok` → `lastBackup` is saved, and the status becomes `upToDate`.
@@ -263,18 +271,25 @@ the media part).
 
 - `loadGoogleIdentity()` adds the script tag once, and resolves when
   `window.google.accounts.oauth2.initTokenClient` exists, checking the shape at runtime.
-- `createTokenRequester({ clientId, scope })` → a function `(hint?) => Promise<TokenResult>`.
-  `TokenResult` is `ok { accessToken, expiresAt } | cancelled | failed`. It must be called
-  synchronously from a click (decision 2).
+- `createTokenRequester(identity, { clientId, scope })` → a function
+  `(hint?) => Promise<TokenResult>`. It takes the loaded `identity` from `loadGoogleIdentity()`, so
+  it can't be called before the script is there. `TokenResult` is
+  `ok { accessToken, expiresAtMs } | cancelled | failed`. It opens the popup before anything is
+  awaited, so it must be called synchronously from a click (decision 2). The hint is passed as
+  `login_hint` (`hint` is deprecated).
 - Add `@types/google.accounts` as a dev dependency.
 
-**Review focus:** the shape is checked at runtime, not cast. `popup_closed` and
-`popup_failed_to_open` both map to `cancelled`.
+**Review focus:** the script's shape and Google's response are both zod-checked at runtime, not
+cast. `popup_closed`, `popup_failed_to_open`, `access_denied` and a token without the requested
+scope all map to `cancelled`.
 
 ### Step 10 — `infrastructure/googleAuth.ts`: the `GoogleAuth` port
 
-`authorize(hint?)` returns the in-memory token if it has more than 60s left, and otherwise
-requests a new one through step 9. It returns `ok | cancelled | unavailable`.
+`load()` loads the script through step 9 and keeps the identity; the card calls it on mount and
+enables its button once it resolves. `authorize(hint?)` returns the in-memory token if it has more
+than 60s left, and otherwise requests a new one through step 9, synchronously. It returns
+`ok | cancelled | unavailable`: `failed`, or a script that never loaded, is `unavailable`.
+`discardToken()` forgets the cached token.
 
 **Review focus:** the token is kept in a module variable only, never written to `sessionStorage`,
 IndexedDB or a log.
@@ -285,15 +300,17 @@ IndexedDB or a log.
 
 - **`connect()`**: authorize → create the `jars` folder → read the email → save `connected` →
   upload the first backup.
-- **`backUpNow()`**: authorize with the stored email as hint → `createBackup()` → upload. On
-  `notFound`, create a new folder and retry once. On `unauthorized`, discard the cached token and
-  authorize again once. On success, save `lastBackup`.
+- **`backUpNow(hint)`**: authorize with the hint the card passes in (decision 2) →
+  `createBackup()` → upload. On `notFound`, create a new folder and retry once. On
+  `unauthorized`, discard the cached token and return `unavailable`; the next click opens the
+  popup for a fresh token. On success, save `lastBackup`.
 - **`status(now)`**: decision 8's `DriveBackupStatus`, computed from the state and a fresh
   fingerprint.
 - **Single flight:** a module-level in-progress promise, so a double click can't upload twice.
 
-**Review focus:** state is never written before the upload succeeds. `backUpNow` uploads even when
-the backup isn't due: the click is the user's decision.
+**Review focus:** `authorize` is the first call in both commands, with nothing awaited before it.
+State is never written before the upload succeeds. `backUpNow` uploads even when the backup isn't
+due: the click is the user's decision.
 
 ### Step 12 — Settings: "Setup backup to Google Drive" (ACs `296`, `298`, `299`)
 

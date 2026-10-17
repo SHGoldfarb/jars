@@ -53,6 +53,7 @@
     "@rolldown/plugin-babel": "^0.2.3",
     "@tanstack/router-plugin": "^1.167.35",
     "@types/babel__core": "^7.20.5",
+    "@types/google.accounts": "^0.0.18",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
