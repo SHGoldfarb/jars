@@ -71,6 +71,18 @@ export const createFolder = (
     CreatedFile
   );
 
+const About = z.object({ user: z.object({ emailAddress: z.string().min(1) }) });
+
+// The account the token belongs to. The `fields` mask asks for the email and nothing else.
+export const accountEmail = async (accessToken: string): Promise<DriveResult<string>> => {
+  const about = await driveRequest(
+    `${DRIVE_API}/about?fields=user(emailAddress)`,
+    { method: 'GET', headers: authorization(accessToken) },
+    About
+  );
+  return about.kind === 'ok' ? { kind: 'ok', value: about.value.user.emailAddress } : about;
+};
+
 const DRIVE_UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
 
 // A `multipart/related` body: the file's metadata as JSON, then its contents. The boundary is
