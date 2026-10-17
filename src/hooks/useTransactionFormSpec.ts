@@ -87,19 +87,22 @@ export const useTransactionFormSpec = () => {
     { kind: 'text', name: 'description', label: 'Description', suggestions: descriptions },
   ];
 
+  const options = {
+    accountIds: accounts.map(({ id }) => id),
+    jarIds: jars.map(({ id }) => id),
+    incomeCategoryIds: incomeCategories.map(({ id }) => id),
+    expenseCategoryIds: expenseCategories.map(({ id }) => id),
+    subcategoryIdsByCategoryId: Object.fromEntries(
+      Object.entries(subcategoriesByCategoryId).map(([categoryId, subcategories]) => [
+        categoryId,
+        subcategories.map(({ id }) => id),
+      ])
+    ),
+  };
+
   return {
     fields,
-    schema: transactionForm.createFormSchema({
-      accountIds: accounts.map(({ id }) => id),
-      jarIds: jars.map(({ id }) => id),
-      incomeCategoryIds: incomeCategories.map(({ id }) => id),
-      expenseCategoryIds: expenseCategories.map(({ id }) => id),
-      subcategoryIdsByCategoryId: Object.fromEntries(
-        Object.entries(subcategoriesByCategoryId).map(([categoryId, subcategories]) => [
-          categoryId,
-          subcategories.map(({ id }) => id),
-        ])
-      ),
-    }),
+    schema: transactionForm.createFormSchema(options),
+    bookmarkSchema: transactionForm.createBookmarkSchema(options),
   };
 };

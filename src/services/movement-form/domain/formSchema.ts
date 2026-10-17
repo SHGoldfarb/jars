@@ -35,16 +35,20 @@ const getDefaultValues = (): MovementFormValues => ({
   destinationId: '',
 });
 
-const createValidators = (noun: MovementEndpointNoun) => ({
+// Everything but the date: also what a bookmark is validated against.
+const createUndatedValidators = (noun: MovementEndpointNoun) => ({
   amount: z.string().trim().min(1, 'Amount is required').pipe(currencyInput.parser),
-  date: z.string().trim().min(1, 'Date is required').transform(dateInput.parseToISO),
   description: z.string(),
   originId: z.string().trim().min(1, `Origin ${noun.singular} is required`),
   destinationId: z.string().trim().min(1, `Destination ${noun.singular} is required`),
 });
 
-const createFormSchema = (noun: MovementEndpointNoun, activeEndpointIds: string[]) =>
-  z.object(createValidators(noun)).superRefine((values, ctx) => {
+// The checks that tie the endpoints to what the selectors offer. Kept apart from the object so
+// the bookmark schema below can share them while leaving the date out: Zod refuses to `.omit()`
+// a field from an object that already carries a refinement.
+const refineEndpoints =
+  (noun: MovementEndpointNoun, activeEndpointIds: string[]) =>
+  (values: { originId: string; destinationId: string }, ctx: z.RefinementCtx) => {
     if (values.originId && !activeEndpointIds.includes(values.originId)) {
       ctx.addIssue({
         code: 'custom',
@@ -68,29 +72,56 @@ const createFormSchema = (noun: MovementEndpointNoun, activeEndpointIds: string[
         message: `Origin and destination ${noun.plural} must be different`,
       });
     }
-  });
+  };
+
+const createFormSchema = (noun: MovementEndpointNoun, activeEndpointIds: string[]) =>
+  z
+    .object({
+      date: z.string().trim().min(1, 'Date is required').transform(dateInput.parseToISO),
+      ...createUndatedValidators(noun),
+    })
+    .superRefine(refineEndpoints(noun, activeEndpointIds));
+
+// What saving a bookmark checks: every rule of the form but the date, which a bookmark does not
+// keep - an empty or odd date must not stop one being saved.
+const createBookmarkSchema = (noun: MovementEndpointNoun, activeEndpointIds: string[]) =>
+  z.object(createUndatedValidators(noun)).superRefine(refineEndpoints(noun, activeEndpointIds));
 
 type MovementFormSchema = ReturnType<typeof createFormSchema>;
 type ParsedMovementFormValues = z.output<MovementFormSchema>;
+type MovementBookmarkSchema = ReturnType<typeof createBookmarkSchema>;
+type ParsedMovementBookmarkValues = z.output<MovementBookmarkSchema>;
 
-const toDraft = (values: ParsedMovementFormValues): MovementDraft => ({
+// What a valid bookmark save hands on: a draft without the date a bookmark never keeps.
+type MovementBookmarkDraft = Omit<MovementDraft, 'dateISO'>;
+
+const toBookmarkDraft = (values: ParsedMovementBookmarkValues): MovementBookmarkDraft => ({
   amount: values.amount,
-  dateISO: values.date,
   description: values.description.trim(),
   originId: values.originId,
   destinationId: values.destinationId,
 });
 
+const toDraft = (values: ParsedMovementFormValues): MovementDraft => ({
+  ...toBookmarkDraft(values),
+  dateISO: values.date,
+});
+
 export const movementFormSchema = {
   getDefaultValues,
   createFormSchema,
+  createBookmarkSchema,
   toDraft,
+  toBookmarkDraft,
 };
 
 export type {
+  MovementBookmarkDraft,
+  MovementBookmarkSchema,
   MovementDraft,
   MovementEndpointNoun,
   MovementFormSchema,
   MovementFormValues,
+  ParsedMovementBookmarkValues,
   ParsedMovementFormValues,
 };

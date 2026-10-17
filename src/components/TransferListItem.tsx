@@ -6,7 +6,13 @@ import { useAccount } from 'src/hooks/useAccount';
 import { ItemDescription, ItemTitle } from './ui/item';
 import { MovementListItem } from './MovementListItem';
 
-export const TransferListItem = ({ transfer }: { transfer: Transfer }) => {
+// Takes what a bookmark carries too, so a bookmark is listed exactly like its movement; without a
+// date there is just no date line.
+export const TransferListItem = ({
+  transfer,
+}: {
+  transfer: Omit<Transfer, 'id' | 'dateISO' | 'archivedAtISO'> & { dateISO?: string };
+}) => {
   const originAccount = useAccount(transfer.originAccountId);
   const destinationAccount = useAccount(transfer.destinationAccountId);
 
@@ -25,7 +31,9 @@ export const TransferListItem = ({ transfer }: { transfer: Transfer }) => {
       contentRight={
         <>
           <ItemTitle>{formatCurrencyAmount(transfer.amount)}</ItemTitle>
-          <ItemDescription>{formatDateISO(transfer.dateISO)}</ItemDescription>
+          {transfer.dateISO ? (
+            <ItemDescription>{formatDateISO(transfer.dateISO)}</ItemDescription>
+          ) : null}
         </>
       }
     />

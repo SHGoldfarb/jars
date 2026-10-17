@@ -6,7 +6,13 @@ import { useJar } from 'src/hooks/useJar';
 import { ItemDescription, ItemTitle } from './ui/item';
 import { MovementListItem } from './MovementListItem';
 
-export const AllocationListItem = ({ allocation }: { allocation: Allocation }) => {
+// Takes what a bookmark carries too, so a bookmark is listed exactly like its movement; without a
+// date there is just no date line.
+export const AllocationListItem = ({
+  allocation,
+}: {
+  allocation: Omit<Allocation, 'id' | 'dateISO' | 'archivedAtISO'> & { dateISO?: string };
+}) => {
   const originJar = useJar(allocation.originJarId);
   const destinationJar = useJar(allocation.destinationJarId);
 
@@ -25,7 +31,9 @@ export const AllocationListItem = ({ allocation }: { allocation: Allocation }) =
       contentRight={
         <>
           <ItemTitle>{formatCurrencyAmount(allocation.amount)}</ItemTitle>
-          <ItemDescription>{formatDateISO(allocation.dateISO)}</ItemDescription>
+          {allocation.dateISO ? (
+            <ItemDescription>{formatDateISO(allocation.dateISO)}</ItemDescription>
+          ) : null}
         </>
       }
     />

@@ -1,6 +1,7 @@
 import type {
   Account,
   Allocation,
+  Bookmark,
   Category,
   CategoryExpense,
   CategoryIncome,
@@ -66,6 +67,13 @@ export interface AllocationRepository {
   getLastOperationId: () => string;
 }
 
+export interface BookmarkRepository {
+  getById(bookmarkId: string): Promise<Bookmark>;
+  list(): Promise<Bookmark[]>;
+  save(bookmark: Bookmark): Promise<unknown>;
+  getLastOperationId: () => string;
+}
+
 // Whole-database reads and writes belong to no single entity, so they get their own port.
 // `replaceAll` and `clear` are atomic: a failure part way through leaves the previous state.
 export interface FinanceDatabaseRepository {
@@ -82,5 +90,6 @@ export interface FinanceRepositories {
   transactions: TransactionRepository;
   transfers: TransferRepository;
   allocations: AllocationRepository;
+  bookmarks: BookmarkRepository;
   database: FinanceDatabaseRepository;
 }

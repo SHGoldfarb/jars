@@ -7,6 +7,7 @@ import { createSubcategoryCommands } from './subcategory';
 import { createTransactionCommands } from './transaction';
 import { createTransferCommands } from './transfer';
 import { createAllocationCommands } from './allocation';
+import { createBookmarkCommands } from './bookmark';
 import { createDatabaseCommands } from './database';
 
 const createFinanceCommands = (deps: FinanceRepositories) => ({
@@ -17,6 +18,7 @@ const createFinanceCommands = (deps: FinanceRepositories) => ({
   transactions: createTransactionCommands(deps),
   transfers: createTransferCommands(deps),
   allocations: createAllocationCommands(deps),
+  bookmarks: createBookmarkCommands(deps),
   database: createDatabaseCommands(deps),
 });
 

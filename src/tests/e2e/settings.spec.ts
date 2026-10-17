@@ -95,6 +95,7 @@ test.describe('create backup', () => {
       ),
       transfers: z.array(z.unknown()),
       allocations: z.array(z.unknown()),
+      bookmarks: z.array(z.record(z.string(), z.unknown())),
     }),
   });
 
@@ -104,6 +105,7 @@ test.describe('create backup', () => {
     rootLayoutPage,
     settingsPage,
     movementsPage,
+    transactionFormPage,
   }) => {
     await seedData({
       ...defaultData,
@@ -122,6 +124,10 @@ test.describe('create backup', () => {
       categoryName: defaultData.expenseCategories[0],
       subcategoryName: 'Fruit',
     });
+    // Saved from the form too, for the same reason.
+    await movementsPage.getMovement('Backed up transaction').click();
+    await transactionFormPage.bookmarkButton.click();
+    await expect(transactionFormPage.bookmarkedButton).toBeDisabled();
 
     await rootLayoutPage.navButton('Settings').click();
     const download = await settingsPage.downloadFromAction('Create backup');
@@ -131,7 +137,7 @@ test.describe('create backup', () => {
 
     const backup = BackupFile.parse(JSON.parse(await readFile(await download.path(), 'utf8')));
 
-    expect(backup.schemaVersion).toBe(4);
+    expect(backup.schemaVersion).toBe(5);
     expect(backup.data.accounts.map(({ name }) => name)).toEqual(['Wallet']);
     expect(backup.data.jars.map(({ name }) => name)).toEqual(['Monthly expenses']);
     expect(backup.data.categories.map(({ name, kind }) => `${name} (${kind})`).sort()).toEqual([
@@ -160,6 +166,22 @@ test.describe('create backup', () => {
     expect(backup.data.subcategories.map(({ name }) => name)).toEqual(['Fruit']);
     expect(backup.data.subcategories[0].categoryId).toBe(transaction.categoryId);
     expect(transaction.subcategoryId).toBe(backup.data.subcategories[0].id);
+
+    // The bookmark is the transaction's fields without its id or its date.
+    expect(backup.data.bookmarks).toHaveLength(1);
+    const { id: bookmarkId, createdAtISO, ...bookmark } = backup.data.bookmarks[0];
+    expect(bookmarkId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(createdAtISO).toEqual(expect.any(String));
+    expect(bookmark).toEqual({
+      movementType: 'transaction',
+      kind: 'expense',
+      description: 'Backed up transaction',
+      amount: { currency: 'CLP', amountDecimal: { value: '123456', decimalPlaces: 2 } },
+      accountId: transaction.accountId,
+      jarId: transaction.jarId,
+      categoryId: transaction.categoryId,
+      subcategoryId: transaction.subcategoryId,
+    });
 
     // Creating the backup leaves the data untouched.
     await rootLayoutPage.navButton('Movements').click();
@@ -193,7 +215,7 @@ test.describe('load from backup', () => {
   }) => {
     const jars = [{ id: uuid('2'), name: 'Hand-written jar' }];
     return JSON.stringify({
-      schemaVersion: overrides.schemaVersion ?? 4,
+      schemaVersion: overrides.schemaVersion ?? 5,
       createdAtISO: '2026-02-10T09:00:00.000Z',
       data: {
         accounts: [{ id: uuid('1'), name: 'Hand-written account' }],
@@ -215,6 +237,7 @@ test.describe('load from backup', () => {
         ],
         transfers: [],
         allocations: [],
+        bookmarks: [],
       },
     });
   };
@@ -226,6 +249,7 @@ test.describe('load from backup', () => {
     movementsPage,
     accountsPage,
     jarsPage,
+    bookmarksPage,
   }) => {
     const secondAccountName = 'Savings';
     const secondJarName = 'Holidays';
@@ -251,6 +275,7 @@ test.describe('load from backup', () => {
           destinationJarName: secondJarName,
         },
       ],
+      bookmarks: [{ description: 'Backed up bookmark' }],
     });
 
     await rootLayoutPage.navButton('Settings').click();
@@ -269,6 +294,8 @@ test.describe('load from backup', () => {
     await movementsPage.expectMovementToExist('Backed up income');
     await movementsPage.expectMovementToExist('Backed up transfer');
     await movementsPage.expectMovementToExist('Backed up allocation');
+    await movementsPage.bookmarksButton.click();
+    await bookmarksPage.expectBookmarksInOrder(['Backed up bookmark']);
 
     // Expected strings are hardcoded for the hardcoded amounts above:
     // 10000 income - 5000 transferred out, and the 5000 that arrived in the second account.
@@ -405,7 +432,7 @@ test.describe('export to CSV', () => {
 
   const backupWith = (transactions: StoredTransaction[]) =>
     JSON.stringify({
-      schemaVersion: 4,
+      schemaVersion: 5,
       createdAtISO: '2026-02-10T09:00:00.000Z',
       data: {
         accounts: [{ id: accountId, name: 'Wallet' }],
@@ -424,6 +451,7 @@ test.describe('export to CSV', () => {
         })),
         transfers: [],
         allocations: [],
+        bookmarks: [],
       },
     });
 
@@ -627,6 +655,7 @@ test.describe('clear all data', () => {
     accountsPage,
     jarsPage,
     categoriesPage,
+    bookmarksPage,
   }) => {
     const secondAccountName = 'Savings';
     const secondJarName = 'Holidays';
@@ -650,6 +679,7 @@ test.describe('clear all data', () => {
           destinationJarName: secondJarName,
         },
       ],
+      bookmarks: [{ description: 'Cleared bookmark' }],
     });
 
     // Cancelling the confirmation leaves all data in place.
@@ -677,6 +707,8 @@ test.describe('clear all data', () => {
     await movementsPage.expectMovementToNotExist('Cleared transaction');
     await movementsPage.expectMovementToNotExist('Cleared transfer');
     await movementsPage.expectMovementToNotExist('Cleared allocation');
+    await movementsPage.bookmarksButton.click();
+    await expect(bookmarksPage.emptyMessage).toBeVisible();
 
     await rootLayoutPage.navButton('Accounts').click();
     await accountsPage.expectAccountToNotExist(defaultData.accounts[0]);

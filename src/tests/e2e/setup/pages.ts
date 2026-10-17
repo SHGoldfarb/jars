@@ -17,6 +17,7 @@ import {
   type AllocationFormPage,
 } from '../pages/allocationForm.page';
 import { settingsPageConstructor, type SettingsPage } from '../pages/settings.page';
+import { bookmarksPageConstructor, type BookmarksPage } from '../pages/bookmarks.page';
 
 const test = base.extend<{
   accountsPage: AccountsPage;
@@ -31,6 +32,7 @@ const test = base.extend<{
   transferFormPage: TransferFormPage;
   allocationFormPage: AllocationFormPage;
   settingsPage: SettingsPage;
+  bookmarksPage: BookmarksPage;
 }>({
   rootLayoutPage: async ({ page }, use) => {
     // The router devtools float over the bottom of every page and swallow the clicks meant for
@@ -87,6 +89,9 @@ const test = base.extend<{
   },
   settingsPage: async ({ page }, use) => {
     await use(settingsPageConstructor(page));
+  },
+  bookmarksPage: async ({ page }, use) => {
+    await use(bookmarksPageConstructor(page));
   },
 });
 

@@ -24,9 +24,9 @@ const getDefaultValues = (): TransactionFormValues => ({
   jarId: '',
 });
 
-const transactionValidators = {
+// Everything but the date: also what a bookmark is validated against.
+const undatedValidators = {
   amount: z.string().trim().min(1, 'Amount is required').pipe(currencyInput.parser),
-  date: z.string().trim().min(1, 'Date is required').transform(dateInput.parseToISO),
   description: z.string(),
   kind: z.enum(['income', 'expense']),
   accountId: z.string().trim().min(1, 'Account is required'),
@@ -34,6 +34,11 @@ const transactionValidators = {
   // Choosing a subcategory is optional, so an empty value is a valid one.
   subcategoryId: z.string().trim(),
   jarId: z.string().trim().min(1, 'Jar is required'),
+};
+
+const transactionValidators = {
+  date: z.string().trim().min(1, 'Date is required').transform(dateInput.parseToISO),
+  ...undatedValidators,
 };
 
 // What the selections are checked against: the ids each selector is offering, and - for
@@ -47,14 +52,27 @@ interface TransactionFormOptions {
   subcategoryIdsByCategoryId: Record<string, string[]>;
 }
 
-const createFormSchema = ({
-  accountIds,
-  jarIds,
-  incomeCategoryIds,
-  expenseCategoryIds,
-  subcategoryIdsByCategoryId,
-}: TransactionFormOptions) =>
-  z.object(transactionValidators).superRefine((values, ctx) => {
+// The checks that tie the selections to what the selectors offer. Kept apart from the object so
+// the bookmark schema below can share every one of them while leaving the date out: Zod refuses
+// to `.omit()` a field from an object that already carries a refinement.
+const refineSelections =
+  ({
+    accountIds,
+    jarIds,
+    incomeCategoryIds,
+    expenseCategoryIds,
+    subcategoryIdsByCategoryId,
+  }: TransactionFormOptions) =>
+  (
+    values: {
+      kind: 'income' | 'expense';
+      accountId: string;
+      jarId: string;
+      categoryId: string;
+      subcategoryId: string;
+    },
+    ctx: z.RefinementCtx
+  ) => {
     if (values.accountId && !accountIds.includes(values.accountId)) {
       ctx.addIssue({
         code: 'custom',
@@ -90,11 +108,29 @@ const createFormSchema = ({
         message: 'Subcategory must belong to the selected category',
       });
     }
-  });
+  };
+
+const createFormSchema = (options: TransactionFormOptions) =>
+  z.object(transactionValidators).superRefine(refineSelections(options));
+
+// What saving a bookmark checks: every rule of the form but the date, which a bookmark does not
+// keep - an empty or odd date must not stop one being saved.
+const createBookmarkSchema = (options: TransactionFormOptions) =>
+  z.object(undatedValidators).superRefine(refineSelections(options));
+
+type TransactionFormSchema = ReturnType<typeof createFormSchema>;
+type ParsedTransactionFormValues = z.output<TransactionFormSchema>;
+type ParsedTransactionBookmarkValues = z.output<ReturnType<typeof createBookmarkSchema>>;
 
 export const transactionFormSchema = {
   getDefaultValues,
   createFormSchema,
+  createBookmarkSchema,
 };
 
-export type { TransactionFormValues };
+export type {
+  ParsedTransactionBookmarkValues,
+  ParsedTransactionFormValues,
+  TransactionFormOptions,
+  TransactionFormValues,
+};

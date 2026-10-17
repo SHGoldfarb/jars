@@ -48,8 +48,11 @@ export const useMovementFormSpec = (
     { kind: 'text', name: 'description', label: 'Description', suggestions: descriptions },
   ];
 
+  const endpointIds = endpoints.map(({ id }) => id);
+
   return {
     fields,
-    schema: movementForm.createFormSchema(endpoints.map(({ id }) => id)),
+    schema: movementForm.createFormSchema(endpointIds),
+    bookmarkSchema: movementForm.createBookmarkSchema(endpointIds),
   };
 };

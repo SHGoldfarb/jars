@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { TransactionUnsaved } from 'src/services/finance';
+import { financeCommands, TransactionUnsaved } from 'src/services/finance';
 import { TransactionForm } from './TransactionForm';
 import { useTransactionEditCurrentTransaction } from 'src/hooks/useTransactionEditCurrentTransaction';
 import { transactionForm } from 'src/services/transaction-form';
@@ -39,6 +39,9 @@ export const TransactionsEdit = () => {
       defaultValues={transactionForm.toFormValues(transaction)}
       onDelete={() => {
         void handleDelete();
+      }}
+      onBookmark={async (bookmark) => {
+        await financeCommands.bookmarks.create(bookmark);
       }}
     />
   );

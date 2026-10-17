@@ -18,7 +18,19 @@ import { formUtils } from 'src/lib/formUtils';
 // selector has closed by the time the caret lands.
 const HAND_OVER_FOCUS_DELAY_MS = 100;
 
-export const Form = <TValues extends StringValued<TValues>, TParsed>({
+// A second way out of the form besides Submit - saving its values as something else - that has
+// its own idea of what is valid. Kept generic: the form only validates, reports and hands over.
+export interface FormSecondaryAction<TValues, TSecondary> {
+  label: string;
+  // What the button reads once its action has run, until a value changes again.
+  doneLabel: string;
+  // May read only some of the fields - the ones the action cares about - but nothing the form
+  // does not hold.
+  schema: z.ZodType<TSecondary, Partial<TValues>>;
+  onAction: (parsed: TSecondary) => Promise<void>;
+}
+
+export const Form = <TValues extends StringValued<TValues>, TParsed, TSecondary = never>({
   title,
   fields,
   defaultValues,
@@ -28,6 +40,7 @@ export const Form = <TValues extends StringValued<TValues>, TParsed>({
   cancel,
   onDelete,
   deleteDisabled,
+  secondaryAction,
 }: {
   title: string;
   // Ordered: the list is both what gets rendered and what the focus flow is derived from.
@@ -39,6 +52,7 @@ export const Form = <TValues extends StringValued<TValues>, TParsed>({
   cancel: Pick<LinkProps, 'to' | 'search'>;
   onDelete?: () => void;
   deleteDisabled?: boolean;
+  secondaryAction?: FormSecondaryAction<TValues, TSecondary>;
 }) => {
   // The form machinery only ever moves raw strings around, so it works on the unbranded shape
   // while the props keep the caller's own value type. The fields are what a form renders, so
@@ -69,6 +83,10 @@ export const Form = <TValues extends StringValued<TValues>, TParsed>({
   });
 
   const values = useStore(form.store, (state) => state.values);
+  // The values the secondary action last ran on. While the form still holds exactly those, running
+  // it again would only repeat it, so the button stays done until something changes.
+  const [secondaryDoneFor, setSecondaryDoneFor] = useState<string | undefined>(undefined);
+  const secondaryDone = secondaryDoneFor === JSON.stringify(values);
   // A reader accepts any of the caller's field names, so the spec keeps its key checking even
   // though what it reads from is the widened shape.
   const read = (name: string) => values[name];
@@ -132,6 +150,33 @@ export const Form = <TValues extends StringValued<TValues>, TParsed>({
     }
   };
 
+  // Reports the action's own validation exactly where Submit reports its: on each field, and the
+  // form-level error cleared. A valid run clears whatever an earlier attempt left on the fields.
+  const runSecondaryAction = async (action: FormSecondaryAction<TValues, TSecondary>) => {
+    const current = form.state.values;
+    const issues = formUtils.validateWithSchema(current, action.schema);
+    for (const spec of fields) {
+      const name: string = spec.name;
+      const message = issues?.fields[name];
+      form.setFieldMeta(name, (meta) => ({
+        ...meta,
+        errorMap: { ...meta.errorMap, onSubmit: message },
+      }));
+    }
+    form.setErrorMap({ ...form.state.errorMap, onSubmit: undefined });
+    if (issues) {
+      return;
+    }
+
+    try {
+      await action.onAction(action.schema.parse(current));
+      setSecondaryDoneFor(JSON.stringify(current));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : defaultErrorMessage;
+      form.setErrorMap({ ...form.state.errorMap, onSubmit: { form: message, fields: {} } });
+    }
+  };
+
   return (
     <div className="w-full max-w-md p-6">
       <form
@@ -186,7 +231,22 @@ export const Form = <TValues extends StringValued<TValues>, TParsed>({
 
           <FieldError>{formUtils.getFirstErrorMessage(form.state.errors)}</FieldError>
 
-          <FormActions cancel={cancel} onDelete={onDelete} deleteDisabled={deleteDisabled} />
+          <FormActions
+            cancel={cancel}
+            onDelete={onDelete}
+            deleteDisabled={deleteDisabled}
+            secondary={
+              secondaryAction
+                ? {
+                    label: secondaryDone ? secondaryAction.doneLabel : secondaryAction.label,
+                    disabled: secondaryDone,
+                    onClick: () => {
+                      void runSecondaryAction(secondaryAction);
+                    },
+                  }
+                : undefined
+            }
+          />
         </FieldGroup>
       </form>
     </div>

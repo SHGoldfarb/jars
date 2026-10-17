@@ -2,6 +2,7 @@ import { DB } from './db';
 import {
   Account,
   Allocation,
+  Bookmark,
   Category,
   CategoryExpense,
   CategoryIncome,
@@ -14,6 +15,7 @@ import {
 import type {
   AccountRepository,
   AllocationRepository,
+  BookmarkRepository,
   CategoryRepository,
   FinanceDatabaseRepository,
   JarRepository,
@@ -23,7 +25,9 @@ import type {
 } from '../domain';
 import type z from 'zod';
 
-const createDBTableRepository = <T extends z.ZodObject>(
+// Typed on any schema, not just objects: a bookmark is a union of one object per movement kind,
+// and all this needs of a schema is to parse with it.
+const createDBTableRepository = <T extends z.ZodType>(
   Model: T,
   table:
     | 'accounts'
@@ -33,6 +37,7 @@ const createDBTableRepository = <T extends z.ZodObject>(
     | 'transactions'
     | 'transfers'
     | 'allocations'
+    | 'bookmarks'
 ) => ({
   getById: async (id: string) => {
     return Model.parse((await DB[table].getMap())[id]);
@@ -89,6 +94,8 @@ const allocationRepository: AllocationRepository = createDBTableRepository(
   'allocations'
 );
 
+const bookmarkRepository: BookmarkRepository = createDBTableRepository(Bookmark, 'bookmarks');
+
 const databaseRepository: FinanceDatabaseRepository = {
   snapshot: async () => FinanceSnapshot.parse(await DB.snapshot()),
   replaceAll: (snapshot: FinanceSnapshot) => DB.replaceAll(FinanceSnapshot.parse(snapshot)),
@@ -103,5 +110,6 @@ export const repositories = {
   transactions: transactionRepository,
   transfers: transferRepository,
   allocations: allocationRepository,
+  bookmarks: bookmarkRepository,
   database: databaseRepository,
 };

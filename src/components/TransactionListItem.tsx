@@ -9,7 +9,13 @@ import { useAccount } from 'src/hooks/useAccount';
 import { formatDateISO } from 'src/presentation/formatters/dateFormatters';
 import { MovementListItem } from './MovementListItem';
 
-export const TransactionListItem = ({ transaction }: { transaction: Transaction }) => {
+// Takes what a bookmark carries too, so a bookmark is listed exactly like its movement; without a
+// date there is just no date line.
+export const TransactionListItem = ({
+  transaction,
+}: {
+  transaction: Omit<Transaction, 'id' | 'dateISO' | 'archivedAtISO'> & { dateISO?: string };
+}) => {
   const jar = useJar(transaction.jarId);
   const category = useCategory(transaction.categoryId);
   const subcategory = useSubcategory(transaction.subcategoryId ?? '');
@@ -39,7 +45,9 @@ export const TransactionListItem = ({ transaction }: { transaction: Transaction 
       contentRight={
         <>
           <ItemTitle className={kindColor}>{formatCurrencyAmount(transaction.amount)}</ItemTitle>
-          <ItemDescription>{formatDateISO(transaction.dateISO)}</ItemDescription>
+          {transaction.dateISO ? (
+            <ItemDescription>{formatDateISO(transaction.dateISO)}</ItemDescription>
+          ) : null}
         </>
       }
     />

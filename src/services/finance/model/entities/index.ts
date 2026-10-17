@@ -7,3 +7,4 @@ export * from './transaction';
 export * from './transfer';
 export * from './allocation';
 export * from './snapshot';
+export * from './bookmark';

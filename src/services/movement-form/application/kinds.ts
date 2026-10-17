@@ -4,12 +4,18 @@ import {
   financeQueries,
   type Allocation,
   type AllocationUnsaved,
+  type Bookmark,
+  type BookmarkUnsaved,
   type Transfer,
   type TransferUnsaved,
 } from 'src/services/finance';
 import type { CurrencyAmount } from 'src/services/shared';
 import type { MovementEndpoints } from '../domain/commands';
-import type { MovementDraft, MovementEndpointNoun } from '../domain/formSchema';
+import type {
+  MovementBookmarkDraft,
+  MovementDraft,
+  MovementEndpointNoun,
+} from '../domain/formSchema';
 
 // The shape every movement shares, which is all the form itself reads off the entity.
 interface MovementLike {
@@ -37,7 +43,28 @@ interface MovementKind<TMovement extends MovementLike, TUnsaved> {
   updateMovement: (movement: TMovement) => Promise<void>;
   endpointsOf: (movement: TMovement) => MovementEndpoints;
   toUnsaved: (draft: MovementDraft) => TUnsaved;
+  // A bookmark is the draft minus its date, so it maps the same way, both directions. Reading
+  // one gives nothing when the bookmark is another kind's.
+  toBookmark: (draft: MovementBookmarkDraft) => BookmarkUnsaved;
+  fromBookmark: (bookmark: Bookmark) => MovementBookmarkDraft | undefined;
 }
+
+// The endpoint fields alone, so a movement and its bookmark are read by the same function.
+const transferEndpoints = ({
+  originAccountId,
+  destinationAccountId,
+}: Pick<Transfer, 'originAccountId' | 'destinationAccountId'>): MovementEndpoints => ({
+  originId: originAccountId,
+  destinationId: destinationAccountId,
+});
+
+const allocationEndpoints = ({
+  originJarId,
+  destinationJarId,
+}: Pick<Allocation, 'originJarId' | 'destinationJarId'>): MovementEndpoints => ({
+  originId: originJarId,
+  destinationId: destinationJarId,
+});
 
 export const transferKind: MovementKind<Transfer, TransferUnsaved> = {
   endpointNoun: { singular: 'account', plural: 'accounts' },
@@ -52,10 +79,7 @@ export const transferKind: MovementKind<Transfer, TransferUnsaved> = {
   updateMovement: async (transfer) => {
     await financeCommands.transfers.update(transfer);
   },
-  endpointsOf: ({ originAccountId, destinationAccountId }) => ({
-    originId: originAccountId,
-    destinationId: destinationAccountId,
-  }),
+  endpointsOf: transferEndpoints,
   toUnsaved: ({ amount, dateISO, description, originId, destinationId }) => ({
     amount,
     dateISO,
@@ -63,6 +87,21 @@ export const transferKind: MovementKind<Transfer, TransferUnsaved> = {
     originAccountId: originId,
     destinationAccountId: destinationId,
   }),
+  toBookmark: ({ amount, description, originId, destinationId }) => ({
+    movementType: 'transfer',
+    amount,
+    description,
+    originAccountId: originId,
+    destinationAccountId: destinationId,
+  }),
+  fromBookmark: (bookmark) =>
+    bookmark.movementType === 'transfer'
+      ? {
+          amount: bookmark.amount,
+          description: bookmark.description,
+          ...transferEndpoints(bookmark),
+        }
+      : undefined,
 };
 
 export const allocationKind: MovementKind<Allocation, AllocationUnsaved> = {
@@ -78,10 +117,7 @@ export const allocationKind: MovementKind<Allocation, AllocationUnsaved> = {
   updateMovement: async (allocation) => {
     await financeCommands.allocations.update(allocation);
   },
-  endpointsOf: ({ originJarId, destinationJarId }) => ({
-    originId: originJarId,
-    destinationId: destinationJarId,
-  }),
+  endpointsOf: allocationEndpoints,
   toUnsaved: ({ amount, dateISO, description, originId, destinationId }) => ({
     amount,
     dateISO,
@@ -89,6 +125,21 @@ export const allocationKind: MovementKind<Allocation, AllocationUnsaved> = {
     originJarId: originId,
     destinationJarId: destinationId,
   }),
+  toBookmark: ({ amount, description, originId, destinationId }) => ({
+    movementType: 'allocation',
+    amount,
+    description,
+    originJarId: originId,
+    destinationJarId: destinationId,
+  }),
+  fromBookmark: (bookmark) =>
+    bookmark.movementType === 'allocation'
+      ? {
+          amount: bookmark.amount,
+          description: bookmark.description,
+          ...allocationEndpoints(bookmark),
+        }
+      : undefined,
 };
 
 export type { MovementEndpointOption, MovementKind, MovementLike };

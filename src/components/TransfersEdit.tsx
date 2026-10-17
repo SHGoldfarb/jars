@@ -41,6 +41,9 @@ export const TransfersEdit = () => {
       onDelete={() => {
         void handleDelete();
       }}
+      onBookmark={async (bookmark) => {
+        await financeCommands.bookmarks.create(bookmark);
+      }}
     />
   );
 };

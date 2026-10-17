@@ -5,7 +5,7 @@ import z from 'zod';
 
 // The version the database is currently on. A backup carries it so a restore can tell
 // whether it understands the file.
-export const DB_SCHEMA_VERSION = 4;
+export const DB_SCHEMA_VERSION = 5;
 
 const db = new Dexie('JarsMainDatabase');
 
@@ -46,8 +46,13 @@ db.version(3).upgrade((tx) => {
 // Only the added store is declared: Dexie carries every unchanged one forward, and an existing
 // database needs no data migration because a subcategory is something new rather than a
 // reshaping of what is already stored.
-db.version(DB_SCHEMA_VERSION).stores({
+db.version(4).stores({
   subcategories: '&id, categoryId',
+});
+
+// Bookmarks are a new store too, so the same holds: declare it and nothing else.
+db.version(DB_SCHEMA_VERSION).stores({
+  bookmarks: '&id',
 });
 
 interface Identified {
@@ -90,6 +95,7 @@ const TABLE_NAMES = [
   'transactions',
   'allocations',
   'transfers',
+  'bookmarks',
 ] as const;
 
 export type FinanceTableName = (typeof TABLE_NAMES)[number];
@@ -102,20 +108,30 @@ const tables = {
   transactions: memoizedTable(db.table('transactions')),
   allocations: memoizedTable(db.table('allocations')),
   transfers: memoizedTable(db.table('transfers')),
+  bookmarks: memoizedTable(db.table('bookmarks')),
 };
 
 // Rows leave persistence unvalidated: the repository parses them into `FinanceSnapshot`.
 const snapshot = async (): Promise<Record<FinanceTableName, unknown[]>> => {
-  const [accounts, jars, categories, subcategories, transactions, allocations, transfers] =
-    await Promise.all([
-      tables.accounts.getMap(),
-      tables.jars.getMap(),
-      tables.categories.getMap(),
-      tables.subcategories.getMap(),
-      tables.transactions.getMap(),
-      tables.allocations.getMap(),
-      tables.transfers.getMap(),
-    ]);
+  const [
+    accounts,
+    jars,
+    categories,
+    subcategories,
+    transactions,
+    allocations,
+    transfers,
+    bookmarks,
+  ] = await Promise.all([
+    tables.accounts.getMap(),
+    tables.jars.getMap(),
+    tables.categories.getMap(),
+    tables.subcategories.getMap(),
+    tables.transactions.getMap(),
+    tables.allocations.getMap(),
+    tables.transfers.getMap(),
+    tables.bookmarks.getMap(),
+  ]);
 
   return {
     accounts: Object.values(accounts),
@@ -125,6 +141,7 @@ const snapshot = async (): Promise<Record<FinanceTableName, unknown[]>> => {
     transactions: Object.values(transactions),
     allocations: Object.values(allocations),
     transfers: Object.values(transfers),
+    bookmarks: Object.values(bookmarks),
   };
 };
 

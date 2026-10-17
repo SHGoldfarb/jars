@@ -15,6 +15,16 @@ export const transferFormPageConstructor = (page: Page) => {
     locator: () => submitButtonLocator,
   };
   const deleteButton = page.getByRole('button', { name: 'Delete' });
+  const bookmarkButtonLocator = page.getByRole('button', { name: 'Save as bookmark' });
+  const bookmarkButton = {
+    click: async () => {
+      await closeDropdowns();
+      await bookmarkButtonLocator.click();
+    },
+    locator: () => bookmarkButtonLocator,
+  };
+  // What the bookmark button turns into once it has saved the values the form holds.
+  const bookmarkedButton = page.getByRole('button', { name: 'Bookmarked' });
   const amountInput = page.getByLabel('Amount');
   const dateInput = page.getByLabel('Date');
   const descriptionInput = page.getByLabel('Description');
@@ -79,6 +89,8 @@ export const transferFormPageConstructor = (page: Page) => {
 
   return {
     submitButton,
+    bookmarkButton,
+    bookmarkedButton,
     deleteButton,
     amountInput,
     dateInput,

@@ -24,6 +24,7 @@ export const createFinanceQueries = (deps: FinanceRepositories) => {
       deps.jars.getLastOperationId(),
       deps.categories.getLastOperationId(),
       deps.subcategories.getLastOperationId(),
+      deps.bookmarks.getLastOperationId(),
     ].join(':');
 
   const withDatabaseCache = <T extends unknown[], U>(f: (...args: T) => U) => {
@@ -98,6 +99,12 @@ export const createFinanceQueries = (deps: FinanceRepositories) => {
         financeDomainQueries.movements.descriptions(await deps.allocations.list()),
       getById: (allocationId: string) => deps.allocations.getById(allocationId),
       lastOperationId: () => deps.allocations.getLastOperationId(),
+    },
+    bookmarks: {
+      list: async (params?: { includeArchived?: boolean }) =>
+        financeDomainQueries.bookmarks.list(await deps.bookmarks.list(), params ?? {}),
+      getById: (bookmarkId: string) => deps.bookmarks.getById(bookmarkId),
+      lastOperationId: () => deps.bookmarks.getLastOperationId(),
     },
     database: {
       snapshot: () => deps.database.snapshot(),

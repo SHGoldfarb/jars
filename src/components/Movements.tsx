@@ -33,6 +33,7 @@ export const Movements = () => {
           { label: 'Add transaction', url: '/transactions/new', search: { month } },
           { label: 'Add transfer', url: '/transfers/new', search: { month } },
           { label: 'Add allocation', url: '/allocations/new', search: { month } },
+          { label: 'Bookmarks', url: '/bookmarks', search: { month } },
         ]}
       >
         {(item) => {

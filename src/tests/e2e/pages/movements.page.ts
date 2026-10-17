@@ -4,6 +4,7 @@ export const movementsPageConstructor = (page: Page) => {
   const createTransactionButton = page.getByRole('link', { name: 'Add transaction' });
   const createTransferButton = page.getByRole('link', { name: 'Add transfer' });
   const createAllocationButton = page.getByRole('link', { name: 'Add allocation' });
+  const bookmarksButton = page.getByRole('link', { name: 'Bookmarks', exact: true });
   const getMovement = (description: string) =>
     page.getByRole('link', { name: new RegExp(description, 'i') });
   // Every row says which kind of movement it is, so a kind that should not be in the list can
@@ -50,6 +51,7 @@ export const movementsPageConstructor = (page: Page) => {
     createTransactionButton,
     createTransferButton,
     createAllocationButton,
+    bookmarksButton,
     getMovement,
     movementKind,
     expectMovementToExist,

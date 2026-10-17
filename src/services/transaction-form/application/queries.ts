@@ -1,7 +1,9 @@
 import { byName, financeQueries, type Subcategory } from 'src/services/finance';
+import type { TransactionFormValues } from '../domain/formSchema';
+import { transactionFormValues } from './formValues';
 
 const createTransactionFormQueries = (financeQueriesDeps: typeof financeQueries) => {
-  return {
+  const queries = {
     // Gets the options that should be shown in the transaction form accounts selector:
     // The non archived accounts + the account the transaction being edited already belongs to,
     // even if it is archived.
@@ -96,6 +98,44 @@ const createTransactionFormQueries = (financeQueriesDeps: typeof financeQueries)
       return byCategory;
     },
   };
+
+  // Gets the values a new transaction started from a bookmark opens with: the bookmark's own,
+  // the date left at the form's default. A reference the selectors would no longer offer - a
+  // deleted account, jar, category or subcategory - is left empty for the user to pick again,
+  // since the form only accepts what its selectors offer. A bookmark that is gone, or is not a
+  // transaction's (a hand-edited link), gives nothing, and the form opens blank.
+  const getFormValuesFromBookmark = async (
+    bookmarkId: string
+  ): Promise<TransactionFormValues | undefined> => {
+    const bookmark = (await financeQueriesDeps.bookmarks.list()).find(
+      ({ id }) => id === bookmarkId
+    );
+    if (bookmark?.movementType !== 'transaction') {
+      return undefined;
+    }
+
+    const [accounts, jars, categories, subcategoriesByCategoryId] = await Promise.all([
+      queries.getAccountsForSelector(undefined),
+      queries.getJarsForSelector(undefined),
+      queries.getCategoriesForSelector(bookmark.kind, undefined),
+      queries.getSubcategoriesByCategoryForSelector(undefined),
+    ]);
+    const offered = (options: { id: string }[], id: string) =>
+      options.some((option) => option.id === id) ? id : '';
+
+    const values = transactionFormValues.fromBookmark(bookmark);
+    const categoryId = offered(categories, values.categoryId);
+    return {
+      ...values,
+      accountId: offered(accounts, values.accountId),
+      jarId: offered(jars, values.jarId),
+      categoryId,
+      // Only ever one of the kept category's own: with the category gone, so is the choice.
+      subcategoryId: offered(subcategoriesByCategoryId[categoryId] ?? [], values.subcategoryId),
+    };
+  };
+
+  return { ...queries, getFormValuesFromBookmark };
 };
 
 export const transactionFormQueries = createTransactionFormQueries(financeQueries);

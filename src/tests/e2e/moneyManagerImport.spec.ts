@@ -123,8 +123,13 @@ test('the import is confirmed, then replaces the current data without a manual r
   settingsPage,
   movementsPage,
   accountsPage,
+  bookmarksPage,
 }) => {
-  await seedData({ ...defaultData, transactions: [{ description: 'Created before the import' }] });
+  await seedData({
+    ...defaultData,
+    transactions: [{ description: 'Created before the import' }],
+    bookmarks: [{ description: 'Saved before the import' }],
+  });
 
   // Cancelling the confirmation writes nothing.
   await rootLayoutPage.navButton('Settings').click();
@@ -151,6 +156,10 @@ test('the import is confirmed, then replaces the current data without a manual r
   await movementsPage.expectMovementToNotExist('Created before the import');
   await movementsPage.selectMonth(SAMPLE_MONTH);
   await movementsPage.expectMovementToExist('Monthly salary');
+
+  // Bookmarks are part of the data an import replaces.
+  await movementsPage.bookmarksButton.click();
+  await expect(bookmarksPage.emptyMessage).toBeVisible();
 
   await rootLayoutPage.navButton('Accounts').click();
   await accountsPage.expectAccountToNotExist(defaultData.accounts[0]);

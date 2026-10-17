@@ -10,7 +10,8 @@ Your cash sits in real accounts — your wallet, your bank, your savings account
 
 - **Accounts** — Define your real-world money containers (bank accounts, cash, etc.) and log transactions manually.
 - **Jars** — Create budget envelopes or savings goals, then pour money into them. A jar labeled "Holidays" or "Monthly Expenses" holds a portion of your real account balances — no transfers needed. When you receive money, you decide which jar it goes into.
-- **Categories** — Tag every transaction with a category (groceries, rent, salary, freelance, etc.) to see where your money is actually coming from and going.
+- **Categories** — Tag every transaction with a category (groceries, rent, salary, freelance, etc.) to see where your money is actually coming from and going. Categories can have subcategories (Groceries → Fruit) for finer detail.
+- **Bookmarks** — Save a movement you repeat (rent, a salary allocation, a monthly transfer) as a bookmark, then start new movements from it with every field pre-filled except the date.
 - **Stats** - of your income and expenses.
 
 #### Other functionality
@@ -28,6 +29,8 @@ Your cash sits in real accounts — your wallet, your bank, your savings account
     - `transfers`: between `accounts`.
     - `allocations`: transfer between `jars`.
     - `category`: kind `income` or `expense`.
+    - `subcategory`: belongs to exactly one `category` and inherits its kind.
     - `transactions`: kind `income` or `expense`.
+    - `bookmarks`: a saved copy of a transaction, transfer or allocation, without its date.
   - Modeling:
-    - `transactions` have 1 `account`, 1 `category` and 1 `jar`.
+    - `transactions` have 1 `account`, 1 `category`, optionally 1 `subcategory` of that category, and 1 `jar`.

@@ -1,7 +1,7 @@
 import { Form } from 'src/components/Form';
 import { useTransactionFormSpec } from 'src/hooks/useTransactionFormSpec';
 import type { YearMonthKey } from 'src/lib/yearMonth';
-import { TransactionUnsaved } from 'src/services/finance';
+import type { BookmarkUnsaved, TransactionUnsaved } from 'src/services/finance';
 import { transactionForm, type TransactionFormValues } from 'src/services/transaction-form';
 
 export const TransactionForm = ({
@@ -9,6 +9,7 @@ export const TransactionForm = ({
   onSubmit,
   cancelMonth,
   onDelete,
+  onBookmark,
   defaultErrorMessage,
   defaultValues,
 }: {
@@ -17,10 +18,12 @@ export const TransactionForm = ({
   // Cancelling always goes back to Movements; this is the month it should land on.
   cancelMonth?: YearMonthKey;
   onDelete?: () => void;
+  // Given, the form offers to save what is typed into it as a bookmark.
+  onBookmark?: (bookmark: BookmarkUnsaved) => Promise<void>;
   defaultErrorMessage: string;
   defaultValues?: TransactionFormValues;
 }) => {
-  const { fields, schema } = useTransactionFormSpec();
+  const { fields, schema, bookmarkSchema } = useTransactionFormSpec();
 
   return (
     <Form
@@ -28,19 +31,20 @@ export const TransactionForm = ({
       fields={fields}
       defaultValues={defaultValues ?? transactionForm.getDefaultValues()}
       schema={schema}
-      onSubmit={(values) =>
-        onSubmit({
-          ...values,
-          dateISO: values.date,
-          description: values.description.trim(),
-          // No subcategory is an absent one: the form holds '' for an empty selector, which is
-          // not an id the entity would accept.
-          subcategoryId: values.subcategoryId || undefined,
-        })
-      }
+      onSubmit={(values) => onSubmit(transactionForm.toUnsaved(values))}
       defaultErrorMessage={defaultErrorMessage}
       cancel={{ to: '/movements', search: { month: cancelMonth } }}
       onDelete={onDelete}
+      secondaryAction={
+        onBookmark
+          ? {
+              label: 'Save as bookmark',
+              doneLabel: 'Bookmarked',
+              schema: bookmarkSchema,
+              onAction: (values) => onBookmark(transactionForm.toBookmark(values)),
+            }
+          : undefined
+      }
     />
   );
 };

@@ -1,9 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { movementsSearchSchema } from 'src/routes/movements';
+import { newMovementSearchSchema } from 'src/routes/movements';
 import { AllocationsNew } from 'src/components/AllocationsNew';
 
 export const Route = createFileRoute('/allocations/new')({
   component: AllocationsNew,
-  // Carries the month the user was browsing, so cancelling returns to it.
-  validateSearch: movementsSearchSchema,
+  // Carries the month the user was browsing, so cancelling returns to it, and the bookmark the
+  // movement is started from, if any.
+  validateSearch: newMovementSearchSchema,
 });

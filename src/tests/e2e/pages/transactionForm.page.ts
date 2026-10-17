@@ -21,6 +21,16 @@ export const transactionFormPageConstructor = (page: Page) => {
     locator: () => submitButtonLocator,
   };
   const deleteButton = page.getByRole('button', { name: 'Delete' });
+  const bookmarkButtonLocator = page.getByRole('button', { name: 'Save as bookmark' });
+  const bookmarkButton = {
+    click: async () => {
+      await closeDropdowns();
+      await bookmarkButtonLocator.click();
+    },
+    locator: () => bookmarkButtonLocator,
+  };
+  // What the bookmark button turns into once it has saved the values the form holds.
+  const bookmarkedButton = page.getByRole('button', { name: 'Bookmarked' });
   // Like Submit: the form opens a selector on mount, so the dropdown is dismissed first.
   const cancelButtonLocator = page.getByRole('button', { name: 'Cancel' });
   const cancelButton = {
@@ -148,6 +158,8 @@ export const transactionFormPageConstructor = (page: Page) => {
 
   return {
     submitButton,
+    bookmarkButton,
+    bookmarkedButton,
     amountInput,
     dateInput,
     descriptionInput,

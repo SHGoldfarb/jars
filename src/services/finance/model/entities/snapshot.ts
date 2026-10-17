@@ -1,6 +1,7 @@
 import * as z from 'zod';
 import { Account } from './account';
 import { Allocation } from './allocation';
+import { Bookmark } from './bookmark';
 import { Category } from './category';
 import { Jar } from './jar';
 import { Subcategory } from './subcategory';
@@ -17,6 +18,7 @@ export const FinanceSnapshot = z.object({
   transactions: z.array(Transaction),
   transfers: z.array(Transfer),
   allocations: z.array(Allocation),
+  bookmarks: z.array(Bookmark),
 });
 
 export type FinanceSnapshot = z.infer<typeof FinanceSnapshot>;

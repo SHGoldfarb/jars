@@ -1,6 +1,7 @@
 import { Form } from 'src/components/Form';
 import { useMovementFormSpec } from 'src/hooks/useMovementFormSpec';
 import type { YearMonthKey } from 'src/lib/yearMonth';
+import type { BookmarkUnsaved } from 'src/services/finance';
 import {
   type MovementDraft,
   type MovementFormUi,
@@ -14,6 +15,7 @@ export const MovementForm = ({
   onSubmit,
   cancelMonth,
   onDelete,
+  onBookmark,
   defaultErrorMessage,
   defaultValues,
 }: {
@@ -24,10 +26,12 @@ export const MovementForm = ({
   // Cancelling always goes back to Movements; this is the month it should land on.
   cancelMonth?: YearMonthKey;
   onDelete?: () => void;
+  // Given, the form offers to save what is typed into it as a bookmark.
+  onBookmark?: (bookmark: BookmarkUnsaved) => Promise<void>;
   defaultErrorMessage: string;
   defaultValues?: MovementFormValues;
 }) => {
-  const { fields, schema } = useMovementFormSpec(movementForm, movementId);
+  const { fields, schema, bookmarkSchema } = useMovementFormSpec(movementForm, movementId);
 
   return (
     <Form
@@ -39,6 +43,16 @@ export const MovementForm = ({
       defaultErrorMessage={defaultErrorMessage}
       cancel={{ to: '/movements', search: { month: cancelMonth } }}
       onDelete={onDelete}
+      secondaryAction={
+        onBookmark
+          ? {
+              label: 'Save as bookmark',
+              doneLabel: 'Bookmarked',
+              schema: bookmarkSchema,
+              onAction: (values) => onBookmark(movementForm.toBookmark(values)),
+            }
+          : undefined
+      }
     />
   );
 };

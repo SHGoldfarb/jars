@@ -259,7 +259,7 @@ Create backup, restore from backup (JSON). Export data (CSV). Import from Money 
 - [x] After a successful clear the app reflects the empty database without a manual page refresh
 - [x] The database stays empty across page refreshes
 
-## Epic 9 — Subcategories
+## Epic 9 — Subcategories [DONE]
 
 Categories can have subcategories, managed from the Categories screen and selectable when recording a transaction.
 
@@ -278,14 +278,16 @@ Categories can have subcategories, managed from the Categories screen and select
 - [x] A transaction's subcategory is shown wherever its category is shown, and can be changed by editing the transaction
 - [x] Subcategories and their assignment to transactions persist across page refreshes
 
-## Epic 10 - Bookmarks
+## Epic 10 — Bookmarks [DONE]
 
 ### Acceptance criteria
 
-- [ ] An existing movement can be saved as a bookmark
-- [ ] Button to open bookmarks menu from the movements page
-- [ ] Selecting a bookmark opens the correct movement form (allocation, transfer or transaction) with all fields pre-filled
-  - [ ] The date field is the only one that is not taken from the bookmark - it gets the default value.
+- [x] An existing movement can be saved as a bookmark
+  - [x] What is saved is what is typed into the movement's form, including edits not yet submitted, not what is stored
+- [x] Button to open bookmarks menu from the movements page
+- [x] Selecting a bookmark opens the correct movement form (allocation, transfer or transaction) with all fields pre-filled
+  - [x] The date field is the only one that is not taken from the bookmark - it gets the default value.
+- [x] A bookmark can be deleted from the bookmarks menu
 
 ## Small features backlog
 

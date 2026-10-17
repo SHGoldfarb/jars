@@ -1,6 +1,7 @@
 import {
   Account,
   Allocation,
+  Bookmark,
   Category,
   Jar,
   Movement,
@@ -176,6 +177,14 @@ const listMovementMonths = (
   return [...months].sort(yearMonth.compareDescending);
 };
 
+// Newest first: the bookmark just saved is the one most likely to be wanted next.
+const listBookmarks = (bookmarks: Bookmark[], params: { includeArchived?: boolean }) => {
+  const { includeArchived = false } = params;
+  return bookmarks
+    .filter((bookmark) => includeArchived || !bookmark.archivedAtISO)
+    .sort((a, b) => b.createdAtISO.localeCompare(a.createdAtISO));
+};
+
 export const financeDomainQueries = {
   transactions: {
     list: listTransactions,
@@ -202,5 +211,8 @@ export const financeDomainQueries = {
     list: listMovements,
     months: listMovementMonths,
     descriptions: listMovementDescriptions,
+  },
+  bookmarks: {
+    list: listBookmarks,
   },
 };

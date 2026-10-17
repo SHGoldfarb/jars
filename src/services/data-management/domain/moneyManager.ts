@@ -338,6 +338,8 @@ const toFinanceSnapshot = (rows: XlsxCell[][]): ParseResult<FinanceSnapshot> => 
       // Every movement lives in the single `Cash` account, so nothing moves between accounts.
       transfers: [],
       allocations,
+      // An import replaces the whole database, and bookmarks are part of it.
+      bookmarks: [],
     },
   };
 };

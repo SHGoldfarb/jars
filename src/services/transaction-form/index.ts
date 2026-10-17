@@ -8,7 +8,15 @@ export const transactionForm = {
   queries: transactionFormQueries,
   getDefaultValues: transactionFormSchema.getDefaultValues,
   createFormSchema: transactionFormSchema.createFormSchema,
+  createBookmarkSchema: transactionFormSchema.createBookmarkSchema,
   toFormValues: transactionFormValues.toFormValues,
+  toUnsaved: transactionFormValues.toUnsaved,
+  toBookmark: transactionFormValues.toBookmark,
 };
 
-export type { TransactionFormValues } from './domain/formSchema';
+export type {
+  ParsedTransactionBookmarkValues,
+  ParsedTransactionFormValues,
+  TransactionFormOptions,
+  TransactionFormValues,
+} from './domain/formSchema';

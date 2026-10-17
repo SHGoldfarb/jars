@@ -84,12 +84,12 @@ test('movements list shows transactions, transfers and allocations interleaved b
   await rootLayoutPage.navButton('Movements').click();
 
   // Find the movement list (role="list" that contains "Add transaction") and get all links
-  // within it to exclude nav links in other lists
+  // within it to exclude nav links in other lists, leaving out the list's own actions
   const movementLinks = page
     .getByRole('list')
     .filter({ hasText: 'Add transaction' })
     .getByRole('link')
-    .filter({ hasNotText: /^Add / });
+    .filter({ hasNotText: /^(Add .*|Bookmarks)$/ });
 
   // The kinds are interleaved by date descending, each labelled with its own kind
   await expect(movementLinks.nth(0)).toContainText('Newest transfer');
@@ -156,12 +156,20 @@ test.describe('movements month selector', () => {
     rootLayoutPage,
     movementsPage,
     transactionFormPage,
+    bookmarksPage,
   }) => {
-    await seedData(defaultData);
+    await seedData({ ...defaultData, bookmarks: [{ description: 'Bookmarked rent' }] });
 
     await rootLayoutPage.navButton('Movements').click();
     await movementsPage.nextMonthButton.click();
     await movementsPage.createTransactionButton.click();
+    await transactionFormPage.cancelButton.click();
+
+    await expect(movementsPage.monthSelect).toHaveText(monthLabel(1));
+
+    // Started from a bookmark, by way of the bookmarks menu, it still remembers the month.
+    await movementsPage.bookmarksButton.click();
+    await bookmarksPage.getBookmark('Bookmarked rent').click();
     await transactionFormPage.cancelButton.click();
 
     await expect(movementsPage.monthSelect).toHaveText(monthLabel(1));

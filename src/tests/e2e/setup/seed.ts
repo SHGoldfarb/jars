@@ -40,6 +40,9 @@ export interface SeedTransaction extends SeedMovement {
   subcategoryName?: string;
 }
 
+// A transaction bookmark: what a transaction carries, minus the date a bookmark never has.
+export type SeedBookmark = Omit<SeedTransaction, 'date' | 'archived'>;
+
 export interface SeedTransfer extends SeedMovement {
   originAccountName: string;
   destinationAccountName: string;
@@ -61,6 +64,7 @@ export interface SeedData {
   transactions?: readonly SeedTransaction[];
   transfers?: readonly SeedTransfer[];
   allocations?: readonly SeedAllocation[];
+  bookmarks?: readonly SeedBookmark[];
 }
 
 export const defaultData = {
@@ -137,7 +141,8 @@ const toSnapshot = (data: SeedData): FinanceSnapshot => {
     categoryId: idByName(categories, 'category', categoryName),
   }));
 
-  const transactions = (data.transactions ?? []).map((transaction) => {
+  // What a transaction and a transaction bookmark share: everything a transaction points at.
+  const transactionFields = (transaction: SeedBookmark) => {
     const type = transaction.type ?? 'Expense';
     const defaultCategoryName =
       type === 'Income' ? defaultData.incomeCategories[0] : defaultData.expenseCategories[0];
@@ -158,14 +163,20 @@ const toSnapshot = (data: SeedData): FinanceSnapshot => {
           };
 
     return {
-      ...movement(transaction),
+      amount: toAmount(transaction.amount ?? '1000'),
+      description: transaction.description,
       kind: type === 'Income' ? ('income' as const) : ('expense' as const),
       accountId: idByName(accounts, 'account', transaction.accountName ?? defaultData.accounts[0]),
       jarId: idByName(jars, 'jar', transaction.jarName ?? defaultData.jars[0]),
       categoryId,
       ...subcategoryId,
     };
-  });
+  };
+
+  const transactions = (data.transactions ?? []).map((transaction) => ({
+    ...movement(transaction),
+    ...transactionFields(transaction),
+  }));
 
   const transfers = (data.transfers ?? []).map((transfer) => ({
     ...movement(transfer),
@@ -179,7 +190,26 @@ const toSnapshot = (data: SeedData): FinanceSnapshot => {
     destinationJarId: idByName(jars, 'jar', allocation.destinationJarName),
   }));
 
-  return { accounts, jars, categories, subcategories, transactions, transfers, allocations };
+  // Created a minute apart in the order given, so the menu - newest first - lists them reversed.
+  const bookmarks = (data.bookmarks ?? []).map((bookmark, index) => {
+    return {
+      ...transactionFields(bookmark),
+      id: randomUUID(),
+      createdAtISO: new Date(Date.parse(ARCHIVED_AT_ISO) + index * 60_000).toISOString(),
+      movementType: 'transaction' as const,
+    };
+  });
+
+  return {
+    accounts,
+    jars,
+    categories,
+    subcategories,
+    transactions,
+    transfers,
+    allocations,
+    bookmarks,
+  };
 };
 
 // The backup file "Load from backup" takes. The schema version is hardcoded like the settings
@@ -189,7 +219,7 @@ export const seedBackupFile = (data: SeedData) => ({
   mimeType: 'application/json',
   buffer: Buffer.from(
     JSON.stringify({
-      schemaVersion: 4,
+      schemaVersion: 5,
       createdAtISO: '2026-01-01T00:00:00.000Z',
       data: toSnapshot(data),
     })

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as MovementsRouteImport } from './routes/movements'
 import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as BookmarksRouteImport } from './routes/bookmarks'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JarsIndexRouteImport } from './routes/jars/index'
 import { Route as CategoriesIndexRouteImport } from './routes/categories/index'
@@ -47,6 +48,11 @@ const MovementsRoute = MovementsRouteImport.update({
 const CategoriesRoute = CategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookmarksRoute = BookmarksRouteImport.update({
+  id: '/bookmarks',
+  path: '/bookmarks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -162,6 +168,7 @@ const CategoriesCategoryIdSubcategoriesNewRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/bookmarks': typeof BookmarksRoute
   '/categories': typeof CategoriesRouteWithChildren
   '/movements': typeof MovementsRoute
   '/settings': typeof SettingsRoute
@@ -188,6 +195,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/bookmarks': typeof BookmarksRoute
   '/movements': typeof MovementsRoute
   '/settings': typeof SettingsRoute
   '/accounts/new': typeof AccountsNewRoute
@@ -214,6 +222,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/bookmarks': typeof BookmarksRoute
   '/categories': typeof CategoriesRouteWithChildren
   '/movements': typeof MovementsRoute
   '/settings': typeof SettingsRoute
@@ -242,6 +251,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/bookmarks'
     | '/categories'
     | '/movements'
     | '/settings'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/bookmarks'
     | '/movements'
     | '/settings'
     | '/accounts/new'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/bookmarks'
     | '/categories'
     | '/movements'
     | '/settings'
@@ -320,6 +332,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BookmarksRoute: typeof BookmarksRoute
   CategoriesRoute: typeof CategoriesRouteWithChildren
   MovementsRoute: typeof MovementsRoute
   SettingsRoute: typeof SettingsRoute
@@ -358,6 +371,13 @@ declare module '@tanstack/react-router' {
       path: '/categories'
       fullPath: '/categories'
       preLoaderRoute: typeof CategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bookmarks': {
+      id: '/bookmarks'
+      path: '/bookmarks'
+      fullPath: '/bookmarks'
+      preLoaderRoute: typeof BookmarksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -540,6 +560,7 @@ const CategoriesRouteWithChildren = CategoriesRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BookmarksRoute: BookmarksRoute,
   CategoriesRoute: CategoriesRouteWithChildren,
   MovementsRoute: MovementsRoute,
   SettingsRoute: SettingsRoute,

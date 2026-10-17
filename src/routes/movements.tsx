@@ -9,6 +9,13 @@ export const movementsSearchSchema = z.object({
   month: YearMonthKey.optional().catch(undefined),
 });
 
+// The pages a movement is started from: they carry the month to return to, and may name the
+// bookmark the movement is started from. A stale or hand-edited bookmark id degrades to a blank
+// form, for the same reason a bad month degrades to none.
+export const newMovementSearchSchema = movementsSearchSchema.extend({
+  bookmarkId: z.uuidv4().optional().catch(undefined),
+});
+
 export const Route = createFileRoute('/movements')({
   component: Movements,
   validateSearch: movementsSearchSchema,
