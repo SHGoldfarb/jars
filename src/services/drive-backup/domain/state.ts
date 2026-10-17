@@ -21,6 +21,8 @@ export const DriveBackupState = z.discriminatedUnion('status', [
 
 export type DriveBackupState = z.infer<typeof DriveBackupState>;
 
+export type DriveBackupConnection = Extract<DriveBackupState, { status: 'connected' }>;
+
 // What the Settings card shows.
 export type DriveBackupStatus =
   | { kind: 'disconnected' }
