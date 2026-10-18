@@ -27,6 +27,10 @@ export const settingsPageConstructor = (page: Page) => {
     action(name).getByRole('checkbox', { name: option });
   const statusMessage = page.getByRole('alert');
 
+  const driveBackup = page.getByRole('region', { name: 'Google Drive backup' });
+  const driveBackupButton = (name: 'Setup backup to Google Drive') =>
+    driveBackup.getByRole('button', { name });
+
   // The dialog is portalled out of the action's card, so it is located from the page.
   const confirmDialog = (name: SettingsActionName) =>
     page.getByRole('alertdialog', { name: `${name}?` });
@@ -75,6 +79,8 @@ export const settingsPageConstructor = (page: Page) => {
     actionWarning,
     actionOption,
     statusMessage,
+    driveBackup,
+    driveBackupButton,
     confirmDialog,
     confirmButton,
     cancelButton,

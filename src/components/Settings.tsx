@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import { Checkbox } from 'components/ui/checkbox';
 import { Label } from 'components/ui/label';
 import { useDataManagement } from 'src/hooks/useDataManagement';
+import { DriveBackupSettings } from './DriveBackupSettings';
 import { SettingsAction } from './SettingsAction';
 
 const replacesAllData = 'Replaces all current data. This cannot be undone.';
@@ -40,6 +41,7 @@ export const Settings = () => {
           void handleDownload(createBackup, 'Failed to create backup:');
         }}
       />
+      <DriveBackupSettings />
       <SettingsAction
         kind="file"
         title="Load from backup"

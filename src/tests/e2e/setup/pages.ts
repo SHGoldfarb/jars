@@ -1,4 +1,4 @@
-import { test as base } from '@playwright/test';
+import { test as base } from './googleDrive';
 import { accountsPageConstructor, type AccountsPage } from '../pages/accounts.page';
 import { accountFormPageConstructor, type AccountFormPage } from '../pages/accountsForm.page';
 import { jarsPageConstructor, type JarsPage } from '../pages/jars.page';
@@ -34,7 +34,8 @@ const test = base.extend<{
   settingsPage: SettingsPage;
   bookmarksPage: BookmarksPage;
 }>({
-  rootLayoutPage: async ({ page }, use) => {
+  // Depends on the Google fake so its routes are in place before the app first loads.
+  rootLayoutPage: async ({ page, googleDrive: _googleDrive }, use) => {
     // The router devtools float over the bottom of every page and swallow the clicks meant for
     // whatever sits under them - a form's Submit button, once the form is tall enough to reach
     // that corner. They are a development aid rather than part of the app under test, so they
