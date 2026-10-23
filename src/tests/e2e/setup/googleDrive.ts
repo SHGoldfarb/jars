@@ -58,7 +58,7 @@ const createGoogleDriveFake = () => {
   let popupOutcome: PopupOutcome = 'grant';
   let reachable = true;
   let scriptGate: Promise<void> = Promise.resolve();
-  let popups = 0;
+  const popupHints: (string | undefined)[] = [];
   const requests: string[] = [];
   const folders: DriveFolder[] = [];
   const uploads: DriveUpload[] = [];
@@ -102,8 +102,8 @@ const createGoogleDriveFake = () => {
 
   return {
     handle,
-    popup: () => {
-      popups += 1;
+    popup: (hint: string | undefined) => {
+      popupHints.push(hint);
       return popupOutcome;
     },
     fake: {
@@ -127,7 +127,8 @@ const createGoogleDriveFake = () => {
       },
       // Every request to a Google host, in order, as `METHOD host/path`.
       requests: () => [...requests],
-      popups: () => popups,
+      // The account hint each sign-in popup was opened with, in order.
+      popupHints: () => [...popupHints],
       folders: () => [...folders],
       uploads: () => [...uploads],
     },
@@ -137,6 +138,10 @@ const createGoogleDriveFake = () => {
 export type GoogleDriveFake = ReturnType<typeof createGoogleDriveFake>['fake'];
 
 export const test = base.extend<{ googleDrive: GoogleDriveFake }>({
+  // The app's service worker controls a page once it is reloaded, and in WebKit what it fetches
+  // never reaches `page.route`: Google's real script would load around the fake. No test is about
+  // the service worker, so it is blocked for all of them.
+  serviceWorkers: 'block',
   googleDrive: [
     async ({ page }, use) => {
       const google = createGoogleDriveFake();
