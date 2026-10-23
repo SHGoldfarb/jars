@@ -13,6 +13,7 @@ Your cash sits in real accounts — your wallet, your bank, your savings account
 - **Categories** — Tag every transaction with a category (groceries, rent, salary, freelance, etc.) to see where your money is actually coming from and going. Categories can have subcategories (Groceries → Fruit) for finer detail.
 - **Bookmarks** — Save a movement you repeat (rent, a salary allocation, a monthly transfer) as a bookmark, then start new movements from it with every field pre-filled except the date.
 - **Stats** - of your income and expenses.
+- **Google Drive backup** — Connect once; when a backup is due, Settings asks you to reconnect, and one click saves a copy of your data to a `jars` folder in your Drive.
 
 #### Other functionality
 

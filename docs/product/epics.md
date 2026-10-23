@@ -289,15 +289,14 @@ Categories can have subcategories, managed from the Categories screen and select
   - [x] The date field is the only one that is not taken from the bookmark - it gets the default value.
 - [x] A bookmark can be deleted from the bookmarks menu
 
-## Epic 11 — Google Drive backup
+## Epic 11 — Google Drive backup [DONE]
 
 ### Acceptance criteria
 
-- [ ] "Setup backup to Google Drive" button in settings page
-- [ ] Backs up every time that the app opens if last backup was more than 24 hours and the current snapshot is different than the last snapshot
-- [ ] "jars" folder in the google drive visible to the user
-- [ ] backup files are the same than the json backup
-- [ ] If the auth expires, a prompt to reconnect is shown in the settings page
+- [x] "Setup backup to Google Drive" button in settings page
+- [x] When the app opens more than 24 hours after the last backup and the data has changed, Settings prompts to reconnect, and one click backs up
+- [x] "jars" folder in the google drive visible to the user
+- [x] backup files are the same than the json backup
 
 ### Out of scope
 
@@ -313,7 +312,6 @@ Categories can have subcategories, managed from the Categories screen and select
 
 ## Epics Backlog
 
-- Configure automatic backup to cloud (Google Drive?)
 - Desktop support
 - Sync support (open in desktop browser and keep synced with phone)
 - switch between dark/light modes

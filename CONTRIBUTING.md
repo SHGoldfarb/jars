@@ -88,6 +88,8 @@ The main application code lives under `src/` and is grouped by responsibility:
   - `movement-form/` - transfer and allocation form orchestration (`application/`, `domain/`)
   - `data-management/` - backup, restore, CSV export and Money Manager import file formats
     (`application/`, `domain/`)
+  - `drive-backup/` - syncs the JSON backup to the user's Google Drive (`application/`, `domain/`,
+    `infrastructure/`)
   - `shared/` - shared kernel: value objects used by more than one context (`CurrencyAmount`)
     and the boundary parsing that produces them (`currencyInput`)
 - `src/tests/unit/` - unit tests
