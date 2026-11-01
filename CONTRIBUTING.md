@@ -75,6 +75,7 @@ The main application code lives under `src/` and is grouped by responsibility:
 - `src/routes/` - TanStack Router route files
 - `src/presentation/` - view-layer presentation logic
   - `formatters/` - currency and date formatting
+  - `movements/` - view mapping for the movements list (grouping movements by day)
 - `src/lib/` - framework-agnostic technical utilities with no domain or business knowledge. If a
   helper needs to know what a jar, an account or a movement is, it belongs in a context instead.
 - `src/services/` - bounded contexts

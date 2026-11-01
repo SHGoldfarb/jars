@@ -2,9 +2,11 @@ import type { MovementListEntry } from 'src/services/finance';
 import { useMovements } from 'src/hooks/useMovements';
 import { useMovementMonths } from 'src/hooks/useMovementMonths';
 import { useSelectedMonth } from 'src/hooks/useSelectedMonth';
-import { formatYearMonth } from 'src/presentation/formatters/dateFormatters';
+import { formatDayISO, formatYearMonth } from 'src/presentation/formatters/dateFormatters';
+import { groupByDay } from 'src/presentation/movements/groupByDay';
 import { GenericList } from './GenericList';
 import { MonthSelector } from './MonthSelector';
+import { MovementActions } from './MovementActions';
 import { TransactionListItem } from './TransactionListItem';
 import { TransferListItem } from './TransferListItem';
 import { AllocationListItem } from './AllocationListItem';
@@ -27,27 +29,27 @@ export const Movements = () => {
   return (
     <>
       <MonthSelector month={month} monthsWithMovements={months} onSelectMonth={selectMonth} />
-      <GenericList
-        items={movements.map((movement) => ({ ...movement, url: movementUrl(movement) }))}
-        actions={[
-          { label: 'Add transaction', url: '/transactions/new', search: { month } },
-          { label: 'Add transfer', url: '/transfers/new', search: { month } },
-          { label: 'Add allocation', url: '/allocations/new', search: { month } },
-          { label: 'Bookmarks', url: '/bookmarks', search: { month } },
-        ]}
-      >
-        {(item) => {
-          if (item.movementType === 'transfer') {
-            return <TransferListItem transfer={item} />;
-          }
-          if (item.movementType === 'allocation') {
-            return <AllocationListItem allocation={item} />;
-          }
-          return <TransactionListItem transaction={item} />;
-        }}
-      </GenericList>
+      <MovementActions month={month} />
+      {groupByDay(movements).map((day) => (
+        <GenericList
+          key={day.dayISO}
+          title={formatDayISO(day.dayISO)}
+          items={day.entries.map((movement) => ({ ...movement, url: movementUrl(movement) }))}
+          actions={[]}
+        >
+          {(item) => {
+            if (item.movementType === 'transfer') {
+              return <TransferListItem transfer={item} />;
+            }
+            if (item.movementType === 'allocation') {
+              return <AllocationListItem allocation={item} />;
+            }
+            return <TransactionListItem transaction={item} />;
+          }}
+        </GenericList>
+      ))}
       {movements.length === 0 && !isPending ? (
-        <p className="max-w-lg mx-auto py-3 text-center text-muted-foreground text-xs/relaxed">
+        <p className="max-w-lg mx-auto py-8 text-center text-muted-foreground text-xs/relaxed">
           No movements in {formatYearMonth(month)}
         </p>
       ) : null}

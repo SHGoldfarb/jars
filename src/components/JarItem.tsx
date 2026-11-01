@@ -1,7 +1,6 @@
 import { ItemContent, ItemTitle } from 'components/ui/item';
 import { useJarBalance } from 'src/hooks/useJarBalance';
-import { decimal } from 'src/lib/decimal';
-import { formatCurrencyAmount } from 'src/presentation/formatters/currencyFormatter';
+import { BalanceAmount } from './BalanceAmount';
 
 export const JarItem = ({ jar }: { jar: { id: string; name: string } }) => {
   const balance = useJarBalance(jar.id);
@@ -11,16 +10,10 @@ export const JarItem = ({ jar }: { jar: { id: string; name: string } }) => {
   return (
     <>
       <ItemContent>
-        <ItemTitle>{jar.name}</ItemTitle>
+        <ItemTitle className="text-sm">{jar.name}</ItemTitle>
       </ItemContent>
       <ItemContent>
-        <ItemTitle
-          className={
-            decimal.toNumber(balance.amountDecimal) > 0 ? 'text-emerald-400' : 'text-rose-400'
-          }
-        >
-          {formatCurrencyAmount(balance)}
-        </ItemTitle>
+        <BalanceAmount balance={balance} className="text-sm" />
       </ItemContent>
     </>
   );

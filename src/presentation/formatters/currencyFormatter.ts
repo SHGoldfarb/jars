@@ -22,3 +22,11 @@ export const formatCurrencyAmount = (value: CurrencyAmount) => {
 
   return formatters[value.currency](amount);
 };
+
+// Money coming in or going out, signed so the direction reads without relying on colour:
+// "+$600" and "−$28".
+export const formatSignedCurrencyAmount = (value: CurrencyAmount, direction: 'in' | 'out') => {
+  const sign = direction === 'in' ? '+' : '\u2212';
+
+  return `${sign}${formatCurrencyAmount(value)}`;
+};

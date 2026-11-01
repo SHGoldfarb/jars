@@ -4,8 +4,9 @@ import { DEFAULT_MOVEMENT_DATE, defaultData, test } from './setup';
 // Pin locale/timezone: the rendered dates and amounts below are asserted as literals.
 test.use({ locale: 'en-US', timezoneId: 'UTC' });
 
-// A movement row prints its date as en-US `M/D/YYYY, h:mm:ss AM`; a bookmark row has none.
-const RENDERED_DATE = /\d{1,2}\/\d{1,2}\/\d{4}/;
+// A movement row prints its time as en-US `h:mm AM` under its day's heading; a bookmark row has
+// none.
+const RENDERED_TIME = /\d{1,2}:\d{2}/;
 
 // What a form started from a bookmark shows in its date field: today, as the blank form would.
 // Read off the test's own clock rather than the app's date helpers.
@@ -72,7 +73,7 @@ test('a movement of each kind can be saved as a bookmark and is listed in the bo
   await expect(bookmarksPage.getBookmark('Rent')).toContainText('Transaction');
   await expect(bookmarksPage.getBookmark('Rent')).toContainText('$1,000');
   for (const description of ['Holiday fund', 'Savings top-up', 'Rent']) {
-    await expect(bookmarksPage.getBookmark(description)).not.toContainText(RENDERED_DATE);
+    await expect(bookmarksPage.getBookmark(description)).not.toContainText(RENDERED_TIME);
   }
 });
 

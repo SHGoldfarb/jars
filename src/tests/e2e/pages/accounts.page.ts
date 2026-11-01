@@ -9,6 +9,8 @@ export const accountsPageConstructor = (page: Page) => {
   const expectAccountToNotExist = async (accountName: string) => {
     await expect(getAccount(accountName)).not.toBeVisible();
   };
+  // The headline figure above the list: what every listed account holds between them.
+  const total = page.getByRole('region', { name: 'Total in accounts' });
   const clickAccount = (accountName: string) => getAccount(accountName).click();
   // The accounts list itself, told apart from the page's navigation lists by the add action it
   // holds - which is also the row that heads it.
@@ -29,6 +31,7 @@ export const accountsPageConstructor = (page: Page) => {
     expectAccountToNotExist,
     expectAccountsInOrder,
     clickAccount,
+    total,
   };
 };
 

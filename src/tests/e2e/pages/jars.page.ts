@@ -9,6 +9,8 @@ export const jarsPageConstructor = (page: Page) => {
   const expectJarToNotExist = async (jarName: string) => {
     await expect(getJar(jarName)).not.toBeVisible();
   };
+  // The headline figure above the list: what every listed jar holds between them.
+  const total = page.getByRole('region', { name: 'Total in jars' });
   const clickJar = (jarName: string) => getJar(jarName).click();
   // The jars list itself, told apart from the page's navigation lists by the add action it
   // holds - which is also the row that heads it.
@@ -29,6 +31,7 @@ export const jarsPageConstructor = (page: Page) => {
     expectJarToNotExist,
     expectJarsInOrder,
     clickJar,
+    total,
   };
 };
 

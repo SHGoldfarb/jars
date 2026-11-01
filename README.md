@@ -18,6 +18,7 @@ Your cash sits in real accounts — your wallet, your bank, your savings account
 #### Other functionality
 
 - **Offline support**
+- **Mobile-first layout**
 
 ### Development
 

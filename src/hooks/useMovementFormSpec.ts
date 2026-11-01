@@ -41,7 +41,7 @@ export const useMovementFormSpec = (
       kind: 'text',
       name: 'amount',
       label: 'Amount',
-      placeholder: clpInputMask.format('10000'),
+      placeholder: clpInputMask.format('0'),
       inputMode: 'decimal',
       mask: clpInputMask,
     },

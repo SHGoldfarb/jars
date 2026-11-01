@@ -52,7 +52,8 @@ test('can create a transfer, focus flowing from one field to the next', async ({
   await expect(page.getByText(description)).toBeVisible();
   await expect(page.getByText(`${originName} → ${destinationName}`)).toBeVisible();
   await expect(page.getByText('$150,000')).toBeVisible();
-  await expect(page.getByText('5/20/2026, 3:20:00 PM')).toBeVisible();
+  await expect(page.getByText('3:20 PM')).toBeVisible();
+  await expect(movementsPage.dayHeading('Wed, May 20')).toBeVisible();
 });
 
 test('transfer form defaults, account options and validation', async ({
@@ -213,7 +214,8 @@ test('can edit a transfer', async ({
   await expect(transferLink).toBeVisible();
   await expect(transferLink.getByText(`${newOriginName} → ${newDestinationName}`)).toBeVisible();
   await expect(transferLink.getByText('$275,000')).toBeVisible();
-  await expect(transferLink.getByText('7/11/2026, 8:45:00 AM')).toBeVisible();
+  await expect(transferLink.getByText('8:45 AM')).toBeVisible();
+  await expect(movementsPage.dayHeading('Sat, Jul 11')).toBeVisible();
   await expect(page.getByText(initialDescription)).toBeHidden();
 });
 

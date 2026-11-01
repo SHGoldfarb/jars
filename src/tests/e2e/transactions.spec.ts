@@ -3,7 +3,6 @@ import { DEFAULT_MOVEMENT_DATE, defaultData, test } from './setup';
 import { runInOrder } from 'src/lib/utils';
 import { formatCurrencyAmount } from 'src/presentation/formatters/currencyFormatter';
 import { decimal } from 'src/lib/decimal';
-import { formatDateISO } from 'src/presentation/formatters/dateFormatters';
 
 test('can create income transaction, focus flowing from one field to the next', async ({
   seedData,
@@ -63,9 +62,9 @@ test('can create income transaction, focus flowing from one field to the next', 
       formatCurrencyAmount({ currency: 'CLP', amountDecimal: decimal.parseString(amount) })
     )
   ).toBeVisible();
-  await expect(
-    transactionLink.getByText(formatDateISO(new Date(`${date}:00.000Z`).toISOString()))
-  ).toBeVisible();
+  // Hardcoded for the hardcoded date above ('2026-05-20T15:20' -> UTC).
+  await expect(transactionLink.getByText('3:20 PM')).toBeVisible();
+  await expect(movementsPage.dayHeading('Wed, May 20')).toBeVisible();
 });
 
 test('can edit transaction, the form opening on its current values', async ({
@@ -198,9 +197,9 @@ test('can edit transaction, the form opening on its current values', async ({
       formatCurrencyAmount({ currency: 'CLP', amountDecimal: decimal.parseString(newAmount) })
     )
   ).toBeVisible();
-  await expect(
-    transactionLink.getByText(formatDateISO(new Date(`${newDate}:00.000Z`).toISOString()))
-  ).toBeVisible();
+  // Hardcoded for the hardcoded date above ('2026-06-20T14:30' -> UTC).
+  await expect(transactionLink.getByText('2:30 PM')).toBeVisible();
+  await expect(movementsPage.dayHeading('Sat, Jun 20')).toBeVisible();
 });
 
 test('can delete transaction', async ({ seedData, rootLayoutPage, movementsPage, page }) => {

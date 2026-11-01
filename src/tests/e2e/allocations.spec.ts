@@ -53,7 +53,8 @@ test('can create an allocation, focus flowing from one field to the next', async
   await expect(allocationLink).toBeVisible();
   await expect(allocationLink.getByText(`${originName} → ${destinationName}`)).toBeVisible();
   await expect(allocationLink.getByText('$150,000')).toBeVisible();
-  await expect(allocationLink.getByText('5/20/2026, 3:20:00 PM')).toBeVisible();
+  await expect(allocationLink.getByText('3:20 PM')).toBeVisible();
+  await expect(movementsPage.dayHeading('Wed, May 20')).toBeVisible();
 });
 
 test('allocation form defaults, jar options and validation', async ({
@@ -226,7 +227,8 @@ test('can edit an allocation', async ({
   await expect(allocationLink).toBeVisible();
   await expect(allocationLink.getByText(`${newOriginName} → ${newDestinationName}`)).toBeVisible();
   await expect(allocationLink.getByText('$275,000')).toBeVisible();
-  await expect(allocationLink.getByText('7/11/2026, 8:45:00 AM')).toBeVisible();
+  await expect(allocationLink.getByText('8:45 AM')).toBeVisible();
+  await expect(movementsPage.dayHeading('Sat, Jul 11')).toBeVisible();
   await expect(page.getByText(initialDescription)).toBeHidden();
 });
 

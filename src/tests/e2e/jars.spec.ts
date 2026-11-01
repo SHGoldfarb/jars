@@ -89,6 +89,8 @@ test('jars show balance', async ({ seedData, rootLayoutPage, jarsPage }) => {
 
   // Expected string is hardcoded for the hardcoded amounts above: 10000 income - 3000 expense.
   await expect(jarsPage.getJar(jarName)).toContainText('$7,000');
+  // Every listed jar together: 7000 here and -12345 in the second jar.
+  await expect(jarsPage.total).toContainText('-$5,345');
 });
 
 test('delete button is disabled for jars with non zero balance', async ({

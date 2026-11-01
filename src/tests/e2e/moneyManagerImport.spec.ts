@@ -75,7 +75,8 @@ test('a Money Manager export becomes jars, categories and movements under one Ca
   await expect(income).toContainText(`${CASH_ACCOUNT} · Wallet`);
   await expect(income).toContainText('Salary');
   await expect(income).toContainText('$10,000');
-  await expect(income).toContainText('2/10/2026, 9:00:00 AM');
+  await expect(income).toContainText('9:00 AM');
+  await expect(movementsPage.dayHeading('Tue, Feb 10')).toBeVisible();
 
   // The snacks cost 0.53 USD and the file converts that to 500 CLP: the converted amount is the
   // one that is imported.
@@ -84,7 +85,8 @@ test('a Money Manager export becomes jars, categories and movements under one Ca
   // Its category and the subcategory the row named, both carried onto the transaction.
   await expect(expense).toContainText('Wants · Snacks');
   await expect(expense).toContainText('$500');
-  await expect(expense).toContainText('2/13/2026, 8:15:00 AM');
+  await expect(expense).toContainText('8:15 AM');
+  await expect(movementsPage.dayHeading('Fri, Feb 13')).toBeVisible();
 
   // The file writes the transfer once, from the paying side, naming the jar it paid into in the
   // column every other row uses for its category.
@@ -92,7 +94,8 @@ test('a Money Manager export becomes jars, categories and movements under one Ca
   await expect(allocation).toHaveCount(1);
   await expect(allocation).toContainText('Wallet → Holidays');
   await expect(allocation).toContainText('$3,000');
-  await expect(allocation).toContainText('2/12/2026, 11:45:00 AM');
+  await expect(allocation).toContainText('11:45 AM');
+  await expect(movementsPage.dayHeading('Thu, Feb 12')).toBeVisible();
 
   // Every movement lives in the one account, so nothing moved between accounts.
   await expect(movementsPage.movementKind('Transfer')).toBeHidden();

@@ -4,6 +4,25 @@ export const formatDateISO = (dateISO: string) => {
   return new Date(dateISO).toLocaleString(undefined, { timeZone: 'UTC' });
 };
 
+// The heading a day's movements are listed under: "Mon, Oct 12".
+export const formatDayISO = (dateISO: string) => {
+  return new Date(dateISO).toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
+};
+
+// A movement's time of day, for a row that already sits under its day's heading: "9:00 AM".
+export const formatTimeISO = (dateISO: string) => {
+  return new Date(dateISO).toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  });
+};
+
 export const formatYearMonth = (key: YearMonthKey) => {
   const { year, month } = yearMonth.toParts(key);
 

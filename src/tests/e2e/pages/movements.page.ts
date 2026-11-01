@@ -8,9 +8,12 @@ export const movementsPageConstructor = (page: Page) => {
   const getMovement = (description: string) =>
     page.getByRole('link', { name: new RegExp(description, 'i') });
   // Every row says which kind of movement it is, so a kind that should not be in the list can
-  // be asserted absent without knowing which row would have carried it.
+  // be asserted absent without knowing which row would have carried it. Looked for inside the
+  // lists only: the add tiles above them are labelled with the same words.
   const movementKind = (kind: 'Transaction' | 'Transfer' | 'Allocation') =>
-    page.getByText(kind, { exact: true });
+    page.getByRole('list').getByText(kind, { exact: true });
+  // The heading a day's movements are listed under, like "Wed, May 20".
+  const dayHeading = (day: string) => page.getByRole('heading', { name: day, exact: true });
 
   const monthSelect = page.getByRole('combobox', { name: 'Month' });
   const previousMonthButton = page.getByRole('button', { name: 'Previous month' });
@@ -54,6 +57,7 @@ export const movementsPageConstructor = (page: Page) => {
     bookmarksButton,
     getMovement,
     movementKind,
+    dayHeading,
     expectMovementToExist,
     expectMovementToNotExist,
   };

@@ -83,13 +83,9 @@ test('movements list shows transactions, transfers and allocations interleaved b
 
   await rootLayoutPage.navButton('Movements').click();
 
-  // Find the movement list (role="list" that contains "Add transaction") and get all links
-  // within it to exclude nav links in other lists, leaving out the list's own actions
-  const movementLinks = page
-    .getByRole('list')
-    .filter({ hasText: 'Add transaction' })
-    .getByRole('link')
-    .filter({ hasNotText: /^(Add .*|Bookmarks)$/ });
+  // The movements are listed a day at a time, every day's list inside the page's main content;
+  // the app's own navigation sits outside it, and the add tiles are not a list.
+  const movementLinks = page.getByRole('main').getByRole('list').getByRole('link');
 
   // The kinds are interleaved by date descending, each labelled with its own kind
   await expect(movementLinks.nth(0)).toContainText('Newest transfer');

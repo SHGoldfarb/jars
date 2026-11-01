@@ -66,8 +66,13 @@ export const useDataManagement = () => {
     }
   };
 
+  const dismissStatus = () => {
+    setStatus(null);
+  };
+
   return {
     status,
+    dismissStatus,
     createBackup,
     exportMovementsCsv,
     restoreFromBackup,

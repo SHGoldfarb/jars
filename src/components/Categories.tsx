@@ -1,5 +1,5 @@
 import { Outlet } from '@tanstack/react-router';
-import { Navbar } from './Navbar';
+import { SegmentedNav } from './SegmentedNav';
 
 const routes = [
   { name: 'Income', href: '/categories/income' },
@@ -9,7 +9,7 @@ const routes = [
 export const Categories = () => {
   return (
     <>
-      <Navbar routes={routes} />
+      <SegmentedNav label="Category kind" routes={routes} />
       <Outlet />
     </>
   );

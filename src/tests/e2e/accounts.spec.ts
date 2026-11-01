@@ -114,6 +114,8 @@ test('accounts show balance', async ({ seedData, rootLayoutPage, accountsPage })
   // Expected string is hardcoded for the hardcoded amounts above:
   // 10000 income - 3000 expense - 5000 transferred out + 2000 transferred in -> CLP.
   await expect(accountsPage.getAccount(accountName)).toContainText('$4,000');
+  // Every listed account together: 4000 here, and -12345 + 5000 - 2000 in the second account.
+  await expect(accountsPage.total).toContainText('-$5,345');
 });
 
 test('delete button is disabled for accounts with non zero balance', async ({

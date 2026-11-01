@@ -1,4 +1,5 @@
 import { financeQueries } from 'src/services/finance';
+import { currency } from 'src/services/shared';
 import { balancesGetters } from '../domain/queries';
 
 const createBalanceQueries = (financeQueriesDeps: typeof financeQueries) => {
@@ -26,6 +27,16 @@ const createBalanceQueries = (financeQueriesDeps: typeof financeQueries) => {
     },
     jars: async (jarId: string) => {
       return (await getBalances()).jars(jarId);
+    },
+    // What the given accounts hold between them - the ones a list is showing, say.
+    accountsTotal: async (accountIds: readonly string[]) => {
+      const getters = await getBalances();
+      return accountIds.map(getters.accounts).reduce(currency.sum, currency.new(0, 'CLP'));
+    },
+    // What the given jars hold between them.
+    jarsTotal: async (jarIds: readonly string[]) => {
+      const getters = await getBalances();
+      return jarIds.map(getters.jars).reduce(currency.sum, currency.new(0, 'CLP'));
     },
   };
 };
