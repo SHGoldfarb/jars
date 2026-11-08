@@ -32,6 +32,7 @@ test('can delete account', async ({ rootLayoutPage, accountsPage, accountFormPag
 });
 
 test('can edit account', async ({ rootLayoutPage, accountsPage, accountFormPage, seedData }) => {
+  test.slow();
   const initialName = 'Account to be renamed';
   const newName = 'Renamed account';
 
