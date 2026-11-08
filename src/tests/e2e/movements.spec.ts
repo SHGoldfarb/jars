@@ -147,6 +147,27 @@ test.describe('movements month selector', () => {
     await movementsPage.expectMovementToExist(twoMonthsOnTransaction.description);
   });
 
+  test.describe('in a zone behind UTC', () => {
+    test.use({ locale: 'en-US', timezoneId: 'America/Santiago' });
+
+    test('the list opens on the local month while UTC is already in the next one', async ({
+      seedData,
+      page,
+      rootLayoutPage,
+      movementsPage,
+    }) => {
+      const lastDayTransaction = { date: '2026-10-31T21:00', description: 'Last day transaction' };
+      await seedData({ ...defaultData, transactions: [lastDayTransaction] });
+
+      // 23:30 on Oct 31 in Santiago (UTC-3) is already Nov 1 in UTC.
+      await page.clock.setFixedTime(new Date('2026-11-01T02:30:00.000Z'));
+      await rootLayoutPage.navButton('Movements').click();
+
+      await expect(movementsPage.monthSelect).toHaveText('October 2026');
+      await movementsPage.expectMovementToExist(lastDayTransaction.description);
+    });
+  });
+
   test('cancelling a new movement returns to the month it was started from', async ({
     seedData,
     rootLayoutPage,

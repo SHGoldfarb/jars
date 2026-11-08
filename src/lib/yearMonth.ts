@@ -29,7 +29,13 @@ const toParts = (key: YearMonthKey) => {
   return { year: date.getUTCFullYear(), month: date.getUTCMonth() + 1 };
 };
 
-const current = () => fromDate(new Date());
+// The month on the user's own calendar. Stored dates are wall-clock times labelled UTC (see
+// `dateInput.todayDateInputValue`), so "now" has to be read in local parts to land in the same
+// month a movement dated now would - near a month's end, the UTC month has often already moved on.
+const current = () => {
+  const now = new Date();
+  return fromUTCParts(now.getFullYear(), now.getMonth());
+};
 
 const fromISO = (dateISO: string) => fromDate(new Date(dateISO));
 
