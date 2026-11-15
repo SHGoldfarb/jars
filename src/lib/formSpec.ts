@@ -44,6 +44,8 @@ interface FormFieldText<TValues> {
   // Values the input offers to complete what is typed, in place of the browser's own history of
   // the field.
   suggestions?: string[];
+  // Offers a button beside the input that empties it and puts the caret back in it.
+  clearable?: boolean;
 }
 
 interface FormFieldSelect<TValues> {

@@ -144,10 +144,3 @@ becomes public by accident.
 - When a feature changes or extends a use case that already has a test, add its checks to that
   test rather than writing a new one. Add a new test only when no existing use case is an
   appropriate place to exercise the feature.
-
-## Pull Requests
-
-- Summarize what changed and why.
-- Call out any boundary changes or DDD-related refactors.
-- Mention the checks you ran.
-- If a change intentionally trades off strict type safety, explain why and what the safest available alternative is.

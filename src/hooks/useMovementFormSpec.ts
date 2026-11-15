@@ -44,6 +44,7 @@ export const useMovementFormSpec = (
       placeholder: clpInputMask.format('0'),
       inputMode: 'decimal',
       mask: clpInputMask,
+      clearable: true,
     },
     { kind: 'text', name: 'description', label: 'Description', suggestions: descriptions },
   ];

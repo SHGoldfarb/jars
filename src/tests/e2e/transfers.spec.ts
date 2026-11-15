@@ -203,7 +203,13 @@ test('can edit a transfer', async ({
   await transferFormPage.fillDate(newDate);
   await transferFormPage.selectOriginAccount(newOriginName);
   await transferFormPage.selectDestinationAccount(newDestinationName);
-  await transferFormPage.fillAmount(newAmount);
+  // The clear button empties the amount and hands the caret back to it, ready to type
+  await page.keyboard.press('Escape');
+  await transferFormPage.clearAmountButton.click();
+  await expect(transferFormPage.amountInput).toHaveValue('');
+  await expect(transferFormPage.amountInput).toBeFocused();
+  await page.keyboard.type(newAmount);
+  await expect(transferFormPage.amountInput).toHaveValue('$275,000');
   await transferFormPage.fillDescription(newDescription);
   await transferFormPage.submitButton.click();
 

@@ -40,7 +40,8 @@ export const transactionFormPageConstructor = (page: Page) => {
     },
     locator: () => cancelButtonLocator,
   };
-  const amountInput = page.getByLabel('Amount');
+  const amountInput = page.getByLabel('Amount', { exact: true });
+  const clearAmountButton = page.getByRole('button', { name: 'Clear amount' });
   const dateInput = page.getByLabel('Date');
   const descriptionInput = page.getByLabel('Description');
   const typeSelect = page.getByRole('combobox', { name: 'Type' });
@@ -161,6 +162,7 @@ export const transactionFormPageConstructor = (page: Page) => {
     bookmarkButton,
     bookmarkedButton,
     amountInput,
+    clearAmountButton,
     dateInput,
     descriptionInput,
     typeSelect,

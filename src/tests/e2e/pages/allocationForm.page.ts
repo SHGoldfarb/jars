@@ -25,7 +25,8 @@ export const allocationFormPageConstructor = (page: Page) => {
   };
   // What the bookmark button turns into once it has saved the values the form holds.
   const bookmarkedButton = page.getByRole('button', { name: 'Bookmarked' });
-  const amountInput = page.getByLabel('Amount');
+  const amountInput = page.getByLabel('Amount', { exact: true });
+  const clearAmountButton = page.getByRole('button', { name: 'Clear amount' });
   const dateInput = page.getByLabel('Date');
   const descriptionInput = page.getByLabel('Description');
   const originJarSelect = page.getByRole('combobox', { name: 'Origin jar' });
@@ -93,6 +94,7 @@ export const allocationFormPageConstructor = (page: Page) => {
     bookmarkedButton,
     deleteButton,
     amountInput,
+    clearAmountButton,
     dateInput,
     descriptionInput,
     originJarSelect,

@@ -309,6 +309,7 @@ Categories can have subcategories, managed from the Categories screen and select
 - [x] Order jars, accounts, categories alphabetically. In page and form selectors.
 - [x] Suggest previous descriptions in description field in movements form.
 - [x] Live format amount in input field.
+- [x] Button to erase+focus amount in movements form.
 
 ## Epics Backlog
 

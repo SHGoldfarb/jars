@@ -175,8 +175,15 @@ test('can edit transaction, the form opening on its current values', async ({
   await transactionFormPage.pickDescriptionSuggestion('cof', 'Coffee');
   await expect(transactionFormPage.descriptionInput).toHaveValue('Coffee');
 
-  // Change every field of the transaction
-  await transactionFormPage.fillAmount(newAmount);
+  // The clear button empties the amount and hands the caret back to it, ready to type
+  await page.keyboard.press('Escape');
+  await transactionFormPage.clearAmountButton.click();
+  await expect(transactionFormPage.amountInput).toHaveValue('');
+  await expect(transactionFormPage.amountInput).toBeFocused();
+  await page.keyboard.type(newAmount);
+  await expect(transactionFormPage.amountInput).toHaveValue('$75,000');
+
+  // Change every other field of the transaction
   await transactionFormPage.fillDate(newDate);
   await transactionFormPage.fillDescription(newDescription);
   await transactionFormPage.selectType('Expense');

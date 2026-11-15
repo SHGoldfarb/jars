@@ -1,4 +1,6 @@
+import { useRef } from 'react';
 import { Input } from 'src/components/ui/input';
+import { FormFieldClearButton } from 'src/components/FormFieldClearButton';
 import { FormFieldMaskedInput } from 'src/components/FormFieldMaskedInput';
 import { FormFieldSelect } from 'src/components/FormFieldSelect';
 import { FormFieldSuggestInput } from 'src/components/FormFieldSuggestInput';
@@ -36,6 +38,13 @@ export const FormField = <TValues,>({
   onClosed: () => void;
   onEnter?: () => void;
 }) => {
+  // The text input, kept so a clear button can hand the caret back to it.
+  const input = useRef<HTMLInputElement | null>(null);
+  const textInputRef = (element: HTMLInputElement | null) => {
+    input.current = element;
+    inputRef(element);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (onEnter && e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -48,57 +57,70 @@ export const FormField = <TValues,>({
       {spec.kind === 'date' ? (
         <Input type="datetime-local" {...formUtils.inputProps(field)} />
       ) : null}
-      {spec.kind === 'text' && spec.mask ? (
-        <FormFieldMaskedInput
-          id={field.name}
-          name={field.name}
-          inputRef={inputRef}
-          // The form owns the focus flow, and an active field is the one the user came here to
-          // fill, so landing on it is the point rather than a surprise.
-          // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus={active}
-          mask={spec.mask}
-          inputMode={spec.inputMode}
-          placeholder={spec.placeholder}
-          required={spec.required}
-          value={field.state.value}
-          onBlur={field.handleBlur}
-          onChange={field.handleChange}
-          onKeyDown={handleKeyDown}
-        />
-      ) : null}
-      {spec.kind === 'text' && !spec.mask && spec.suggestions ? (
-        <FormFieldSuggestInput
-          id={field.name}
-          name={field.name}
-          inputRef={inputRef}
-          // The form owns the focus flow, and an active field is the one the user came here to
-          // fill, so landing on it is the point rather than a surprise.
-          // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus={active}
-          suggestions={spec.suggestions}
-          inputMode={spec.inputMode}
-          placeholder={spec.placeholder}
-          required={spec.required}
-          value={field.state.value}
-          onBlur={field.handleBlur}
-          onChange={field.handleChange}
-          onKeyDown={handleKeyDown}
-        />
-      ) : null}
-      {spec.kind === 'text' && !spec.mask && !spec.suggestions ? (
-        <Input
-          ref={inputRef}
-          // The form owns the focus flow, and an active field is the one the user came here to
-          // fill, so landing on it is the point rather than a surprise.
-          // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus={active}
-          inputMode={spec.inputMode}
-          placeholder={spec.placeholder}
-          required={spec.required}
-          {...formUtils.inputProps(field)}
-          onKeyDown={handleKeyDown}
-        />
+      {spec.kind === 'text' ? (
+        <div className="flex items-center gap-1">
+          {spec.mask ? (
+            <FormFieldMaskedInput
+              id={field.name}
+              name={field.name}
+              inputRef={textInputRef}
+              // The form owns the focus flow, and an active field is the one the user came here to
+              // fill, so landing on it is the point rather than a surprise.
+              // eslint-disable-next-line jsx-a11y/no-autofocus
+              autoFocus={active}
+              mask={spec.mask}
+              inputMode={spec.inputMode}
+              placeholder={spec.placeholder}
+              required={spec.required}
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={field.handleChange}
+              onKeyDown={handleKeyDown}
+            />
+          ) : null}
+          {!spec.mask && spec.suggestions ? (
+            <FormFieldSuggestInput
+              id={field.name}
+              name={field.name}
+              inputRef={textInputRef}
+              // The form owns the focus flow, and an active field is the one the user came here to
+              // fill, so landing on it is the point rather than a surprise.
+              // eslint-disable-next-line jsx-a11y/no-autofocus
+              autoFocus={active}
+              suggestions={spec.suggestions}
+              inputMode={spec.inputMode}
+              placeholder={spec.placeholder}
+              required={spec.required}
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={field.handleChange}
+              onKeyDown={handleKeyDown}
+            />
+          ) : null}
+          {!spec.mask && !spec.suggestions ? (
+            <Input
+              ref={textInputRef}
+              // The form owns the focus flow, and an active field is the one the user came here to
+              // fill, so landing on it is the point rather than a surprise.
+              // eslint-disable-next-line jsx-a11y/no-autofocus
+              autoFocus={active}
+              inputMode={spec.inputMode}
+              placeholder={spec.placeholder}
+              required={spec.required}
+              {...formUtils.inputProps(field)}
+              onKeyDown={handleKeyDown}
+            />
+          ) : null}
+          {spec.clearable ? (
+            <FormFieldClearButton
+              label={spec.label}
+              onClear={() => {
+                field.handleChange('');
+                input.current?.focus();
+              }}
+            />
+          ) : null}
+        </div>
       ) : null}
       {spec.kind === 'select' ? (
         <FormFieldSelect
