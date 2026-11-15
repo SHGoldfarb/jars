@@ -80,3 +80,13 @@ about what the test does; it is never a reaction to seeing it time out.
 
 If a test genuinely cannot fit in the configured budget, report that and propose making the test
 do less work — not making the budget bigger.
+
+## Run Only The Related Tests
+
+After making changes, agents must not default to running the full test suite. Run only the tests
+related to the change: the tests for the files, components, or flows that were touched.
+
+The full suite is reserved for changes that genuinely need an app-wide review — for example a
+change to shared infrastructure, global configuration, cross-cutting types or utilities, or
+anything whose blast radius cannot be confined to a known set of tests. "Just to be safe" is not
+a reason to run it.
