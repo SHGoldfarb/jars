@@ -13,6 +13,7 @@ import { FormActions } from 'src/components/FormActions';
 import { FormField } from 'src/components/FormField';
 import { formSpec, type FormFieldSpec, type FormValues, type StringValued } from 'src/lib/formSpec';
 import { formUtils } from 'src/lib/formUtils';
+import { revealAboveKeyboard } from 'src/lib/revealAboveKeyboard';
 
 // How long to wait before pulling focus into the text field a select hands over to, so the
 // selector has closed by the time the caret lands.
@@ -184,6 +185,13 @@ export const Form = <TValues extends StringValued<TValues>, TParsed, TSecondary 
           e.preventDefault();
           e.stopPropagation();
           void form.handleSubmit();
+        }}
+        // The focus flow moves the caret from field to field on its own, and on a phone the
+        // keyboard that comes up can cover the field it lands on.
+        onFocus={(e) => {
+          if (e.target instanceof HTMLInputElement) {
+            revealAboveKeyboard(e.target);
+          }
         }}
       >
         <FieldGroup>
