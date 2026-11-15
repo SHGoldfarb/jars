@@ -11,13 +11,16 @@ export interface MainNavRoute {
 // them, and the header has nothing else to show, so it takes no room at all; from tablet width up
 // they sit in the header next to the app's name. One set of links serves both, so every section
 // is linked exactly once.
+//
+// While an input has focus on a phone the tab bar steps aside: the keyboard is up, the browser
+// scrolls the field to just above it, and that is exactly where the fixed bar would cover it.
 export const MainNav = ({ routes }: { routes: MainNavRoute[] }) => (
   <header className="bg-background sm:sticky sm:top-0 sm:z-40 sm:border-b">
     <div className="mx-auto max-w-3xl px-4 sm:flex sm:h-12 sm:items-center sm:justify-between">
       <span className="hidden text-sm font-semibold tracking-tight sm:inline">Jars</span>
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-40 border-t bg-background pb-[env(safe-area-inset-bottom)] sm:static sm:border-0 sm:pb-0"
+        className="fixed inset-x-0 bottom-0 z-40 border-t bg-background pb-[env(safe-area-inset-bottom)] max-sm:[body:has(input:focus)_&]:hidden sm:static sm:border-0 sm:pb-0"
       >
         <ul className="grid grid-cols-5 sm:flex sm:gap-1">
           {routes.map(({ name, href, icon: Icon }) => (
